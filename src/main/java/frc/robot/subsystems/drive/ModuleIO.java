@@ -1,4 +1,4 @@
-// Copyright 2021-2023 FRC 6328
+// Copyright 2021-2024 FRC 6328
 // http://github.com/Mechanical-Advantage
 //
 // This program is free software; you can redistribute it and/or
@@ -17,8 +17,38 @@ import edu.wpi.first.math.geometry.Rotation2d;
 import org.littletonrobotics.junction.AutoLog;
 
 public interface ModuleIO {
+  /**
+   * Updates the set of loggable inputs.
+   */
+  default void updateInputs(ModuleIOInputs inputs) {
+  }
+
+  /**
+   * Run the drive motor at the specified voltage.
+   */
+  default void setDriveVoltage(double volts) {
+  }
+
+  /**
+   * Run the turn motor at the specified voltage.
+   */
+  default void setTurnVoltage(double volts) {
+  }
+
+  /**
+   * Enable or disable brake mode on the drive motor.
+   */
+  default void setDriveBrakeMode(boolean enable) {
+  }
+
+  /**
+   * Enable or disable brake mode on the turn motor.
+   */
+  default void setTurnBrakeMode(boolean enable) {
+  }
+
   @AutoLog
-  public static class ModuleIOInputs {
+  class ModuleIOInputs {
     public double drivePositionRad = 0.0;
     public double driveVelocityRadPerSec = 0.0;
     public double driveAppliedVolts = 0.0;
@@ -29,23 +59,5 @@ public interface ModuleIO {
     public double turnVelocityRadPerSec = 0.0;
     public double turnAppliedVolts = 0.0;
     public double[] turnCurrentAmps = new double[] {};
-
-    public double[] odometryDrivePositionsRad = new double[] {};
-    public Rotation2d[] odometryTurnPositions = new Rotation2d[] {};
   }
-
-  /** Updates the set of loggable inputs. */
-  public default void updateInputs(ModuleIOInputs inputs) {}
-
-  /** Run the drive motor at the specified voltage. */
-  public default void setDriveVoltage(double volts) {}
-
-  /** Run the turn motor at the specified voltage. */
-  public default void setTurnVoltage(double volts) {}
-
-  /** Enable or disable brake mode on the drive motor. */
-  public default void setDriveBrakeMode(boolean enable) {}
-
-  /** Enable or disable brake mode on the turn motor. */
-  public default void setTurnBrakeMode(boolean enable) {}
 }
