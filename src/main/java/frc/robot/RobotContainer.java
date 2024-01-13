@@ -25,10 +25,9 @@ import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import frc.robot.commands.DriveCommands;
 import frc.robot.commands.FeedForwardCharacterization;
 import frc.robot.subsystems.drive.*;
-import frc.robot.subsystems.flywheel.Flywheel;
-import frc.robot.subsystems.flywheel.FlywheelIO;
-import frc.robot.subsystems.flywheel.FlywheelIOSim;
-import frc.robot.subsystems.flywheel.FlywheelIOSparkMax;
+import frc.robot.subsystems.shooter.*;
+import frc.robot.subsystems.shooter.ShooterIO;
+import frc.robot.subsystems.shooter.ShooterIOSparkMax;
 import org.littletonrobotics.junction.networktables.LoggedDashboardChooser;
 import org.littletonrobotics.junction.networktables.LoggedDashboardNumber;
 
@@ -41,7 +40,7 @@ import org.littletonrobotics.junction.networktables.LoggedDashboardNumber;
 public class RobotContainer {
   // Subsystems
   private final Drive drive;
-  private final Flywheel flywheel;
+  private final Shooter shooter;
 
   // Controller
   private final CommandXboxController controller = new CommandXboxController(0);
@@ -49,7 +48,7 @@ public class RobotContainer {
   // Dashboard inputs
   private final LoggedDashboardChooser<Command> autoChooser;
   private final LoggedDashboardNumber flywheelSpeedInput =
-      new LoggedDashboardNumber("Flywheel Speed", 1500.0);
+      new LoggedDashboardNumber("Shooter Speed", 1500.0);
 
   /** The container for the robot. Contains subsystems, OI devices, and commands. */
   public RobotContainer() {
@@ -58,19 +57,19 @@ public class RobotContainer {
         // Real robot, instantiate hardware IO implementations
         drive =
             new Drive(
-                    new GyroIOPigeon2(),
+                new GyroIOPigeon2(),
                 new ModuleIOSparkMax(0),
                 new ModuleIOSparkMax(1),
                 new ModuleIOSparkMax(2),
                 new ModuleIOSparkMax(3));
-        flywheel = new Flywheel(new FlywheelIOSparkMax());
+        shooter = new Shooter(new ShooterIOSparkMax());
         // drive = new Drive(
         // new GyroIOPigeon2(),
         // new ModuleIOTalonFX(0),
         // new ModuleIOTalonFX(1),
         // new ModuleIOTalonFX(2),
         // new ModuleIOTalonFX(3));
-        // flywheel = new Flywheel(new FlywheelIOTalonFX());
+        // shooter = new Shooter(new ShooterIOTalonFX());
         break;
 
       case SIM:
@@ -82,7 +81,7 @@ public class RobotContainer {
                 new ModuleIOSim(),
                 new ModuleIOSim(),
                 new ModuleIOSim());
-        flywheel = new Flywheel(new FlywheelIOSim());
+        shooter = new Shooter(new ShooterIOSim());
         break;
 
       default:
@@ -94,15 +93,15 @@ public class RobotContainer {
                 new ModuleIO() {},
                 new ModuleIO() {},
                 new ModuleIO() {});
-        flywheel = new Flywheel(new FlywheelIO() {});
+        shooter = new Shooter(new ShooterIO() {});
         break;
     }
 
     // Set up auto routines
     NamedCommands.registerCommand(
-        "Run Flywheel",
+        "Run Shooter",
         Commands.startEnd(
-                () -> flywheel.runVelocity(flywheelSpeedInput.get()), flywheel::stop, flywheel)
+                () -> shooter.runVelocity(flywheelSpeedInput.get()), shooter::stop, shooter)
             .withTimeout(5.0));
     autoChooser = new LoggedDashboardChooser<>("Auto Choices", AutoBuilder.buildAutoChooser());
 
@@ -112,9 +111,9 @@ public class RobotContainer {
         new FeedForwardCharacterization(
             drive, drive::runCharacterizationVolts, drive::getCharacterizationVelocity));
     autoChooser.addOption(
-        "Flywheel FF Characterization",
+        "Shooter FF Characterization",
         new FeedForwardCharacterization(
-            flywheel, flywheel::runVolts, flywheel::getCharacterizationVelocity));
+            shooter, shooter::runVolts, shooter::getCharacterizationVelocity));
 
     // Configure the button bindings
     configureButtonBindings();
@@ -147,7 +146,7 @@ public class RobotContainer {
         .a()
         .whileTrue(
             Commands.startEnd(
-                () -> flywheel.runVelocity(flywheelSpeedInput.get()), flywheel::stop, flywheel));
+                () -> shooter.runVelocity(flywheelSpeedInput.get()), shooter::stop, shooter));
   }
 
   /**
