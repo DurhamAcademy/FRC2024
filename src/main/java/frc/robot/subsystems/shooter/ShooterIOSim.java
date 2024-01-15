@@ -25,9 +25,9 @@ import static edu.wpi.first.units.Units.Degrees;
 import static edu.wpi.first.units.Units.Radians;
 
 public class ShooterIOSim implements ShooterIO {
-  private final FlywheelSim sim = new FlywheelSim(DCMotor.getNEO(1), 1.5, 0.004);
-  private final SingleJointedArmSim armSim = new SingleJointedArmSim(DCMotor.getNEO(2),
-          5,
+  private final FlywheelSim sim = new FlywheelSim(DCMotor.getNEO(2), 1.5, 0.004);
+  private final SingleJointedArmSim armSim = new SingleJointedArmSim(DCMotor.getNEO(1),
+          9,
           .1,
           .2,
           Radians.convertFrom(90, Degrees),
