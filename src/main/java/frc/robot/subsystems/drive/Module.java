@@ -19,6 +19,9 @@ import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.kinematics.SwerveModulePosition;
 import edu.wpi.first.math.kinematics.SwerveModuleState;
 import edu.wpi.first.math.util.Units;
+import edu.wpi.first.units.Angle;
+import edu.wpi.first.units.Measure;
+import edu.wpi.first.units.Velocity;
 import frc.robot.Constants;
 import org.littletonrobotics.junction.Logger;
 
@@ -164,9 +167,7 @@ public class Module {
     return new SwerveModulePosition(getPositionMeters(), getAngle());
   }
 
-  /**
-   * Returns the module position delta since the last call to this method.
-   */
+  /** Returns the module position delta since the last call to this method. */
   public SwerveModulePosition getPositionDelta() {
     var delta = new SwerveModulePosition(getPositionMeters() - lastPositionMeters, getAngle());
     lastPositionMeters = getPositionMeters();
@@ -179,7 +180,16 @@ public class Module {
   }
 
   /** Returns the drive velocity in radians/sec. */
-  public double getCharacterizationVelocity() {
+  public double getCharacterizationVelocityRadPerSec() {
     return inputs.driveVelocityRadPerSec;
+  }
+
+  /** Returns the drive velocity unitless. */
+  public Measure<Velocity<Angle>> getCharacterizationVelocity() {
+    return edu.wpi.first.units.Units.RadiansPerSecond.of(inputs.driveVelocityRadPerSec);
+  }
+
+  public int getIndex() {
+    return index;
   }
 }

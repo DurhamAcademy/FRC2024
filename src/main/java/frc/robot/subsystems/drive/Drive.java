@@ -27,12 +27,19 @@ import edu.wpi.first.math.kinematics.SwerveDriveKinematics;
 import edu.wpi.first.math.kinematics.SwerveModulePosition;
 import edu.wpi.first.math.kinematics.SwerveModuleState;
 import edu.wpi.first.math.util.Units;
+import edu.wpi.first.units.Distance;
+import edu.wpi.first.units.Measure;
+import edu.wpi.first.units.Velocity;
+import edu.wpi.first.units.Voltage;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.DriverStation.Alliance;
+import edu.wpi.first.wpilibj.sysid.SysIdRoutineLog;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.util.LocalADStarAK;
 import org.littletonrobotics.junction.AutoLogOutput;
 import org.littletonrobotics.junction.Logger;
+
+import static edu.wpi.first.units.Units.*;
 
 public class Drive extends SubsystemBase {
   private static final double MAX_LINEAR_SPEED = Units.feetToMeters(14.5);
@@ -77,10 +84,11 @@ public class Drive extends SubsystemBase {
     Pathfinding.setPathfinder(new LocalADStarAK());
     //noinspection ToArrayCallWithZeroLengthArrayArgument
     PathPlannerLogging.setLogActivePathCallback(
-            (activePath) -> Logger.recordOutput(
-                    "Odometry/Trajectory", activePath.toArray(new Pose2d[activePath.size()])));
+        (activePath) ->
+            Logger.recordOutput(
+                "Odometry/Trajectory", activePath.toArray(new Pose2d[activePath.size()])));
     PathPlannerLogging.setLogTargetPoseCallback(
-            (targetPose) -> Logger.recordOutput("Odometry/TrajectorySetpoint", targetPose));
+        (targetPose) -> Logger.recordOutput("Odometry/TrajectorySetpoint", targetPose));
   }
 
   public void periodic() {
@@ -117,8 +125,8 @@ public class Drive extends SubsystemBase {
       // If the gyro is connected, replace the theta component of the twist
       // with the change in angle since the last loop cycle.
       twist =
-              new Twist2d(
-                      twist.dx, twist.dy, gyroInputs.yawPosition.minus(lastGyroRotation).getRadians());
+          new Twist2d(
+              twist.dx, twist.dy, gyroInputs.yawPosition.minus(lastGyroRotation).getRadians());
       lastGyroRotation = gyroInputs.yawPosition;
     }
     // Apply the twist (change since last loop cycle) to the current pose
@@ -167,9 +175,9 @@ public class Drive extends SubsystemBase {
   }
 
   /** Runs forwards at the commanded voltage. */
-  public void runCharacterizationVolts(double volts) {
+  public void runCharacterizationVolts(Measure<Voltage> voltageMeasure) {
     for (int i = 0; i < 4; i++) {
-      modules[i].runCharacterization(volts);
+      modules[i].runCharacterization(voltageMeasure.in(Volts));
     }
   }
 
@@ -177,8 +185,29 @@ public class Drive extends SubsystemBase {
   public double getCharacterizationVelocity() {
     double driveVelocityAverage = 0.0;
     for (var module : modules) {
-      driveVelocityAverage += module.getCharacterizationVelocity();
+      driveVelocityAverage += module.getCharacterizationVelocityRadPerSec();
     }
+    return driveVelocityAverage / 4.0;
+  }
+
+  /** Returns the average drive velocity in radians/sec. */
+  public double populateCharacterizationData(SysIdRoutineLog routineLog) {
+    Measure<Velocity<Distance>> driveVelocityAverage = MetersPerSecond.zero();
+    Measure<Velocity<Distance>> drivePositionAverage = MetersPerSecond.zero();
+    // fixme: idk what to do here?
+    //  whats position and whats velocity in this situation
+
+    for (var module : modules) {
+      var motor = routineLog.motor("DriveMotor #"+module.getIndex());
+      motor.angularVelocity(module.getCharacterizationVelocity());
+      var linearPosition = Meters.of(module.getPositionMeters());
+      motor.linearPosition(linearPosition);
+      var linearVelocity = MetersPerSecond.of(module.getVelocityMetersPerSec())
+      motor.linearVelocity(linearVelocity);
+
+      driveVelocityAverage = driveVelocityAverage.plus(linearVelocity);
+    }
+
     return driveVelocityAverage / 4.0;
   }
 

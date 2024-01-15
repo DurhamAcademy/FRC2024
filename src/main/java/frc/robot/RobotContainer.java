@@ -13,15 +13,22 @@
 
 package frc.robot;
 
+import static edu.wpi.first.units.BaseUnits.Voltage;
+import static edu.wpi.first.units.Units.*;
+
 import com.pathplanner.lib.auto.AutoBuilder;
 import com.pathplanner.lib.auto.NamedCommands;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
+import edu.wpi.first.units.Units;
 import edu.wpi.first.wpilibj.GenericHID;
 import edu.wpi.first.wpilibj.XboxController;
-import edu.wpi.first.wpilibj2.command.Command;
-import edu.wpi.first.wpilibj2.command.Commands;
+import edu.wpi.first.wpilibj2.command.*;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
+import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
+import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine.Config;
+import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine.Direction;
+import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine.Mechanism;
 import frc.robot.commands.DriveCommands;
 import frc.robot.commands.FeedForwardCharacterization;
 import frc.robot.subsystems.drive.*;
@@ -29,6 +36,9 @@ import frc.robot.subsystems.flywheel.Flywheel;
 import frc.robot.subsystems.flywheel.FlywheelIO;
 import frc.robot.subsystems.flywheel.FlywheelIOSim;
 import frc.robot.subsystems.flywheel.FlywheelIOSparkMax;
+
+import java.util.HashMap;
+import java.util.concurrent.atomic.AtomicReference;
 import org.littletonrobotics.junction.networktables.LoggedDashboardChooser;
 import org.littletonrobotics.junction.networktables.LoggedDashboardNumber;
 
@@ -58,7 +68,7 @@ public class RobotContainer {
         // Real robot, instantiate hardware IO implementations
         drive =
             new Drive(
-                    new GyroIOPigeon2(),
+                new GyroIOPigeon2(),
                 new ModuleIOSparkMax(0),
                 new ModuleIOSparkMax(1),
                 new ModuleIOSparkMax(2),
@@ -120,6 +130,8 @@ public class RobotContainer {
     configureButtonBindings();
   }
 
+  public static boolean sysIDMode = true;
+
   /**
    * Use this method to define your button->command mappings. Buttons can be created by
    * instantiating a {@link GenericHID} or one of its subclasses ({@link
@@ -127,28 +139,62 @@ public class RobotContainer {
    * edu.wpi.first.wpilibj2.command.button.JoystickButton}.
    */
   private void configureButtonBindings() {
-    drive.setDefaultCommand(
-        DriveCommands.joystickDrive(
-            drive,
-            () -> -controller.getLeftY(),
-            () -> -controller.getLeftX(),
-            () -> -controller.getRightX()));
-    controller.x().onTrue(Commands.runOnce(drive::stopWithX, drive));
-    controller
-        .b()
-        .onTrue(
-            Commands.runOnce(
-                    () ->
-                        drive.setPose(
-                            new Pose2d(drive.getPose().getTranslation(), new Rotation2d())),
-                    drive)
-                .ignoringDisable(true));
-    controller
-        .a()
-        .whileTrue(
-            Commands.startEnd(
-                () -> flywheel.runVelocity(flywheelSpeedInput.get()), flywheel::stop, flywheel));
+    if (!sysIDMode) {
+      drive.setDefaultCommand(
+          DriveCommands.joystickDrive(
+              drive,
+              () -> -controller.getLeftY(),
+              () -> -controller.getLeftX(),
+              () -> -controller.getRightX()));
+      controller.x().onTrue(Commands.runOnce(drive::stopWithX, drive));
+      controller
+          .b()
+          .onTrue(
+              Commands.runOnce(
+                      () ->
+                          drive.setPose(
+                              new Pose2d(drive.getPose().getTranslation(), new Rotation2d())),
+                      drive)
+                  .ignoringDisable(true));
+      controller
+          .a()
+          .whileTrue(
+              Commands.startEnd(
+                  () -> flywheel.runVelocity(flywheelSpeedInput.get()), flywheel::stop, flywheel));
+    } else {
+      drive.setDefaultCommand(
+              DriveCommands.joystickDrive(
+                      drive,
+                      () -> -controller.getLeftY(),
+                      () -> -controller.getLeftX(),
+                      () -> -controller.getRightX()));
+      Double currentVoltage = 0.0;
+      var drivetrainSysID =
+          new SysIdRoutine(
+              new Config(Voltage.per(Units.Second).of(.5), Voltage.of(8.0), Seconds.of(1.0)),
+              new Mechanism(
+                  drive::runCharacterizationVolts,
+                  (routineLogConsumer) -> {
+                    var FL = routineLogConsumer.motor("Drivetrain");
+                    FL.angularVelocity(RadiansPerSecond.of(drive.getCharacterizationVelocity()));
+                  },
+                  drive,
+                  "DriveLinear"));
+      controller.x()
+              .whileTrue(drivetrainSysID.dynamic(Direction.kForward)    )
+              .onFalse  (Commands.runOnce(drive::stopWithX, drive)      );
+      controller.y()
+              .whileTrue(drivetrainSysID.dynamic(Direction.kReverse)    )
+              .onFalse  (Commands.runOnce(drive::stopWithX, drive)      );
+      controller.a()
+              .whileTrue(drivetrainSysID.quasistatic(Direction.kForward))
+              .onFalse  (Commands.runOnce(drive::stopWithX, drive)      );
+      controller.b()
+              .whileTrue(drivetrainSysID.quasistatic(Direction.kReverse))
+              .onFalse  (Commands.runOnce(drive::stopWithX, drive)      );
+    }
   }
+
 
   /**
    * Use this to pass the autonomous command to the main {@link Robot} class.
