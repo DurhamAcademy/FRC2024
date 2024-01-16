@@ -13,6 +13,8 @@
 
 package frc.robot.subsystems.drive;
 
+import static edu.wpi.first.units.Units.*;
+
 import com.pathplanner.lib.auto.AutoBuilder;
 import com.pathplanner.lib.pathfinding.Pathfinding;
 import com.pathplanner.lib.util.HolonomicPathFollowerConfig;
@@ -27,10 +29,7 @@ import edu.wpi.first.math.kinematics.SwerveDriveKinematics;
 import edu.wpi.first.math.kinematics.SwerveModulePosition;
 import edu.wpi.first.math.kinematics.SwerveModuleState;
 import edu.wpi.first.math.util.Units;
-import edu.wpi.first.units.Distance;
-import edu.wpi.first.units.Measure;
-import edu.wpi.first.units.Velocity;
-import edu.wpi.first.units.Voltage;
+import edu.wpi.first.units.*;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.DriverStation.Alliance;
 import edu.wpi.first.wpilibj.sysid.SysIdRoutineLog;
@@ -38,8 +37,6 @@ import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.util.LocalADStarAK;
 import org.littletonrobotics.junction.AutoLogOutput;
 import org.littletonrobotics.junction.Logger;
-
-import static edu.wpi.first.units.Units.*;
 
 public class Drive extends SubsystemBase {
   private static final double MAX_LINEAR_SPEED = Units.feetToMeters(14.5);
@@ -191,24 +188,56 @@ public class Drive extends SubsystemBase {
   }
 
   /** Returns the average drive velocity in radians/sec. */
-  public double populateCharacterizationData(SysIdRoutineLog routineLog) {
-    Measure<Velocity<Distance>> driveVelocityAverage = MetersPerSecond.zero();
-    Measure<Velocity<Distance>> drivePositionAverage = MetersPerSecond.zero();
+  public void populateDriveCharacterizationData(SysIdRoutineLog routineLog) {
+    Measure<Velocity<Angle>> driveVelocityAverage = RadiansPerSecond.zero();
+    Measure<Angle> drivePositionAverage = Radians.zero();
     // fixme: idk what to do here?
     //  whats position and whats velocity in this situation
 
     for (var module : modules) {
-      var motor = routineLog.motor("DriveMotor #"+module.getIndex());
-      motor.angularVelocity(module.getCharacterizationVelocity());
-      var linearPosition = Meters.of(module.getPositionMeters());
-      motor.linearPosition(linearPosition);
-      var linearVelocity = MetersPerSecond.of(module.getVelocityMetersPerSec())
-      motor.linearVelocity(linearVelocity);
+      var motor = routineLog.motor("DriveMotor #" + module.getIndex());
+      var angularPosition = module.getCharacterizationDrivePosition();
+      var angularVelocity = module.getCharacterizationDriveVelocity();
+      motor.angularPosition(angularPosition);
+      motor.angularVelocity(angularVelocity);
 
-      driveVelocityAverage = driveVelocityAverage.plus(linearVelocity);
+      drivePositionAverage = drivePositionAverage.plus(angularPosition);
+      driveVelocityAverage = driveVelocityAverage.plus(angularVelocity);
     }
+    var averageDriveMotor = routineLog.motor("Average DriveMotor");
+    averageDriveMotor.angularVelocity(driveVelocityAverage.divide(4.0));
+    averageDriveMotor.angularPosition(drivePositionAverage.divide(4.0));
+  }
 
-    return driveVelocityAverage / 4.0;
+  public void populateTurnCharacterizationData(SysIdRoutineLog routineLog) {
+    Measure<Velocity<Angle>> driveVelocityAverage = RadiansPerSecond.zero();
+    Measure<Angle> drivePositionAverage = Radians.zero();
+    // fixme: idk what to do here?
+    //  whats position and whats velocity in this situation
+
+    for (var module : modules) {
+      var motor = routineLog.motor("TurnMotor #" + module.getIndex());
+      var angularPosition = module.getCharacterizationTurnPosition();
+      var angularVelocity = module.getCharacterizationTurnVelocity();
+      motor.angularPosition(angularPosition);
+      motor.angularVelocity(angularVelocity);
+
+      driveVelocityAverage = driveVelocityAverage.plus(angularVelocity);
+      drivePositionAverage = drivePositionAverage.plus(angularPosition);
+    }
+    var averageDriveMotor = routineLog.motor("Average TurnMotor");
+    averageDriveMotor.angularVelocity(driveVelocityAverage.divide(4.0));
+    averageDriveMotor.angularPosition(drivePositionAverage.divide(4.0));
+  }
+
+  public void populateTurnCharacterizationData(SysIdRoutineLog routineLog, int moduleId) {
+    var module = modules[moduleId];
+    var motor = routineLog.motor("TurnMotor #" + module.getIndex());
+    var angularPosition = module.getCharacterizationTurnPosition();
+    var angularVelocity = module.getCharacterizationTurnVelocity();
+    motor.angularVelocity(module.getCharacterizationDriveVelocity());
+    motor.angularPosition(angularPosition);
+    motor.angularVelocity(angularVelocity);
   }
 
   /** Returns the module states (turn angles and drive velocities) for all of the modules. */

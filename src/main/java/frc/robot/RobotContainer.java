@@ -30,15 +30,11 @@ import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine.Config;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine.Direction;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine.Mechanism;
 import frc.robot.commands.DriveCommands;
-import frc.robot.commands.FeedForwardCharacterization;
 import frc.robot.subsystems.drive.*;
 import frc.robot.subsystems.flywheel.Flywheel;
 import frc.robot.subsystems.flywheel.FlywheelIO;
 import frc.robot.subsystems.flywheel.FlywheelIOSim;
 import frc.robot.subsystems.flywheel.FlywheelIOSparkMax;
-
-import java.util.HashMap;
-import java.util.concurrent.atomic.AtomicReference;
 import org.littletonrobotics.junction.networktables.LoggedDashboardChooser;
 import org.littletonrobotics.junction.networktables.LoggedDashboardNumber;
 
@@ -117,20 +113,27 @@ public class RobotContainer {
     autoChooser = new LoggedDashboardChooser<>("Auto Choices", AutoBuilder.buildAutoChooser());
 
     // Set up feedforward characterization
-    autoChooser.addOption(
-        "Drive FF Characterization",
-        new FeedForwardCharacterization(
-            drive, drive::runCharacterizationVolts, drive::getCharacterizationVelocity));
-    autoChooser.addOption(
-        "Flywheel FF Characterization",
-        new FeedForwardCharacterization(
-            flywheel, flywheel::runVolts, flywheel::getCharacterizationVelocity));
+    //    autoChooser.addOption(
+    //        "Drive FF Characterization",
+    //        new FeedForwardCharacterization(
+    //            drive, drive::runCharacterizationVolts, drive::getCharacterizationDriveVelocity));
+    //    autoChooser.addOption(
+    //        "Flywheel FF Characterization",
+    //        new FeedForwardCharacterization(
+    //            flywheel, flywheel::runVolts, flywheel::getCharacterizationDriveVelocity));
 
     // Configure the button bindings
     configureButtonBindings();
   }
 
-  public static boolean sysIDMode = true;
+  public static SysIDMode sysIDMode = SysIDMode.Disabled;
+
+  enum SysIDMode {
+    Disabled,
+    DriveMotors,
+    TurnMotors,
+    EverythingElse
+  }
 
   /**
    * Use this method to define your button->command mappings. Buttons can be created by
@@ -139,62 +142,85 @@ public class RobotContainer {
    * edu.wpi.first.wpilibj2.command.button.JoystickButton}.
    */
   private void configureButtonBindings() {
-    if (!sysIDMode) {
-      drive.setDefaultCommand(
-          DriveCommands.joystickDrive(
-              drive,
-              () -> -controller.getLeftY(),
-              () -> -controller.getLeftX(),
-              () -> -controller.getRightX()));
-      controller.x().onTrue(Commands.runOnce(drive::stopWithX, drive));
-      controller
-          .b()
-          .onTrue(
-              Commands.runOnce(
-                      () ->
-                          drive.setPose(
-                              new Pose2d(drive.getPose().getTranslation(), new Rotation2d())),
-                      drive)
-                  .ignoringDisable(true));
-      controller
-          .a()
-          .whileTrue(
-              Commands.startEnd(
-                  () -> flywheel.runVelocity(flywheelSpeedInput.get()), flywheel::stop, flywheel));
-    } else {
-      drive.setDefaultCommand(
-              DriveCommands.joystickDrive(
-                      drive,
-                      () -> -controller.getLeftY(),
-                      () -> -controller.getLeftX(),
-                      () -> -controller.getRightX()));
-      Double currentVoltage = 0.0;
-      var drivetrainSysID =
-          new SysIdRoutine(
-              new Config(Voltage.per(Units.Second).of(.5), Voltage.of(8.0), Seconds.of(1.0)),
-              new Mechanism(
-                  drive::runCharacterizationVolts,
-                  (routineLogConsumer) -> {
-                    var FL = routineLogConsumer.motor("Drivetrain");
-                    FL.angularVelocity(RadiansPerSecond.of(drive.getCharacterizationVelocity()));
-                  },
-                  drive,
-                  "DriveLinear"));
-      controller.x()
-              .whileTrue(drivetrainSysID.dynamic(Direction.kForward)    )
-              .onFalse  (Commands.runOnce(drive::stopWithX, drive)      );
-      controller.y()
-              .whileTrue(drivetrainSysID.dynamic(Direction.kReverse)    )
-              .onFalse  (Commands.runOnce(drive::stopWithX, drive)      );
-      controller.a()
-              .whileTrue(drivetrainSysID.quasistatic(Direction.kForward))
-              .onFalse  (Commands.runOnce(drive::stopWithX, drive)      );
-      controller.b()
-              .whileTrue(drivetrainSysID.quasistatic(Direction.kReverse))
-              .onFalse  (Commands.runOnce(drive::stopWithX, drive)      );
+    switch (sysIDMode) {
+      case Disabled:
+        drive.setDefaultCommand(
+            DriveCommands.joystickDrive(
+                drive,
+                () -> -controller.getLeftY(),
+                () -> -controller.getLeftX(),
+                () -> -controller.getRightX()));
+        controller.x().onTrue(Commands.runOnce(drive::stopWithX, drive));
+        controller
+            .b()
+            .onTrue(
+                Commands.runOnce(
+                        () ->
+                            drive.setPose(
+                                new Pose2d(drive.getPose().getTranslation(), new Rotation2d())),
+                        drive)
+                    .ignoringDisable(true));
+        controller
+            .a()
+            .whileTrue(
+                Commands.startEnd(
+                    () -> flywheel.runVelocity(flywheelSpeedInput.get()), flywheel::stop, flywheel));
+        break;
+      case DriveMotors:
+        drive.setDefaultCommand(
+            DriveCommands.joystickDrive(
+                drive,
+                () -> -controller.getLeftY(),
+                () -> -controller.getLeftX(),
+                () -> -controller.getRightX()));
+        var drivetrainDriveSysID =
+                new SysIdRoutine(
+                        new Config(Voltage.per(Units.Second).of(.5), Voltage.of(8.0), Seconds.of(12.0)),
+                        new Mechanism(
+                                drive::runCharacterizationVolts,
+                                drive::populateDriveCharacterizationData,
+                                drive,
+                                "DrivetrainDriveMotors"));
+        controller
+                .x()
+                .whileTrue(drivetrainDriveSysID.dynamic(Direction.kForward))
+                .onFalse(Commands.runOnce(drive::stopWithX, drive));
+        controller
+                .y()
+                .whileTrue(drivetrainDriveSysID.dynamic(Direction.kReverse))
+                .onFalse(Commands.runOnce(drive::stopWithX, drive));
+        controller
+                .a()
+                .whileTrue(drivetrainDriveSysID.quasistatic(Direction.kForward).withTimeout(2.0))
+                .onFalse(Commands.runOnce(drive::stopWithX, drive));
+        controller
+                .b()
+                .whileTrue(drivetrainDriveSysID.quasistatic(Direction.kReverse).withTimeout(2.0))
+                .onFalse(Commands.runOnce(drive::stopWithX, drive));
+        break;
+      case TurnMotors:
+        var drivetrainTurnSysID =
+                new SysIdRoutine(
+                        new Config(Voltage.per(Units.Second).of(.5), Voltage.of(8.0), Seconds.of(12.0)),
+                        new Mechanism(
+                                drive::runCharacterizationVolts,
+                                drive::populateTurnCharacterizationData,
+                                drive,
+                                "DrivetrainDriveMotors"));
+        controller
+                .x()
+                .whileTrue(drivetrainTurnSysID.dynamic(Direction.kForward)
+                        .andThen(drivetrainTurnSysID.dynamic(Direction.kReverse))
+                        .andThen(drivetrainTurnSysID.quasistatic(Direction.kForward))
+                        .andThen(drivetrainTurnSysID.quasistatic(Direction.kReverse))
+                        .andThen(Commands.runOnce(drive::stopWithX, drive))
+                )
+                .onFalse(Commands.runOnce(drive::stopWithX, drive));
+        break;
+      case EverythingElse:
+        break;
     }
   }
-
 
   /**
    * Use this to pass the autonomous command to the main {@link Robot} class.

@@ -185,8 +185,20 @@ public class Module {
   }
 
   /** Returns the drive velocity unitless. */
-  public Measure<Velocity<Angle>> getCharacterizationVelocity() {
+  public Measure<Angle> getCharacterizationDrivePosition() {
+    return edu.wpi.first.units.Units.Radians.of(inputs.drivePositionRad);
+  }
+  /** Returns the turn velocity unitless. */
+  public Measure<Angle> getCharacterizationTurnPosition() {
+    return edu.wpi.first.units.Units.Radians.of(inputs.turnPosition.getRadians());
+  }
+  /** Returns the drive velocity unitless. */
+  public Measure<Velocity<Angle>> getCharacterizationDriveVelocity() {
     return edu.wpi.first.units.Units.RadiansPerSecond.of(inputs.driveVelocityRadPerSec);
+  }
+  /** Returns the turn velocity unitless. */
+  public Measure<Velocity<Angle>> getCharacterizationTurnVelocity() {
+    return edu.wpi.first.units.Units.RadiansPerSecond.of(inputs.turnVelocityRadPerSec);
   }
 
   public int getIndex() {
