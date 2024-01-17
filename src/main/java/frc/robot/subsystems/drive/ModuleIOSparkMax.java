@@ -48,6 +48,7 @@ public class ModuleIOSparkMax implements ModuleIO {
 
   @SuppressWarnings("FieldCanBeLocal")
   private final boolean isTurnMotorInverted = true;
+
   private final Rotation2d absoluteEncoderOffset;
 
   public ModuleIOSparkMax(int index) {
