@@ -3,6 +3,7 @@ package frc.robot.subsystems.intake;
 import org.littletonrobotics.junction.AutoLog;
 
 public interface IntakeIO {
+
   @AutoLog
   public static class IntakeIOInputs {
     public double armPositionRad = 0.0;
@@ -12,6 +13,7 @@ public interface IntakeIO {
     public double wheelVelocityRadPerSec;
     public double wheelAppliedVolts = 0.0;
     public double[] wheelCurrentAmps = new double[] {};
+
   }
 
   /** Updates the set of loggable inputs. */
