@@ -164,9 +164,7 @@ public class Module {
     return new SwerveModulePosition(getPositionMeters(), getAngle());
   }
 
-  /**
-   * Returns the module position delta since the last call to this method.
-   */
+  /** Returns the module position delta since the last call to this method. */
   public SwerveModulePosition getPositionDelta() {
     var delta = new SwerveModulePosition(getPositionMeters() - lastPositionMeters, getAngle());
     lastPositionMeters = getPositionMeters();
