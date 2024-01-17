@@ -11,13 +11,20 @@ public class IntakeIOSim implements IntakeIO {
   private FlywheelSim wheelSim = new FlywheelSim(DCMotor.getNEO(1), 3, .01);
   private SingleJointedArmSim armSim =
       new SingleJointedArmSim(
-          DCMotor.getNEO(1), 100,   0.13, Units.inchesToMeters(11.875), PI * .6, PI * -.25, true, -.2);
+          DCMotor.getNEO(1),
+          100,
+          0.13,
+          Units.inchesToMeters(11.875),
+          PI * .6,
+          PI * -.25,
+          true,
+          -.2);
   private double armVoltage = 0.0;
   private double wheelVoltage = 0.0;
 
   @Override
   public void updateInputs(IntakeIOInputs inputs) {
-    inputs.armCurrentAmps = new double[]{armSim.getCurrentDrawAmps()};
+    inputs.armCurrentAmps = new double[] {armSim.getCurrentDrawAmps()};
     inputs.armAppliedVolts = armVoltage;
     inputs.armPositionRad = armSim.getAngleRads();
     inputs.armVelocityRadPerSec = armSim.getVelocityRadPerSec();
@@ -27,16 +34,15 @@ public class IntakeIOSim implements IntakeIO {
     inputs.wheelVelocityRadPerSec = wheelSim.getAngularVelocityRadPerSec();
   }
 
-
   @Override
   public void setArmVoltage(double volts) {
     armVoltage = volts;
-    armSim.setInputVoltage(volts);
+    armSim.setInputVoltage(armVoltage);
   }
 
   @Override
-  public void setWheelVoltage(double volts) {
-    wheelVoltage = volts;
-    wheelSim.setInputVoltage(volts);
+  public void setRollerPercent(double percent) {
+    wheelVoltage = percent * 12.0;
+    wheelSim.setInputVoltage(wheelVoltage);
   }
 }

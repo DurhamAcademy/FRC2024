@@ -4,11 +4,13 @@ import static edu.wpi.first.units.Units.*;
 
 import edu.wpi.first.math.controller.ArmFeedforward;
 import edu.wpi.first.math.controller.ProfiledPIDController;
+import edu.wpi.first.math.geometry.Rotation2d;
+import edu.wpi.first.math.geometry.Rotation3d;
 import edu.wpi.first.math.trajectory.TrapezoidProfile.Constraints;
+import edu.wpi.first.units.Voltage;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
-import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
-import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine.Config;
 import frc.robot.Constants;
+import org.littletonrobotics.junction.Logger;
 
 public class Intake extends SubsystemBase {
   ProfiledPIDController armFB;
@@ -46,20 +48,23 @@ public class Intake extends SubsystemBase {
     }
   }
 
-  double position = 0.0;
-  double wheelVoltage = 0.0;
+  //double position = 0.0;
+  Rotation2d armTarget = Rotation2d.fromDegrees(0);
+
   @Override
   public void periodic() {
-      io.updateInputs(inputs);
-      io.setArmVoltage(armFB.calculate(inputs.armPositionRad) + armFF.calculate(inputs.armPositionRad, inputs.armVelocityRadPerSec));
-      io.setWheelVoltage(wheelVoltage);
+    io.updateInputs(inputs);
+    Logger.processInputs("Intake", inputs);
+    io.setArmVoltage(
+        armFB.calculate(inputs.armPositionRad, armTarget.getRadians())
+            + armFF.calculate(inputs.armPositionRad, inputs.armVelocityRadPerSec));
   }
 
-  public void setIntakePosition(double position) {
-    armFB.setGoal(position);
+  public void setIntakePosition(Rotation2d position) {
+    armTarget = position;
   }
 
-  public void setIntakeMotorPercentage(double percentage) {
-    wheelVoltage = edu.wpi.first.hal.PowerJNI.getVinVoltage()*percentage;
+  public void setRollerPercentage(double percentage) {
+     io.setRollerPercent(percentage);
   }
 }

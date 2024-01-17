@@ -21,6 +21,5 @@ public interface IntakeIO {
   public default void setArmVoltage(double volts) {}
 
   /** Set intake wheel voltage. */
-  public default void setWheelVoltage(double volts) {}
-
+  public default void setRollerPercent(double percent) {}
 }
