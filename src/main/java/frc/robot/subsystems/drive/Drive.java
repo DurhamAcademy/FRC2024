@@ -235,7 +235,6 @@ public class Drive extends SubsystemBase {
     var motor = routineLog.motor("TurnMotor #" + module.getIndex());
     var angularPosition = module.getCharacterizationTurnPosition();
     var angularVelocity = module.getCharacterizationTurnVelocity();
-    motor.angularVelocity(module.getCharacterizationDriveVelocity());
     motor.angularPosition(angularPosition);
     motor.angularVelocity(angularVelocity);
   }
