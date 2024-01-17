@@ -14,6 +14,8 @@
 package frc.robot.subsystems.drive;
 
 import com.pathplanner.lib.auto.AutoBuilder;
+import com.pathplanner.lib.path.GoalEndState;
+import com.pathplanner.lib.path.PathConstraints;
 import com.pathplanner.lib.pathfinding.Pathfinding;
 import com.pathplanner.lib.util.HolonomicPathFollowerConfig;
 import com.pathplanner.lib.util.PathPlannerLogging;
@@ -82,6 +84,9 @@ public class Drive extends SubsystemBase {
     Pathfinding.setDynamicObstacles(
         List.of(new Pair(new Translation2d(1.5, 1.5), new Translation2d(2.0, 3.0))),
         new Translation2d(1.0, 2.0));
+    PathPlannerLogging.logActivePath(
+        Pathfinding.getCurrentPath(
+            new PathConstraints(2.5, 2.5, 2.5, 2.5), new GoalEndState(0.0, new Rotation2d(0.0))));
     //noinspection ToArrayCallWithZeroLengthArrayArgument
     PathPlannerLogging.setLogActivePathCallback(
         (activePath) ->
