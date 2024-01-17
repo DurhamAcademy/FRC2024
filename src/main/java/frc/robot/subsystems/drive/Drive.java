@@ -13,6 +13,8 @@
 
 package frc.robot.subsystems.drive;
 
+import static edu.wpi.first.units.Units.*;
+
 import com.pathplanner.lib.auto.AutoBuilder;
 import com.pathplanner.lib.pathfinding.Pathfinding;
 import com.pathplanner.lib.util.HolonomicPathFollowerConfig;
@@ -27,8 +29,10 @@ import edu.wpi.first.math.kinematics.SwerveDriveKinematics;
 import edu.wpi.first.math.kinematics.SwerveModulePosition;
 import edu.wpi.first.math.kinematics.SwerveModuleState;
 import edu.wpi.first.math.util.Units;
+import edu.wpi.first.units.*;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.DriverStation.Alliance;
+import edu.wpi.first.wpilibj.sysid.SysIdRoutineLog;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.util.LocalADStarAK;
 import org.littletonrobotics.junction.AutoLogOutput;
@@ -77,10 +81,11 @@ public class Drive extends SubsystemBase {
     Pathfinding.setPathfinder(new LocalADStarAK());
     //noinspection ToArrayCallWithZeroLengthArrayArgument
     PathPlannerLogging.setLogActivePathCallback(
-            (activePath) -> Logger.recordOutput(
-                    "Odometry/Trajectory", activePath.toArray(new Pose2d[activePath.size()])));
+        (activePath) ->
+            Logger.recordOutput(
+                "Odometry/Trajectory", activePath.toArray(new Pose2d[activePath.size()])));
     PathPlannerLogging.setLogTargetPoseCallback(
-            (targetPose) -> Logger.recordOutput("Odometry/TrajectorySetpoint", targetPose));
+        (targetPose) -> Logger.recordOutput("Odometry/TrajectorySetpoint", targetPose));
   }
 
   public void periodic() {
@@ -117,8 +122,8 @@ public class Drive extends SubsystemBase {
       // If the gyro is connected, replace the theta component of the twist
       // with the change in angle since the last loop cycle.
       twist =
-              new Twist2d(
-                      twist.dx, twist.dy, gyroInputs.yawPosition.minus(lastGyroRotation).getRadians());
+          new Twist2d(
+              twist.dx, twist.dy, gyroInputs.yawPosition.minus(lastGyroRotation).getRadians());
       lastGyroRotation = gyroInputs.yawPosition;
     }
     // Apply the twist (change since last loop cycle) to the current pose
@@ -167,9 +172,9 @@ public class Drive extends SubsystemBase {
   }
 
   /** Runs forwards at the commanded voltage. */
-  public void runCharacterizationVolts(double volts) {
+  public void runCharacterizationVolts(Measure<Voltage> voltageMeasure) {
     for (int i = 0; i < 4; i++) {
-      modules[i].runCharacterization(volts);
+      modules[i].runCharacterization(voltageMeasure.in(Volts));
     }
   }
 
@@ -177,9 +182,48 @@ public class Drive extends SubsystemBase {
   public double getCharacterizationVelocity() {
     double driveVelocityAverage = 0.0;
     for (var module : modules) {
-      driveVelocityAverage += module.getCharacterizationVelocity();
+      driveVelocityAverage += module.getCharacterizationVelocityRadPerSec();
     }
     return driveVelocityAverage / 4.0;
+  }
+
+  /** Returns the average drive velocity in radians/sec. */
+  public void populateDriveCharacterizationData(SysIdRoutineLog routineLog) {
+    Measure<Velocity<Angle>> driveVelocityAverage = RadiansPerSecond.zero();
+    Measure<Angle> drivePositionAverage = Radians.zero();
+
+    for (var module : modules) {
+      var motor = routineLog.motor("DriveMotor #" + module.getIndex());
+      var angularPosition = module.getCharacterizationDrivePosition();
+      var angularVelocity = module.getCharacterizationDriveVelocity();
+      motor.angularPosition(angularPosition);
+      motor.angularVelocity(angularVelocity);
+
+      drivePositionAverage = drivePositionAverage.plus(angularPosition);
+      driveVelocityAverage = driveVelocityAverage.plus(angularVelocity);
+    }
+    var averageDriveMotor = routineLog.motor("Average DriveMotor");
+    averageDriveMotor.angularVelocity(driveVelocityAverage.divide(4.0));
+    averageDriveMotor.angularPosition(drivePositionAverage.divide(4.0));
+  }
+
+  public void populateTurnCharacterizationData(SysIdRoutineLog routineLog) {
+    Measure<Velocity<Angle>> driveVelocityAverage = RadiansPerSecond.zero();
+    Measure<Angle> drivePositionAverage = Radians.zero();
+
+    for (var module : modules) {
+      var motor = routineLog.motor("TurnMotor #" + module.getIndex());
+      var angularPosition = module.getCharacterizationTurnPosition();
+      var angularVelocity = module.getCharacterizationTurnVelocity();
+      motor.angularPosition(angularPosition);
+      motor.angularVelocity(angularVelocity);
+
+      driveVelocityAverage = driveVelocityAverage.plus(angularVelocity);
+      drivePositionAverage = drivePositionAverage.plus(angularPosition);
+    }
+    var averageDriveMotor = routineLog.motor("Average TurnMotor");
+    averageDriveMotor.angularVelocity(driveVelocityAverage.divide(4.0));
+    averageDriveMotor.angularPosition(drivePositionAverage.divide(4.0));
   }
 
   /** Returns the module states (turn angles and drive velocities) for all of the modules. */
