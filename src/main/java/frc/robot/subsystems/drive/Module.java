@@ -13,6 +13,8 @@
 
 package frc.robot.subsystems.drive;
 
+import static edu.wpi.first.units.Units.*;
+
 import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.controller.SimpleMotorFeedforward;
 import edu.wpi.first.math.geometry.Rotation2d;
@@ -22,6 +24,7 @@ import edu.wpi.first.math.util.Units;
 import edu.wpi.first.units.Angle;
 import edu.wpi.first.units.Measure;
 import edu.wpi.first.units.Velocity;
+import edu.wpi.first.units.Voltage;
 import frc.robot.Constants;
 import org.littletonrobotics.junction.Logger;
 
@@ -48,6 +51,10 @@ public class Module {
     // separate robot with different tuning)
     switch (Constants.currentMode) {
       case REAL:
+        driveFeedforward = new SimpleMotorFeedforward(0.1, 0.13);
+        driveFeedback = new PIDController(0.05, 0.0, 0.0);
+        turnFeedback = new PIDController(7.0, 0.0, 0.0);
+        break;
       case REPLAY:
         driveFeedforward = new SimpleMotorFeedforward(0.1, 0.13);
         driveFeedback = new PIDController(0.05, 0.0, 0.0);
@@ -186,19 +193,27 @@ public class Module {
 
   /** Returns the drive velocity unitless. */
   public Measure<Angle> getCharacterizationDrivePosition() {
-    return edu.wpi.first.units.Units.Radians.of(inputs.drivePositionRad);
+    return Radians.of(inputs.drivePositionRad);
   }
   /** Returns the turn velocity unitless. */
   public Measure<Angle> getCharacterizationTurnPosition() {
-    return edu.wpi.first.units.Units.Radians.of(inputs.turnPosition.getRadians());
+    return Radians.of(inputs.turnPosition.getRadians());
   }
   /** Returns the drive velocity unitless. */
   public Measure<Velocity<Angle>> getCharacterizationDriveVelocity() {
-    return edu.wpi.first.units.Units.RadiansPerSecond.of(inputs.driveVelocityRadPerSec);
+    return RadiansPerSecond.of(inputs.driveVelocityRadPerSec);
   }
   /** Returns the turn velocity unitless. */
   public Measure<Velocity<Angle>> getCharacterizationTurnVelocity() {
-    return edu.wpi.first.units.Units.RadiansPerSecond.of(inputs.turnVelocityRadPerSec);
+    return RadiansPerSecond.of(inputs.turnVelocityRadPerSec);
+  }
+
+  public Measure<Voltage> getCharacterizationDriveAppliedVoltage() {
+    return Volts.of(inputs.driveAppliedVolts);
+  }
+
+  public Measure<Voltage> getCharacterizationTurnAppliedVoltage() {
+    return Volts.of(inputs.turnAppliedVolts);
   }
 
   public int getIndex() {

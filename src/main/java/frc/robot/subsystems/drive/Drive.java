@@ -50,6 +50,7 @@ public class Drive extends SubsystemBase {
   private final GyroIOInputsAutoLogged gyroInputs = new GyroIOInputsAutoLogged();
   private final Module[] modules = new Module[4]; // FL, FR, BL, BR
 
+  @SuppressWarnings("FieldMayBeFinal")
   private SwerveDriveKinematics kinematics = new SwerveDriveKinematics(getModuleTranslations());
   private Pose2d pose = new Pose2d();
   private Rotation2d lastGyroRotation = new Rotation2d();
@@ -191,39 +192,49 @@ public class Drive extends SubsystemBase {
   public void populateDriveCharacterizationData(SysIdRoutineLog routineLog) {
     Measure<Velocity<Angle>> driveVelocityAverage = RadiansPerSecond.zero();
     Measure<Angle> drivePositionAverage = Radians.zero();
+    Measure<Voltage> driveVoltageAverage = Volts.zero();
 
     for (var module : modules) {
       var motor = routineLog.motor("DriveMotor #" + module.getIndex());
       var angularPosition = module.getCharacterizationDrivePosition();
       var angularVelocity = module.getCharacterizationDriveVelocity();
+      var voltage = module.getCharacterizationDriveAppliedVoltage();
       motor.angularPosition(angularPosition);
       motor.angularVelocity(angularVelocity);
+      motor.voltage(voltage);
 
       drivePositionAverage = drivePositionAverage.plus(angularPosition);
       driveVelocityAverage = driveVelocityAverage.plus(angularVelocity);
+      driveVoltageAverage = driveVoltageAverage.plus(voltage);
     }
     var averageDriveMotor = routineLog.motor("Average DriveMotor");
     averageDriveMotor.angularVelocity(driveVelocityAverage.divide(4.0));
     averageDriveMotor.angularPosition(drivePositionAverage.divide(4.0));
+    averageDriveMotor.voltage(driveVoltageAverage.divide(4.0));
   }
 
   public void populateTurnCharacterizationData(SysIdRoutineLog routineLog) {
     Measure<Velocity<Angle>> driveVelocityAverage = RadiansPerSecond.zero();
     Measure<Angle> drivePositionAverage = Radians.zero();
+    Measure<Voltage> driveVoltageAverage = Volts.zero();
 
     for (var module : modules) {
       var motor = routineLog.motor("TurnMotor #" + module.getIndex());
       var angularPosition = module.getCharacterizationTurnPosition();
       var angularVelocity = module.getCharacterizationTurnVelocity();
+      var voltage = module.getCharacterizationDriveAppliedVoltage();
       motor.angularPosition(angularPosition);
       motor.angularVelocity(angularVelocity);
+      motor.voltage(voltage);
 
       driveVelocityAverage = driveVelocityAverage.plus(angularVelocity);
       drivePositionAverage = drivePositionAverage.plus(angularPosition);
+      driveVoltageAverage = driveVoltageAverage.plus(voltage);
     }
     var averageDriveMotor = routineLog.motor("Average TurnMotor");
     averageDriveMotor.angularVelocity(driveVelocityAverage.divide(4.0));
     averageDriveMotor.angularPosition(drivePositionAverage.divide(4.0));
+    averageDriveMotor.voltage(driveVoltageAverage.divide(4.0));
   }
 
   /** Returns the module states (turn angles and drive velocities) for all of the modules. */

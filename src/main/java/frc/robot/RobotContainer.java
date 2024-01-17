@@ -37,7 +37,6 @@ import frc.robot.subsystems.feeder.FeederIOSim;
 import frc.robot.subsystems.flywheel.Flywheel;
 import frc.robot.subsystems.flywheel.FlywheelIO;
 import frc.robot.subsystems.flywheel.FlywheelIOSim;
-import frc.robot.subsystems.flywheel.FlywheelIOSparkMax;
 import org.littletonrobotics.junction.networktables.LoggedDashboardChooser;
 import org.littletonrobotics.junction.networktables.LoggedDashboardNumber;
 
@@ -69,11 +68,11 @@ public class RobotContainer {
         drive =
             new Drive(
                 new GyroIOPigeon2(),
-                new ModuleIOSparkMax(0),
-                new ModuleIOSparkMax(1),
-                new ModuleIOSparkMax(2),
-                new ModuleIOSparkMax(3));
-        flywheel = new Flywheel(new FlywheelIOSparkMax());
+                new ModuleIOTalonFX(0),
+                new ModuleIOTalonFX(1),
+                new ModuleIOTalonFX(2),
+                new ModuleIOTalonFX(3));
+        flywheel = new Flywheel(new FlywheelIOSim());
         feeder = new Feeder(new FeederIO() {});
         // drive = new Drive(
         // new GyroIOPigeon2(),
@@ -133,7 +132,7 @@ public class RobotContainer {
     configureButtonBindings();
   }
 
-  public static SysIDMode sysIDMode = SysIDMode.Disabled;
+  static SysIDMode sysIDMode = SysIDMode.DriveMotors;
 
   enum SysIDMode {
     Disabled,
@@ -171,7 +170,9 @@ public class RobotContainer {
             .a()
             .whileTrue(
                 Commands.startEnd(
-                    () -> flywheel.runVelocity(flywheelSpeedInput.get()), flywheel::stop, flywheel));
+                    () -> flywheel.runVelocity(flywheelSpeedInput.get()),
+                    flywheel::stop,
+                    flywheel));
         break;
       case DriveMotors:
         drive.setDefaultCommand(
@@ -181,48 +182,49 @@ public class RobotContainer {
                 () -> -controller.getLeftX(),
                 () -> -controller.getRightX()));
         var drivetrainDriveSysID =
-                new SysIdRoutine(
-                        new Config(Voltage.per(Units.Second).of(.5), Voltage.of(8.0), Seconds.of(12.0)),
-                        new Mechanism(
-                                drive::runCharacterizationVolts,
-                                drive::populateDriveCharacterizationData,
-                                drive,
-                                "DrivetrainDriveMotors"));
+            new SysIdRoutine(
+                new Config(Voltage.per(Units.Second).of(.5), Voltage.of(8.0), Seconds.of(12.0)),
+                new Mechanism(
+                    drive::runCharacterizationVolts,
+                    drive::populateDriveCharacterizationData,
+                    drive,
+                    "DrivetrainDriveMotors"));
         controller
-                .x()
-                .whileTrue(drivetrainDriveSysID.dynamic(Direction.kForward))
-                .onFalse(Commands.runOnce(drive::stopWithX, drive));
+            .x()
+            .whileTrue(drivetrainDriveSysID.quasistatic(Direction.kForward))
+            .onFalse(Commands.runOnce(drive::stopWithX, drive));
         controller
-                .y()
-                .whileTrue(drivetrainDriveSysID.dynamic(Direction.kReverse))
-                .onFalse(Commands.runOnce(drive::stopWithX, drive));
+            .y()
+            .whileTrue(drivetrainDriveSysID.quasistatic(Direction.kReverse))
+            .onFalse(Commands.runOnce(drive::stopWithX, drive));
         controller
-                .a()
-                .whileTrue(drivetrainDriveSysID.quasistatic(Direction.kForward).withTimeout(2.0))
-                .onFalse(Commands.runOnce(drive::stopWithX, drive));
+            .a()
+            .whileTrue(drivetrainDriveSysID.dynamic(Direction.kForward).withTimeout(2.0))
+            .onFalse(Commands.runOnce(drive::stopWithX, drive));
         controller
-                .b()
-                .whileTrue(drivetrainDriveSysID.quasistatic(Direction.kReverse).withTimeout(2.0))
-                .onFalse(Commands.runOnce(drive::stopWithX, drive));
+            .b()
+            .whileTrue(drivetrainDriveSysID.dynamic(Direction.kReverse).withTimeout(2.0))
+            .onFalse(Commands.runOnce(drive::stopWithX, drive));
         break;
       case TurnMotors:
         var drivetrainTurnSysID =
-                new SysIdRoutine(
-                        new Config(Voltage.per(Units.Second).of(.5), Voltage.of(8.0), Seconds.of(12.0)),
-                        new Mechanism(
-                                drive::runCharacterizationVolts,
-                                drive::populateTurnCharacterizationData,
-                                drive,
-                                "DrivetrainDriveMotors"));
+            new SysIdRoutine(
+                new Config(Voltage.per(Units.Second).of(.5), Voltage.of(8.0), Seconds.of(12.0)),
+                new Mechanism(
+                    drive::runCharacterizationVolts,
+                    drive::populateTurnCharacterizationData,
+                    drive,
+                    "DrivetrainDriveMotors"));
         controller
-                .x()
-                .whileTrue(drivetrainTurnSysID.dynamic(Direction.kForward)
-                        .andThen(drivetrainTurnSysID.dynamic(Direction.kReverse))
-                        .andThen(drivetrainTurnSysID.quasistatic(Direction.kForward))
-                        .andThen(drivetrainTurnSysID.quasistatic(Direction.kReverse))
-                        .andThen(Commands.runOnce(drive::stopWithX, drive))
-                )
-                .onFalse(Commands.runOnce(drive::stopWithX, drive));
+            .x()
+            .whileTrue(
+                drivetrainTurnSysID
+                    .dynamic(Direction.kForward)
+                    .andThen(drivetrainTurnSysID.dynamic(Direction.kReverse))
+                    .andThen(drivetrainTurnSysID.quasistatic(Direction.kForward))
+                    .andThen(drivetrainTurnSysID.quasistatic(Direction.kReverse))
+                    .andThen(Commands.runOnce(drive::stopWithX, drive)))
+            .onFalse(Commands.runOnce(drive::stopWithX, drive));
         break;
       case EverythingElse:
         break;
