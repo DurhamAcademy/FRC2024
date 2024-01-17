@@ -64,30 +64,44 @@ public class ModuleIOTalonFX implements ModuleIO {
   private final Rotation2d absoluteEncoderOffset;
 
   public ModuleIOTalonFX(int index) {
+    var FLDriveMotorId = 12;
+    var FRDriveMotorId = 10;
+    var BLDriveMotorId = 11;
+    var BRDriveMotorId = 13;
+
+    var FLTurnMotorId = 16;
+    var FRTurnMotorId = 14;
+    var BLTurnMotorId = 15;
+    var BRTurnMotorId = 17;
+
+    var FLTurnEncoderId = 8;
+    var FRTurnEncoderId = 6;
+    var BLTurnEncoderId = 7;
+    var BRTurnEncoderId = 9;
     switch (index) {
       case 0:
-        driveTalon = new TalonFX(0);
-        turnTalon = new TalonFX(1);
-        cancoder = new CANcoder(2);
-        absoluteEncoderOffset = new Rotation2d(0.0); // MUST BE CALIBRATED
+        driveTalon = new TalonFX(FLDriveMotorId);
+        turnTalon = new TalonFX(FLTurnMotorId);
+        cancoder = new CANcoder(FLTurnEncoderId);
+        absoluteEncoderOffset = new Rotation2d(-2.5924275315267336); // MUST BE CALIBRATED
         break;
       case 1:
-        driveTalon = new TalonFX(3);
-        turnTalon = new TalonFX(4);
-        cancoder = new CANcoder(5);
-        absoluteEncoderOffset = new Rotation2d(0.0); // MUST BE CALIBRATED
+        driveTalon = new TalonFX(FRDriveMotorId);
+        turnTalon = new TalonFX(FRTurnMotorId);
+        cancoder = new CANcoder(FRTurnEncoderId);
+        absoluteEncoderOffset = new Rotation2d(-2.2748935084344057); // MUST BE CALIBRATED
         break;
       case 2:
-        driveTalon = new TalonFX(6);
-        turnTalon = new TalonFX(7);
-        cancoder = new CANcoder(8);
-        absoluteEncoderOffset = new Rotation2d(0.0); // MUST BE CALIBRATED
+        driveTalon = new TalonFX(BLDriveMotorId);
+        turnTalon = new TalonFX(BLTurnMotorId);
+        cancoder = new CANcoder(BLTurnEncoderId);
+        absoluteEncoderOffset = new Rotation2d(-1.244058418975255); // MUST BE CALIBRATED
         break;
       case 3:
-        driveTalon = new TalonFX(9);
-        turnTalon = new TalonFX(10);
-        cancoder = new CANcoder(11);
-        absoluteEncoderOffset = new Rotation2d(0.0); // MUST BE CALIBRATED
+        driveTalon = new TalonFX(BRDriveMotorId);
+        turnTalon = new TalonFX(BRTurnMotorId);
+        cancoder = new CANcoder(BRTurnEncoderId);
+        absoluteEncoderOffset = new Rotation2d(-2.860874169406721); // MUST BE CALIBRATED
         break;
       default:
         throw new RuntimeException("Invalid module index");
