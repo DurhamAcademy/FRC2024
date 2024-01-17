@@ -191,8 +191,6 @@ public class Drive extends SubsystemBase {
   public void populateDriveCharacterizationData(SysIdRoutineLog routineLog) {
     Measure<Velocity<Angle>> driveVelocityAverage = RadiansPerSecond.zero();
     Measure<Angle> drivePositionAverage = Radians.zero();
-    // fixme: idk what to do here?
-    //  whats position and whats velocity in this situation
 
     for (var module : modules) {
       var motor = routineLog.motor("DriveMotor #" + module.getIndex());
@@ -212,8 +210,6 @@ public class Drive extends SubsystemBase {
   public void populateTurnCharacterizationData(SysIdRoutineLog routineLog) {
     Measure<Velocity<Angle>> driveVelocityAverage = RadiansPerSecond.zero();
     Measure<Angle> drivePositionAverage = Radians.zero();
-    // fixme: idk what to do here?
-    //  whats position and whats velocity in this situation
 
     for (var module : modules) {
       var motor = routineLog.motor("TurnMotor #" + module.getIndex());
@@ -228,15 +224,6 @@ public class Drive extends SubsystemBase {
     var averageDriveMotor = routineLog.motor("Average TurnMotor");
     averageDriveMotor.angularVelocity(driveVelocityAverage.divide(4.0));
     averageDriveMotor.angularPosition(drivePositionAverage.divide(4.0));
-  }
-
-  public void populateTurnCharacterizationData(SysIdRoutineLog routineLog, int moduleId) {
-    var module = modules[moduleId];
-    var motor = routineLog.motor("TurnMotor #" + module.getIndex());
-    var angularPosition = module.getCharacterizationTurnPosition();
-    var angularVelocity = module.getCharacterizationTurnVelocity();
-    motor.angularPosition(angularPosition);
-    motor.angularVelocity(angularVelocity);
   }
 
   /** Returns the module states (turn angles and drive velocities) for all of the modules. */
