@@ -27,7 +27,7 @@ public final class Constants {
   public static final Mode currentMode = Mode.SIM;
   // *START OF CONSTANTS FOR SWERVE* (STILL MISSING WHEEL POSITIONS - Im not on the cad thingy so i
   // cant see it)
-  double WHEEL_RADIUS = 0.0508;
+//  double WHEEL_RADIUS = 0.0508;
 //  double WHEEL_CIRCUMFERENCE = WHEEL_RADIUS * 2 * PI;
 //  double DRIVE_GEAR_RATIO = 6.75;
 //  double STEERING_RATIO = (150 / 7);
