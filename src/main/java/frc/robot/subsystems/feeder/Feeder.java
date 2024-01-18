@@ -4,6 +4,10 @@ import edu.wpi.first.math.controller.ProfiledPIDController;
 import edu.wpi.first.math.controller.SimpleMotorFeedforward;
 import edu.wpi.first.math.trajectory.TrapezoidProfile;
 import edu.wpi.first.math.util.Units;
+import edu.wpi.first.units.Distance;
+import edu.wpi.first.units.Measure;
+import edu.wpi.first.wpilibj.DigitalInput;
+import edu.wpi.first.wpilibj.Ultrasonic;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants;
 import org.littletonrobotics.junction.AutoLogOutput;
@@ -15,6 +19,19 @@ public class Feeder extends SubsystemBase {
   private final SimpleMotorFeedforward ffModel;
   private final ProfiledPIDController pidController;
   double offset = 0.0;
+
+
+  private Ultrasonic IRSensor;
+
+  private static final int IRSensorNum = 0;
+
+  public Measure<Distance> getSensorFeed(){
+    return edu.wpi.first.units.Units.Meters.of(IRSensor.getRangeMM()*0.001);
+  }
+  public Feeder(FeederIO io) {
+    IRSensor = new Ultrasonic(IRSensor,1);
+    this.io = io;
+
 
   public Feeder(FeederIO io) {
     this.io = io;
