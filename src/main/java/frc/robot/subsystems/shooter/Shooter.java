@@ -13,7 +13,6 @@
 
 package frc.robot.subsystems.shooter;
 
-import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.controller.ProfiledPIDController;
 import edu.wpi.first.math.controller.SimpleMotorFeedforward;
 import edu.wpi.first.math.trajectory.TrapezoidProfile;
@@ -39,7 +38,9 @@ public class Shooter extends SubsystemBase {
       case REAL:
       case REPLAY:
         ffModel = new SimpleMotorFeedforward(0.1, 0.05);
-        pid = new ProfiledPIDController(1.0, 0.0, 0.0, new TrapezoidProfile.Constraints(0.5, 99)); // FIXME: remove profile?
+        pid =
+            new ProfiledPIDController(
+                1.0, 0.0, 0.0, new TrapezoidProfile.Constraints(0.5, 99)); // FIXME: remove profile?
         break;
       case SIM:
         ffModel = new SimpleMotorFeedforward(0.0, 0.03);
@@ -56,9 +57,8 @@ public class Shooter extends SubsystemBase {
     io.updateInputs(inputs);
 
     io.setFlywheelVoltage(
-            pid.calculate(inputs.flywheelVelocityRadPerSec) +
-                    ffModel.calculate(pid.getSetpoint().position, pid.getSetpoint().velocity)
-    );
+        pid.calculate(inputs.flywheelVelocityRadPerSec)
+            + ffModel.calculate(pid.getSetpoint().position, pid.getSetpoint().velocity));
 
     Logger.processInputs("Shooter", inputs);
   }

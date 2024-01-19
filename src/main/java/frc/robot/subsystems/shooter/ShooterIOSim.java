@@ -13,25 +13,24 @@
 
 package frc.robot.subsystems.shooter;
 
-import edu.wpi.first.math.MathUtil;
-import edu.wpi.first.math.controller.PIDController;
-import edu.wpi.first.math.proto.Wpimath;
-import edu.wpi.first.math.system.plant.DCMotor;
-import edu.wpi.first.units.Units;
-import edu.wpi.first.wpilibj.simulation.FlywheelSim;
-import edu.wpi.first.wpilibj.simulation.SingleJointedArmSim;
-
 import static edu.wpi.first.units.Units.Degrees;
 import static edu.wpi.first.units.Units.Radians;
 
+import edu.wpi.first.math.controller.PIDController;
+import edu.wpi.first.math.system.plant.DCMotor;
+import edu.wpi.first.wpilibj.simulation.FlywheelSim;
+import edu.wpi.first.wpilibj.simulation.SingleJointedArmSim;
+
 public class ShooterIOSim implements ShooterIO {
   private final FlywheelSim sim = new FlywheelSim(DCMotor.getNEO(2), 1.5, 0.004);
-  private final SingleJointedArmSim armSim = new SingleJointedArmSim(DCMotor.getNEO(1),
+  private final SingleJointedArmSim armSim =
+      new SingleJointedArmSim(
+          DCMotor.getNEO(1),
           9,
           .1,
           .2,
           Radians.convertFrom(90, Degrees),
-           Radians.convertFrom(-5, Degrees),
+          Radians.convertFrom(-5, Degrees),
           true,
           Radians.convertFrom(45, Degrees));
   private final PIDController pid = new PIDController(0.0, 0.0, 0.0);

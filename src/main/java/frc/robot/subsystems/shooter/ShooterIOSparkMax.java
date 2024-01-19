@@ -13,12 +13,10 @@
 
 package frc.robot.subsystems.shooter;
 
-import com.revrobotics.CANSparkBase.ControlType;
 import com.revrobotics.CANSparkLowLevel.MotorType;
 import com.revrobotics.CANSparkMax;
 import com.revrobotics.RelativeEncoder;
 import com.revrobotics.SparkPIDController;
-import com.revrobotics.SparkPIDController.ArbFFUnits;
 import edu.wpi.first.math.util.Units;
 
 /**
@@ -56,7 +54,8 @@ public class ShooterIOSparkMax implements ShooterIO {
     inputs.flywheelVelocityRadPerSec =
         Units.rotationsPerMinuteToRadiansPerSecond(encoder.getVelocity() / GEAR_RATIO);
     inputs.flywheelAppliedVolts = leader.getAppliedOutput() * leader.getBusVoltage();
-    inputs.flywheelCurrentAmps = new double[] {leader.getOutputCurrent(), follower.getOutputCurrent()};
+    inputs.flywheelCurrentAmps =
+        new double[] {leader.getOutputCurrent(), follower.getOutputCurrent()};
   }
 
   @Override
@@ -68,5 +67,4 @@ public class ShooterIOSparkMax implements ShooterIO {
   public void flywheelStop() {
     leader.stopMotor();
   }
-
 }

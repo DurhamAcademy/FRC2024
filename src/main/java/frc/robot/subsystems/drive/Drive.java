@@ -77,10 +77,11 @@ public class Drive extends SubsystemBase {
     Pathfinding.setPathfinder(new LocalADStarAK());
     //noinspection ToArrayCallWithZeroLengthArrayArgument
     PathPlannerLogging.setLogActivePathCallback(
-            (activePath) -> Logger.recordOutput(
-                    "Odometry/Trajectory", activePath.toArray(new Pose2d[activePath.size()])));
+        (activePath) ->
+            Logger.recordOutput(
+                "Odometry/Trajectory", activePath.toArray(new Pose2d[activePath.size()])));
     PathPlannerLogging.setLogTargetPoseCallback(
-            (targetPose) -> Logger.recordOutput("Odometry/TrajectorySetpoint", targetPose));
+        (targetPose) -> Logger.recordOutput("Odometry/TrajectorySetpoint", targetPose));
   }
 
   public void periodic() {
@@ -117,8 +118,8 @@ public class Drive extends SubsystemBase {
       // If the gyro is connected, replace the theta component of the twist
       // with the change in angle since the last loop cycle.
       twist =
-              new Twist2d(
-                      twist.dx, twist.dy, gyroInputs.yawPosition.minus(lastGyroRotation).getRadians());
+          new Twist2d(
+              twist.dx, twist.dy, gyroInputs.yawPosition.minus(lastGyroRotation).getRadians());
       lastGyroRotation = gyroInputs.yawPosition;
     }
     // Apply the twist (change since last loop cycle) to the current pose
