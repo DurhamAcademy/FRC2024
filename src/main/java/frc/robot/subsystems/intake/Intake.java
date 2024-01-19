@@ -55,7 +55,7 @@ public class Intake extends SubsystemBase {
     Logger.processInputs("Intake", inputs);
     io.setArmVoltage(
         armFB.calculate(inputs.armPositionRad, armTarget.getRadians())
-            + armFF.calculate(inputs.armPositionRad, inputs.armVelocityRadPerSec));
+            + armFF.calculate(armFB.getSetpoint().position, armFB.getSetpoint().velocity));
   }
 
   public void setIntakePosition(Rotation2d position) {
