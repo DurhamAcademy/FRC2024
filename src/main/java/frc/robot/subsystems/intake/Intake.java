@@ -5,9 +5,7 @@ import static edu.wpi.first.units.Units.*;
 import edu.wpi.first.math.controller.ArmFeedforward;
 import edu.wpi.first.math.controller.ProfiledPIDController;
 import edu.wpi.first.math.geometry.Rotation2d;
-import edu.wpi.first.math.geometry.Rotation3d;
 import edu.wpi.first.math.trajectory.TrapezoidProfile.Constraints;
-import edu.wpi.first.units.Voltage;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants;
 import org.littletonrobotics.junction.Logger;
@@ -48,7 +46,7 @@ public class Intake extends SubsystemBase {
     }
   }
 
-  //double position = 0.0;
+  // double position = 0.0;
   Rotation2d armTarget = Rotation2d.fromDegrees(0);
 
   @Override
@@ -65,6 +63,6 @@ public class Intake extends SubsystemBase {
   }
 
   public void setRollerPercentage(double percentage) {
-     io.setRollerPercent(percentage);
+    io.setRollerPercent(percentage);
   }
 }

@@ -14,7 +14,6 @@ public interface IntakeIO {
     public double wheelAppliedVolts = 0.0;
     public double[] wheelCurrentAmps = new double[] {};
     public double wheelPositionRad = 0.0;
-
   }
 
   /** Updates the set of loggable inputs. */

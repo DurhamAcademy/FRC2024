@@ -13,12 +13,10 @@
 
 package frc.robot.subsystems.intake;
 
-import com.revrobotics.CANSparkBase.ControlType;
 import com.revrobotics.CANSparkLowLevel.MotorType;
 import com.revrobotics.CANSparkMax;
 import com.revrobotics.RelativeEncoder;
 import com.revrobotics.SparkPIDController;
-import com.revrobotics.SparkPIDController.ArbFFUnits;
 import edu.wpi.first.math.util.Units;
 
 /**
@@ -26,65 +24,64 @@ import edu.wpi.first.math.util.Units;
  * "CANSparkFlex".
  */
 public class IntakeIOSparkMax implements IntakeIO {
-    private static final double ARM_GEAR_RATIO = 100.0;
-    private static final double ROLLER_GEAR_RATIO = 3.0;
+  private static final double ARM_GEAR_RATIO = 100.0;
+  private static final double ROLLER_GEAR_RATIO = 3.0;
 
-    private final CANSparkMax arm = new CANSparkMax(0, MotorType.kBrushless);
-    private final CANSparkMax roller = new CANSparkMax(1, MotorType.kBrushless);
-    private final RelativeEncoder encoder = arm.getEncoder();
-    private final SparkPIDController pid = arm.getPIDController();
+  private final CANSparkMax arm = new CANSparkMax(0, MotorType.kBrushless);
+  private final CANSparkMax roller = new CANSparkMax(1, MotorType.kBrushless);
+  private final RelativeEncoder encoder = arm.getEncoder();
+  private final SparkPIDController pid = arm.getPIDController();
 
-    public IntakeIOSparkMax() {
-        arm.restoreFactoryDefaults();
-        roller.restoreFactoryDefaults();
+  public IntakeIOSparkMax() {
+    arm.restoreFactoryDefaults();
+    roller.restoreFactoryDefaults();
 
-        arm.setCANTimeout(250);
-        roller.setCANTimeout(250);
+    arm.setCANTimeout(250);
+    roller.setCANTimeout(250);
 
-        arm.setInverted(false);
-        roller.follow(arm, false);
+    arm.setInverted(false);
+    roller.follow(arm, false);
 
-        arm.enableVoltageCompensation(12.0);
-        roller.setSmartCurrentLimit(30);
+    arm.enableVoltageCompensation(12.0);
+    roller.setSmartCurrentLimit(30);
 
-        arm.burnFlash();
-        roller.burnFlash();
-    }
+    arm.burnFlash();
+    roller.burnFlash();
+  }
 
-    @Override
-    public void updateInputs(IntakeIOInputs inputs) {
-        inputs.armPositionRad = Units.rotationsToRadians(encoder.getPosition() / ARM_GEAR_RATIO);
-        inputs.armVelocityRadPerSec =
-                Units.rotationsPerMinuteToRadiansPerSecond(encoder.getVelocity() / ARM_GEAR_RATIO);
-        inputs.armAppliedVolts = arm.getAppliedOutput() * arm.getBusVoltage();
-        inputs.armCurrentAmps = new double[] {arm.getOutputCurrent(), roller.getOutputCurrent()};
-    }
+  @Override
+  public void updateInputs(IntakeIOInputs inputs) {
+    inputs.armPositionRad = Units.rotationsToRadians(encoder.getPosition() / ARM_GEAR_RATIO);
+    inputs.armVelocityRadPerSec =
+        Units.rotationsPerMinuteToRadiansPerSecond(encoder.getVelocity() / ARM_GEAR_RATIO);
+    inputs.armAppliedVolts = arm.getAppliedOutput() * arm.getBusVoltage();
+    inputs.armCurrentAmps = new double[] {arm.getOutputCurrent(), roller.getOutputCurrent()};
+  }
 
-    @Override
-    public void setVoltage(double volts) {
-        arm.setVoltage(volts);
-    }
-//
-//    @Override
-//    public void setArmVelocity(double velocityRadPerSec, double ffVolts) {
-//        pid.setReference(
-//                Units.radiansPerSecondToRotationsPerMinute(velocityRadPerSec) * ARM_GEAR_RATIO,
-//                ControlType.kVelocity,
-//                0,
-//                ffVolts,
-//                ArbFFUnits.kVoltage);
-//    }
-//
-//    @Override
-//    public void stop() {
-//        arm.stopMotor();
-//    }
-//
-//    @Override
-//    public void configurePID(double kP, double kI, double kD) {
-//        pid.setP(kP, 0);
-//        pid.setI(kI, 0);
-//        pid.setD(kD, 0);
-//        pid.setFF(0, 0);
-//    }
+  public void setVoltage(double volts) {
+    arm.setVoltage(volts);
+  }
+  //
+  //    @Override
+  //    public void setArmVelocity(double velocityRadPerSec, double ffVolts) {
+  //        pid.setReference(
+  //                Units.radiansPerSecondToRotationsPerMinute(velocityRadPerSec) * ARM_GEAR_RATIO,
+  //                ControlType.kVelocity,
+  //                0,
+  //                ffVolts,
+  //                ArbFFUnits.kVoltage);
+  //    }
+  //
+  //    @Override
+  //    public void stop() {
+  //        arm.stopMotor();
+  //    }
+  //
+  //    @Override
+  //    public void configurePID(double kP, double kI, double kD) {
+  //        pid.setP(kP, 0);
+  //        pid.setI(kI, 0);
+  //        pid.setD(kD, 0);
+  //        pid.setFF(0, 0);
+  //    }
 }
