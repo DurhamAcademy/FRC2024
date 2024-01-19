@@ -19,6 +19,9 @@ import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.kinematics.SwerveModulePosition;
 import edu.wpi.first.math.kinematics.SwerveModuleState;
 import edu.wpi.first.math.util.Units;
+import edu.wpi.first.units.Angle;
+import edu.wpi.first.units.Measure;
+import edu.wpi.first.units.Velocity;
 import frc.robot.Constants;
 import org.littletonrobotics.junction.Logger;
 
@@ -177,7 +180,28 @@ public class Module {
   }
 
   /** Returns the drive velocity in radians/sec. */
-  public double getCharacterizationVelocity() {
+  public double getCharacterizationVelocityRadPerSec() {
     return inputs.driveVelocityRadPerSec;
+  }
+
+  /** Returns the drive velocity unitless. */
+  public Measure<Angle> getCharacterizationDrivePosition() {
+    return edu.wpi.first.units.Units.Radians.of(inputs.drivePositionRad);
+  }
+  /** Returns the turn velocity unitless. */
+  public Measure<Angle> getCharacterizationTurnPosition() {
+    return edu.wpi.first.units.Units.Radians.of(inputs.turnPosition.getRadians());
+  }
+  /** Returns the drive velocity unitless. */
+  public Measure<Velocity<Angle>> getCharacterizationDriveVelocity() {
+    return edu.wpi.first.units.Units.RadiansPerSecond.of(inputs.driveVelocityRadPerSec);
+  }
+  /** Returns the turn velocity unitless. */
+  public Measure<Velocity<Angle>> getCharacterizationTurnVelocity() {
+    return edu.wpi.first.units.Units.RadiansPerSecond.of(inputs.turnVelocityRadPerSec);
+  }
+
+  public int getIndex() {
+    return index;
   }
 }
