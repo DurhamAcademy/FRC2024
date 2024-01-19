@@ -41,6 +41,8 @@ import frc.robot.subsystems.flywheel.FlywheelIOSparkMax;
 import org.littletonrobotics.junction.networktables.LoggedDashboardChooser;
 import org.littletonrobotics.junction.networktables.LoggedDashboardNumber;
 
+import java.util.function.Function;
+
 /**
  * This class is where the bulk of the robot should be declared. Since Command-based is a
  * "declarative" paradigm, very little robot logic should actually be handled in the {@link Robot}
@@ -157,6 +159,7 @@ public class RobotContainer {
                 () -> -controller.getLeftY(),
                 () -> -controller.getLeftX(),
                 () -> -controller.getRightX()));
+        feeder.setDefaultCommand();
         controller.x().onTrue(Commands.runOnce(drive::stopWithX, drive));
         controller
             .b()
@@ -172,7 +175,7 @@ public class RobotContainer {
             .whileTrue(
                 Commands.startEnd(
                     () -> flywheel.runVelocity(flywheelSpeedInput.get()), flywheel::stop, flywheel));
-        break;
+break;
       case DriveMotors:
         drive.setDefaultCommand(
             DriveCommands.joystickDrive(
