@@ -84,9 +84,6 @@ public class Drive extends SubsystemBase {
     Pathfinding.setDynamicObstacles(
         List.of(new Pair(new Translation2d(1.5, 1.5), new Translation2d(2.0, 3.0))),
         new Translation2d(1.0, 2.0));
-    PathPlannerLogging.logActivePath(
-        Pathfinding.getCurrentPath(
-            new PathConstraints(2.5, 2.5, 2.5, 2.5), new GoalEndState(0.0, new Rotation2d(0.0))));
     //noinspection ToArrayCallWithZeroLengthArrayArgument
     PathPlannerLogging.setLogActivePathCallback(
         (activePath) ->
@@ -136,6 +133,9 @@ public class Drive extends SubsystemBase {
     }
     // Apply the twist (change since last loop cycle) to the current pose
     pose = pose.exp(twist);
+    PathPlannerLogging.logActivePath(
+        Pathfinding.getCurrentPath(
+            new PathConstraints(2.5, 2.5, 2.5, 2.5), new GoalEndState(0.0, new Rotation2d(0.0))));
   }
 
   /**
