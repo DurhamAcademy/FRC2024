@@ -30,16 +30,16 @@ public class Intake extends SubsystemBase {
                 1.0,
                 0.0,
                 0.0,
-                new Constraints(RotationsPerSecond.of(1), RotationsPerSecond.per(Second).of(9)));
+                new Constraints(RotationsPerSecond.of(3), RotationsPerSecond.per(Second).of(9)));
         break;
       case SIM:
         armFF = new ArmFeedforward(0.0, 0.075, 0.03);
         armFB =
             new ProfiledPIDController(
-                0.5,
+                1.0,
                 0.0,
                 0.0,
-                new Constraints(RotationsPerSecond.of(1), RotationsPerSecond.per(Second).of(9)));
+                new Constraints(RotationsPerSecond.of(3), RotationsPerSecond.per(Second).of(9)));
         break;
       default:
         armFF = new ArmFeedforward(0.0, 0.0, 0.0);
