@@ -60,10 +60,10 @@ public class IntakeIOSparkMax implements IntakeIO {
         inputs.armCurrentAmps = new double[] {arm.getOutputCurrent(), roller.getOutputCurrent()};
     }
 
-//    @Override
-//    public void setVoltage(double volts) {
-//        arm.setVoltage(volts);
-//    }
+    @Override
+    public void setVoltage(double volts) {
+        arm.setVoltage(volts);
+    }
 //
 //    @Override
 //    public void setArmVelocity(double velocityRadPerSec, double ffVolts) {
