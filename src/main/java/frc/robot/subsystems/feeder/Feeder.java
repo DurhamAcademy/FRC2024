@@ -21,9 +21,10 @@ public class Feeder extends SubsystemBase {
 
   private static final int conveyorSensorNum = 0;
 
-  public boolean getSensorFeed(){
+  public boolean getSensorFeed() {
     return conveyorSensor.get();
   }
+
   public Feeder(FeederIO io) {
     conveyorSensor = new DigitalInput(conveyorSensorNum);
     this.io = io;

@@ -24,7 +24,6 @@ import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.RunCommand;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import frc.robot.commands.DriveCommands;
-import frc.robot.commands.FeedForwardCharacterization;
 import frc.robot.subsystems.drive.*;
 import frc.robot.subsystems.feeder.Feeder;
 import frc.robot.subsystems.feeder.FeederIO;
@@ -63,7 +62,7 @@ public class RobotContainer {
         // Real robot, instantiate hardware IO implementations
         drive =
             new Drive(
-                    new GyroIOPigeon2(),
+                new GyroIOPigeon2(),
                 new ModuleIOSparkMax(0),
                 new ModuleIOSparkMax(1),
                 new ModuleIOSparkMax(2),
@@ -116,14 +115,14 @@ public class RobotContainer {
     autoChooser = new LoggedDashboardChooser<>("Auto Choices", AutoBuilder.buildAutoChooser());
 
     // Set up feedforward characterization
-    autoChooser.addOption(
-        "Drive FF Characterization",
-        new FeedForwardCharacterization(
-            drive, drive::runCharacterizationVolts, drive::getCharacterizationVelocity));
-    autoChooser.addOption(
-        "Flywheel FF Characterization",
-        new FeedForwardCharacterization(
-            flywheel, flywheel::runVolts, flywheel::getCharacterizationVelocity));
+    //    autoChooser.addOption(
+    //        "Drive FF Characterization",
+    //        new FeedForwardCharacterization(
+    //            drive, drive::runCharacterizationVolts, drive::getCharacterizationVelocity));
+    //    autoChooser.addOption(
+    //        "Flywheel FF Characterization",
+    //        new FeedForwardCharacterization(
+    //            flywheel, flywheel::runVolts, flywheel::getCharacterizationVelocity));
 
     // Configure the button bindings
     configureButtonBindings();
@@ -143,9 +142,9 @@ public class RobotContainer {
             () -> -controller.getLeftX(),
             () -> -controller.getRightX()));
     controller
-            .leftTrigger()
-            .and(feeder::getSensorFeed)
-            .onTrue(new RunCommand(() -> feeder.runVolts(6.0)).until(() -> !feeder.getSensorFeed()));
+        .leftTrigger()
+        .and(feeder::getSensorFeed)
+        .onTrue(new RunCommand(() -> feeder.runVolts(6.0)).until(() -> !feeder.getSensorFeed()));
     controller.x().onTrue(Commands.runOnce(drive::stopWithX, drive));
     controller
         .b()
