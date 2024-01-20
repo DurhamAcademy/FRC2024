@@ -27,7 +27,7 @@ public class Shooter extends SubsystemBase {
   private final ShooterIOInputsAutoLogged inputs = new ShooterIOInputsAutoLogged();
   private ProfiledPIDController pid;
   private final SimpleMotorFeedforward ffModel;
-  private static final double ENCODER_ANGLE_FIX = 0.0;
+  private static final double ENCODER_ANGLE_FIX = 1.0;
   private static double targetShooterAngleRad = 0.0;
 
   /** Creates a new Shooter. */
