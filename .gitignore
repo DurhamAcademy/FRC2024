@@ -177,3 +177,4 @@ src/main/java/frc/robot/BuildConstants.java
 # Network Tables and similar logs
 networktables.json
 logs/
+.sysid/
