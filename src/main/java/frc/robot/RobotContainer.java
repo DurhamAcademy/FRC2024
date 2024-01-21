@@ -21,10 +21,13 @@ import edu.wpi.first.wpilibj.GenericHID;
 import edu.wpi.first.wpilibj.XboxController;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
+import edu.wpi.first.wpilibj2.command.RunCommand;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import frc.robot.commands.DriveCommands;
-import frc.robot.commands.FeedForwardCharacterization;
 import frc.robot.subsystems.drive.*;
+import frc.robot.subsystems.feeder.Feeder;
+import frc.robot.subsystems.feeder.FeederIO;
+import frc.robot.subsystems.feeder.FeederIOSim;
 import frc.robot.subsystems.shooter.*;
 import frc.robot.subsystems.shooter.ShooterIO;
 import frc.robot.subsystems.shooter.ShooterIOSparkMax;
@@ -41,6 +44,7 @@ public class RobotContainer {
   // Subsystems
   private final Drive drive;
   private final Shooter shooter;
+  private final Feeder feeder;
 
   // Controller
   private final CommandXboxController controller = new CommandXboxController(0);
@@ -63,6 +67,7 @@ public class RobotContainer {
                 new ModuleIOSparkMax(2),
                 new ModuleIOSparkMax(3));
         shooter = new Shooter(new ShooterIOSparkMax());
+        feeder = new Feeder(new FeederIO() {});
         // drive = new Drive(
         // new GyroIOPigeon2(),
         // new ModuleIOTalonFX(0),
@@ -82,6 +87,7 @@ public class RobotContainer {
                 new ModuleIOSim(),
                 new ModuleIOSim());
         shooter = new Shooter(new ShooterIOSim());
+        feeder = new Feeder(new FeederIOSim());
         break;
 
       default:
@@ -94,6 +100,7 @@ public class RobotContainer {
                 new ModuleIO() {},
                 new ModuleIO() {});
         shooter = new Shooter(new ShooterIO() {});
+        feeder = new Feeder(new FeederIO() {});
         break;
     }
 
@@ -106,14 +113,14 @@ public class RobotContainer {
     autoChooser = new LoggedDashboardChooser<>("Auto Choices", AutoBuilder.buildAutoChooser());
 
     // Set up feedforward characterization
-    autoChooser.addOption(
-        "Drive FF Characterization",
-        new FeedForwardCharacterization(
-            drive, drive::runCharacterizationVolts, drive::getCharacterizationVelocity));
-    autoChooser.addOption(
-        "Shooter FF Characterization",
-        new FeedForwardCharacterization(
-            shooter, shooter::runVolts, shooter::getCharacterizationVelocity));
+    //    autoChooser.addOption(
+    //        "Drive FF Characterization",
+    //        new FeedForwardCharacterization(
+    //            drive, drive::runCharacterizationVolts, drive::getCharacterizationVelocity));
+    //    autoChooser.addOption(
+    //        "Flywheel FF Characterization",
+    //        new FeedForwardCharacterization(
+    //            flywheel, flywheel::runVolts, flywheel::getCharacterizationVelocity));
 
     // Configure the button bindings
     configureButtonBindings();
@@ -132,6 +139,10 @@ public class RobotContainer {
             () -> -controller.getLeftY(),
             () -> -controller.getLeftX(),
             () -> -controller.getRightX()));
+    controller
+        .leftTrigger()
+        .and(feeder::getSensorFeed)
+        .onTrue(new RunCommand(() -> feeder.runVolts(6.0)).until(() -> !feeder.getSensorFeed()));
     controller.x().onTrue(Commands.runOnce(drive::stopWithX, drive));
     controller
         .b()
