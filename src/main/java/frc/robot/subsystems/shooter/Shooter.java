@@ -27,8 +27,8 @@ public class Shooter extends SubsystemBase {
   private final ShooterIOInputsAutoLogged inputs = new ShooterIOInputsAutoLogged();
   private ProfiledPIDController pid;
   private final SimpleMotorFeedforward ffModel;
-  private static final double ENCODER_ANGLE_FIX = 0.0;
-  private static double shooterAngleRad = 0.0;
+  private static final double ENCODER_ANGLE_FIX = 1.0;
+  private static double targetShooterAngleRad = 0.0;
 
   /** Creates a new Shooter. */
   public Shooter(ShooterIO io) {
@@ -62,7 +62,7 @@ public class Shooter extends SubsystemBase {
     io.setFlywheelVoltage(
         pid.calculate(inputs.flywheelVelocityRadPerSec)
             + ffModel.calculate(pid.getSetpoint().position, pid.getSetpoint().velocity));
-    shooterAngleRad = pid.getP() * ENCODER_ANGLE_FIX;
+    targetShooterAngleRad = pid.getSetpoint().position * ENCODER_ANGLE_FIX;
     Logger.processInputs("Shooter", inputs);
   }
 
