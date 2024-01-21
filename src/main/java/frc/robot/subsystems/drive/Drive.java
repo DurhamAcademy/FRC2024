@@ -14,13 +14,11 @@
 package frc.robot.subsystems.drive;
 
 import com.pathplanner.lib.auto.AutoBuilder;
-import com.pathplanner.lib.path.GoalEndState;
 import com.pathplanner.lib.path.PathConstraints;
 import com.pathplanner.lib.pathfinding.Pathfinding;
 import com.pathplanner.lib.util.HolonomicPathFollowerConfig;
 import com.pathplanner.lib.util.PathPlannerLogging;
 import com.pathplanner.lib.util.ReplanningConfig;
-import edu.wpi.first.math.Pair;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
@@ -33,8 +31,6 @@ import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.DriverStation.Alliance;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
-import frc.robot.util.LocalADStarAK;
-import java.util.List;
 import org.littletonrobotics.junction.AutoLogOutput;
 import org.littletonrobotics.junction.Logger;
 
@@ -44,13 +40,16 @@ public class Drive extends SubsystemBase {
   private static final double TRACK_WIDTH_Y = Units.inchesToMeters(25.0);
   private static final double DRIVE_BASE_RADIUS =
       Math.hypot(TRACK_WIDTH_X / 2.0, TRACK_WIDTH_Y / 2.0);
+  public static final HolonomicPathFollowerConfig HOLONOMIC_PATH_FOLLOWER_CONFIG =
+      new HolonomicPathFollowerConfig(
+          MAX_LINEAR_SPEED, DRIVE_BASE_RADIUS, new ReplanningConfig(true, false));
   private static final double MAX_ANGULAR_SPEED = MAX_LINEAR_SPEED / DRIVE_BASE_RADIUS;
 
   private final GyroIO gyroIO;
   private final GyroIOInputsAutoLogged gyroInputs = new GyroIOInputsAutoLogged();
   private final Module[] modules = new Module[4]; // FL, FR, BL, BR
 
-  private SwerveDriveKinematics kinematics = new SwerveDriveKinematics(getModuleTranslations());
+  public SwerveDriveKinematics kinematics = new SwerveDriveKinematics(getModuleTranslations());
   private Pose2d pose = new Pose2d();
   private Rotation2d lastGyroRotation = new Rotation2d();
 
@@ -72,19 +71,19 @@ public class Drive extends SubsystemBase {
         this::setPose,
         () -> kinematics.toChassisSpeeds(getModuleStates()),
         this::runVelocity,
-        new HolonomicPathFollowerConfig(
-            MAX_LINEAR_SPEED, DRIVE_BASE_RADIUS, new ReplanningConfig()),
+        HOLONOMIC_PATH_FOLLOWER_CONFIG,
         () ->
             DriverStation.getAlliance().isPresent()
                 && DriverStation.getAlliance().get() == Alliance.Red,
         this);
-    Pathfinding.setPathfinder(new LocalADStarAK());
-    Pathfinding.setStartPosition(new Translation2d(1, 2));
-    Pathfinding.setGoalPosition(new Translation2d(4.0, 2.0));
-    Pathfinding.setDynamicObstacles(
-        List.of(new Pair(new Translation2d(1.5, 1.5), new Translation2d(2.0, 3.0))),
-        new Translation2d(1.0, 2.0));
+    //    Pathfinding.setPathfinder(new LocalADStarAK());
+    //        Pathfinding.setDynamicObstacles(
+    //            List.of(new Pair(new Translation2d(1.5, 1.5), new Translation2d(2.0, 3.0))),
+    //            new Translation2d(1.0, 2.0));
     //noinspection ToArrayCallWithZeroLengthArrayArgument
+    PathConstraints constraints =
+            new PathConstraints(3.0, 4.0, Units.degreesToRadians(540), Units.degreesToRadians(720));
+
     PathPlannerLogging.setLogActivePathCallback(
         (activePath) ->
             Logger.recordOutput(
@@ -133,9 +132,6 @@ public class Drive extends SubsystemBase {
     }
     // Apply the twist (change since last loop cycle) to the current pose
     pose = pose.exp(twist);
-    PathPlannerLogging.logActivePath(
-        Pathfinding.getCurrentPath(
-            new PathConstraints(2.5, 2.5, 2.5, 2.5), new GoalEndState(0.0, new Rotation2d(0.0))));
   }
 
   /**
@@ -197,7 +193,7 @@ public class Drive extends SubsystemBase {
 
   /** Returns the module states (turn angles and drive velocities) for all of the modules. */
   @AutoLogOutput(key = "SwerveStates/Measured")
-  private SwerveModuleState[] getModuleStates() {
+  public SwerveModuleState[] getModuleStates() {
     SwerveModuleState[] states = new SwerveModuleState[4];
     for (int i = 0; i < 4; i++) {
       states[i] = modules[i].getState();

@@ -15,8 +15,11 @@ package frc.robot;
 
 import com.pathplanner.lib.auto.AutoBuilder;
 import com.pathplanner.lib.auto.NamedCommands;
+import com.pathplanner.lib.path.PathConstraints;
+import com.pathplanner.lib.pathfinding.Pathfinding;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
+import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.GenericHID;
 import edu.wpi.first.wpilibj.XboxController;
 import edu.wpi.first.wpilibj2.command.Command;
@@ -29,6 +32,7 @@ import frc.robot.subsystems.flywheel.Flywheel;
 import frc.robot.subsystems.flywheel.FlywheelIO;
 import frc.robot.subsystems.flywheel.FlywheelIOSim;
 import frc.robot.subsystems.flywheel.FlywheelIOSparkMax;
+import java.util.Random;
 import org.littletonrobotics.junction.networktables.LoggedDashboardChooser;
 import org.littletonrobotics.junction.networktables.LoggedDashboardNumber;
 
@@ -116,6 +120,29 @@ public class RobotContainer {
         new FeedForwardCharacterization(
             flywheel, flywheel::runVolts, flywheel::getCharacterizationVelocity));
 
+    // Since we are using a holonomic drivetrain, the rotation component of this pose
+    // represents the goal holonomic rotation
+    Pose2d targetPose = new Pose2d(10, 5, Rotation2d.fromDegrees(180));
+    Pose2d targetPose2 = new Pose2d(1.808, 3.544, Rotation2d.fromDegrees(180));
+
+    // Create the constraints to use while pathfinding
+    PathConstraints constraints =
+        new PathConstraints(3.0, 4.0, Units.degreesToRadians(540), Units.degreesToRadians(720));
+    var command = AutoBuilder.pathfindToPose(targetPose, constraints, 0.0);
+    for (int i = 0; i < 8; i++) {
+      command = command.andThen(AutoBuilder.pathfindToPose(targetPose2, constraints, 0.0));
+      command =
+          command.andThen(
+              AutoBuilder.pathfindToPose(
+                  new Pose2d(
+                      new Random().nextDouble() * 14 + 1,
+                      new Random().nextDouble() * (8.21 * .5 - 1) + .5,
+                      Rotation2d.fromDegrees(new Random().nextDouble() * 3.14 * 2.0)),
+                  constraints,
+                  0.0));
+    }
+    autoChooser.addOption("Big Auto", command.repeatedly());
+
     // Configure the button bindings
     configureButtonBindings();
   }
@@ -127,6 +154,7 @@ public class RobotContainer {
    * edu.wpi.first.wpilibj2.command.button.JoystickButton}.
    */
   private void configureButtonBindings() {
+    var random = new Random();
     drive.setDefaultCommand(
         DriveCommands.joystickDrive(
             drive,
@@ -134,8 +162,7 @@ public class RobotContainer {
             () -> -controller.getLeftX(),
             () -> -controller.getRightX()));
     controller.x().onTrue(Commands.runOnce(drive::stopWithX, drive));
-    controller
-        .b()
+    controller.b()
         .onTrue(
             Commands.runOnce(
                     () ->
