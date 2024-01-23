@@ -13,21 +13,18 @@ import org.littletonrobotics.junction.Logger;
 public class Feeder extends SubsystemBase {
   private final FeederIO io;
   private final FeederIOInputsAutoLogged inputs = new FeederIOInputsAutoLogged();
-  private final SimpleMotorFeedforward ffModel;
-  private final ProfiledPIDController pidController;
-  double offset = 0.0;
+  private final SimpleMotorFeedforward feederFFModel;
+  private final ProfiledPIDController feederFBController;
+  private double feederOffset = 0.0;
 
-  private DigitalInput conveyorSensor;
-
-  private static final int conveyorSensorNum = 0;
+  private DigitalInput feederBeambreak = new DigitalInput(0);
 
   public boolean getSensorFeed() {
-    return conveyorSensor.get();
+    return feederBeambreak.get();
   }
 
   public Feeder(FeederIO io) {
-    conveyorSensor = new DigitalInput(conveyorSensorNum);
-    this.io = io;
+      this.io = io;
 
     // Switch constants based on mode (the physics simulator is treated as a
     // separate robot with different tuning)
@@ -35,8 +32,8 @@ public class Feeder extends SubsystemBase {
       case REAL:
         // FIXME: characterize real robot
       case REPLAY:
-        ffModel = new SimpleMotorFeedforward(0.1, 0.05);
-        pidController =
+        feederFFModel = new SimpleMotorFeedforward(0.1, 0.05);
+        feederFBController =
             new ProfiledPIDController(
                 1.0,
                 0.0,
@@ -44,8 +41,8 @@ public class Feeder extends SubsystemBase {
                 new TrapezoidProfile.Constraints(10, 10)); // fixme: tune velocity and acceleration
         break;
       case SIM:
-        ffModel = new SimpleMotorFeedforward(0.0, 0.03);
-        pidController =
+        feederFFModel = new SimpleMotorFeedforward(0.0, 0.03);
+        feederFBController =
             new ProfiledPIDController(
                 1.0,
                 0.0,
@@ -53,8 +50,8 @@ public class Feeder extends SubsystemBase {
                 new TrapezoidProfile.Constraints(10, 10)); // fixme: tune velocity and acceleration
         break;
       default:
-        ffModel = new SimpleMotorFeedforward(0.0, 0.0);
-        pidController =
+        feederFFModel = new SimpleMotorFeedforward(0.0, 0.0);
+        feederFBController =
             new ProfiledPIDController(0., 0., .0, new TrapezoidProfile.Constraints(0., 0.));
         break;
     }
@@ -63,45 +60,45 @@ public class Feeder extends SubsystemBase {
   @Override
   public void periodic() {
     io.updateInputs(inputs);
-    io.setVoltage(
-        pidController.calculate(inputs.positionRad)
-            + ffModel.calculate(pidController.getSetpoint().velocity));
+    io.setFeederVoltage(
+        feederFBController.calculate(inputs.feederPositionRad)
+            + feederFFModel.calculate(feederFBController.getSetpoint().velocity));
     Logger.processInputs("Flywheel", inputs);
   }
 
   /** Run open loop at the specified voltage. */
-  public void runVolts(double volts) {
-    io.setVoltage(volts);
+  public void runFeederVolts(double volts) {
+    io.setFeederVoltage(volts);
   }
 
   /** Run closed loop to the specified position. */
-  public void runPosition(double position) {
-    pidController.setGoal(position + offset);
+  public void runFeederPosition(double position) {
+    feederFBController.setGoal(position + feederOffset);
     // Log flywheel setpoint
-    Logger.recordOutput("Flywheel/SetpointRPM", position);
+    Logger.recordOutput("Feeder/SetpointRot", position);
   }
 
-  public void resetPosition() {
+  public void resetFeederPosition() {
     var oldGoal =
         new TrapezoidProfile.State(
-            pidController.getGoal().position - offset, pidController.getGoal().velocity);
-    offset = inputs.positionRad;
-    pidController.setGoal(new TrapezoidProfile.State(oldGoal.position + offset, oldGoal.velocity));
+            feederFBController.getGoal().position - feederOffset, feederFBController.getGoal().velocity);
+    feederOffset = inputs.feederPositionRad;
+    feederFBController.setGoal(new TrapezoidProfile.State(oldGoal.position + feederOffset, oldGoal.velocity));
   }
 
   /** Stops the flywheel. */
-  public void stop() {
-    io.stop();
+  public void stopFeeder() {
+    io.stopFeeder();
   }
 
   /** Returns the current velocity in RPM. */
   @AutoLogOutput
-  public double getVelocityRPM() {
-    return Units.radiansPerSecondToRotationsPerMinute(inputs.velocityRadPerSec);
+  public double getFeederVelocityRPM() {
+    return Units.radiansPerSecondToRotationsPerMinute(inputs.feederVelocityRadPerSec);
   }
 
   /** Returns the current velocity in radians per second. */
-  public double getCharacterizationVelocity() {
-    return inputs.velocityRadPerSec;
+  public double getFeederCharacterizationVelocity() {
+    return inputs.feederVelocityRadPerSec;
   }
 }

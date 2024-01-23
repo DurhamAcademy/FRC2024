@@ -22,6 +22,11 @@ public interface ShooterIO {
     public double flywheelVelocityRadPerSec = 0.0;
     public double flywheelAppliedVolts = 0.0;
     public double[] flywheelCurrentAmps = new double[] {};
+
+    public double feederPositionRad = 0.0;
+    public double feederVelocityRadPerSec = 0.0;
+    public double feederAppliedVolts = 0.0;
+    public double[] feederCurrentAmps = new double[] {};
   }
 
   /** Updates the set of loggable inputs. */
@@ -32,4 +37,10 @@ public interface ShooterIO {
 
   /** Stop in open loop. */
   public default void flywheelStop() {}
+
+  /** Run open loop at the specified voltage. */
+  public default void setFeederVoltage(double volts) {}
+
+  /** Stop in open loop. */
+  public default void stopFeeder() {}
 }

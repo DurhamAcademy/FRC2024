@@ -8,16 +8,16 @@ public interface FeederIO {
   public default void updateInputs(FeederIOInputs inputs) {}
 
   /** Run open loop at the specified voltage. */
-  public default void setVoltage(double volts) {}
+  public default void setFeederVoltage(double volts) {}
 
   /** Stop in open loop. */
-  public default void stop() {}
+  public default void stopFeeder() {}
 
   @AutoLog
   public static class FeederIOInputs {
-    public double positionRad = 0.0;
-    public double velocityRadPerSec = 0.0;
-    public double appliedVolts = 0.0;
-    public double[] currentAmps = new double[] {};
+    public double feederPositionRad = 0.0;
+    public double feederVelocityRadPerSec = 0.0;
+    public double feederAppliedVolts = 0.0;
+    public double[] feederCurrentAmps = new double[] {};
   }
 }

@@ -16,6 +16,7 @@ package frc.robot.subsystems.shooter;
 import static edu.wpi.first.units.Units.Degrees;
 import static edu.wpi.first.units.Units.Radians;
 
+import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.system.plant.DCMotor;
 import edu.wpi.first.wpilibj.simulation.FlywheelSim;
@@ -35,6 +36,10 @@ public class ShooterIOSim implements ShooterIO {
           Radians.convertFrom(45, Degrees));
   private final PIDController pid = new PIDController(0.0, 0.0, 0.0);
 
+  private SingleJointedArmSim feederSim =
+          new SingleJointedArmSim(
+                  DCMotor.getNEO(1), 1.5, 0.025, 0.1, -Math.PI / 4, Math.PI / 2, true, 0);
+
   private boolean closedLoop = false;
   private double ffVolts = 0.0;
   private double appliedVolts = 0.0;
@@ -47,6 +52,16 @@ public class ShooterIOSim implements ShooterIO {
     inputs.flywheelVelocityRadPerSec = sim.getAngularVelocityRadPerSec();
     inputs.flywheelAppliedVolts = appliedVolts;
     inputs.flywheelCurrentAmps = new double[] {sim.getCurrentDrawAmps()};
+
+    //feeder
+    feederSim.setInputVoltage(appliedVolts);
+
+    feederSim.update(0.02);
+
+    inputs.feederPositionRad = feederSim.getAngleRads();
+    inputs.feederVelocityRadPerSec = feederSim.getVelocityRadPerSec();
+    inputs.feederAppliedVolts = appliedVolts;
+    inputs.feederCurrentAmps = new double[]{feederSim.getCurrentDrawAmps()};
   }
 
   @Override
@@ -59,5 +74,16 @@ public class ShooterIOSim implements ShooterIO {
   @Override
   public void flywheelStop() {
     setFlywheelVoltage(0.0);
+  }
+
+  @Override
+  public void setFeederVoltage(double volts) {
+    appliedVolts = 0.0;
+    feederSim.setInputVoltage(volts);
+  }
+
+  @Override
+  public void stopFeeder() {
+    setFeederVoltage(0.0);
   }
 }

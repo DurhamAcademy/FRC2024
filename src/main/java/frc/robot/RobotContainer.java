@@ -142,7 +142,7 @@ public class RobotContainer {
     controller
         .leftTrigger()
         .and(feeder::getSensorFeed)
-        .onTrue(new RunCommand(() -> feeder.runVolts(6.0)).until(() -> !feeder.getSensorFeed()));
+        .onTrue(new RunCommand(() -> feeder.runFeederVolts(6.0)).until(() -> !feeder.getSensorFeed()));
     controller.x().onTrue(Commands.runOnce(drive::stopWithX, drive));
     controller
         .b()
