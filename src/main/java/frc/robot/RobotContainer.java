@@ -158,6 +158,10 @@ public class RobotContainer {
         .whileTrue(
             Commands.startEnd(
                 () -> shooter.runVelocity(flywheelSpeedInput.get()), shooter::stop, shooter));
+    controller
+            .rightTrigger()
+            .onTrue(new RunCommand(() -> shooter.runVolts(6.0)));
+
   }
 
   /**
