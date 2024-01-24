@@ -1,5 +1,7 @@
 package frc.robot.subsystems.shooter.test;
 
+import org.littletonrobotics.junction.AutoLog;
+
 public interface TestIO {
   @AutoLog
   public static class TestIOInputs {
