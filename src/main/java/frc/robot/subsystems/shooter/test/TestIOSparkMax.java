@@ -44,7 +44,7 @@ public class TestIOSparkMax implements TestIO {
     inputs.testVelocityRadPerSec =
         Units.rotationsPerMinuteToRadiansPerSecond(encoder.getVelocity() / GEAR_RATIO);
     inputs.testAppliedVolts = leader.getAppliedOutput() * leader.getBusVoltage();
-    inputs.testCurrentAmps = new double[] {leader.getOutputCurrent(), follower.getOutputCurrent()};
+    inputs.testCurrentAmps = new double[] {leader.getOutputCurrent()};
   }
 
   @Override
