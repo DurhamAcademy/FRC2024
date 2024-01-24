@@ -53,7 +53,7 @@ public class TestIOSparkMax implements TestIO {
   }
 
   @Override
-  public void flywheelStop() {
+  public void testStop() {
     leader.stopMotor();
   }
 }
