@@ -18,7 +18,6 @@ import com.revrobotics.CANSparkMax;
 import com.revrobotics.RelativeEncoder;
 import com.revrobotics.SparkPIDController;
 import edu.wpi.first.math.util.Units;
-import frc.robot.subsystems.shooter.ShooterIO;
 
 /**
  * NOTE: To use the Spark Flex / NEO Vortex, replace all instances of "CANSparkMax" with
@@ -40,13 +39,12 @@ public class TestIOSparkMax implements TestIO {
   }
 
   @Override
-  public void updateInputs(ShooterIOInputs inputs) {
+  public void updateInputs(TestIOInputs inputs) {
     inputs.testPositionRad = Units.rotationsToRadians(encoder.getPosition() / GEAR_RATIO);
     inputs.testVelocityRadPerSec =
         Units.rotationsPerMinuteToRadiansPerSecond(encoder.getVelocity() / GEAR_RATIO);
     inputs.testAppliedVolts = leader.getAppliedOutput() * leader.getBusVoltage();
-    inputs.testCurrentAmps =
-        new double[] {leader.getOutputCurrent(), follower.getOutputCurrent()};
+    inputs.testCurrentAmps = new double[] {leader.getOutputCurrent(), follower.getOutputCurrent()};
   }
 
   @Override
