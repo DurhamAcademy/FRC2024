@@ -16,8 +16,8 @@ package frc.robot.subsystems.shooter;
 import com.revrobotics.CANSparkLowLevel.MotorType;
 import com.revrobotics.CANSparkMax;
 import com.revrobotics.RelativeEncoder;
-import com.revrobotics.SparkPIDController;
 import edu.wpi.first.math.util.Units;
+import edu.wpi.first.wpilibj.DigitalInput;
 
 /**
  * NOTE: To use the Spark Flex / NEO Vortex, replace all instances of "CANSparkMax" with
@@ -29,7 +29,8 @@ public class ShooterIOSparkMax implements ShooterIO {
   private final CANSparkMax leader = new CANSparkMax(0, MotorType.kBrushless);
   private final CANSparkMax follower = new CANSparkMax(1, MotorType.kBrushless);
   private final RelativeEncoder encoder = leader.getEncoder();
-  private final SparkPIDController pid = leader.getPIDController();
+
+  private DigitalInput feederBeamBreak = new DigitalInput(0);
 
   public ShooterIOSparkMax() {
     leader.restoreFactoryDefaults();
@@ -56,6 +57,8 @@ public class ShooterIOSparkMax implements ShooterIO {
     inputs.flywheelAppliedVolts = leader.getAppliedOutput() * leader.getBusVoltage();
     inputs.flywheelCurrentAmps =
         new double[] {leader.getOutputCurrent(), follower.getOutputCurrent()};
+
+    inputs.feederBeamBroken = feederBeamBreak.get();
   }
 
   @Override

@@ -17,7 +17,6 @@ import edu.wpi.first.math.controller.ProfiledPIDController;
 import edu.wpi.first.math.controller.SimpleMotorFeedforward;
 import edu.wpi.first.math.trajectory.TrapezoidProfile;
 import edu.wpi.first.math.util.Units;
-import edu.wpi.first.wpilibj.DigitalInput;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants;
 import org.littletonrobotics.junction.AutoLogOutput;
@@ -35,10 +34,8 @@ public class Shooter extends SubsystemBase {
     private final ProfiledPIDController feederFBController;
     private double feederOffset = 0.0;
 
-    private DigitalInput feederBeambreak = new DigitalInput(0);
-
-    public boolean getSensorFeed() {
-        return feederBeambreak.get();
+    public boolean getBeamBroken() {
+        return inputs.feederBeamBroken;
     }
 
     /**

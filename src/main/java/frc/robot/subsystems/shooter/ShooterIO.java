@@ -27,6 +27,8 @@ public interface ShooterIO {
     public double feederVelocityRadPerSec = 0.0;
     public double feederAppliedVolts = 0.0;
     public double[] feederCurrentAmps = new double[] {};
+
+    public boolean feederBeamBroken = false;
   }
 
   /** Updates the set of loggable inputs. */
