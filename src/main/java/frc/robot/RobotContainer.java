@@ -26,7 +26,6 @@ import edu.wpi.first.wpilibj2.command.RunCommand;
 import edu.wpi.first.wpilibj2.command.Subsystem;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import frc.robot.commands.DriveCommands;
-import frc.robot.commands.FeedForwardCharacterization;
 import frc.robot.subsystems.drive.*;
 import frc.robot.subsystems.feeder.Feeder;
 import frc.robot.subsystems.feeder.FeederIO;
@@ -36,6 +35,9 @@ import frc.robot.subsystems.flywheel.FlywheelIO;
 import frc.robot.subsystems.flywheel.FlywheelIOSim;
 import frc.robot.subsystems.flywheel.FlywheelIOSparkMax;
 import frc.robot.subsystems.intake.Intake;
+import frc.robot.subsystems.shooter.*;
+import frc.robot.subsystems.shooter.ShooterIO;
+import frc.robot.subsystems.shooter.ShooterIOSparkMax;
 import org.littletonrobotics.junction.networktables.LoggedDashboardChooser;
 import org.littletonrobotics.junction.networktables.LoggedDashboardNumber;
 
@@ -48,7 +50,7 @@ import org.littletonrobotics.junction.networktables.LoggedDashboardNumber;
 public class RobotContainer {
   // Subsystems
   private final Drive drive;
-  private final Flywheel flywheel;
+  private final Shooter shooter;
   private final Feeder feeder;
   private Intake intake; //final?
 
@@ -58,7 +60,7 @@ public class RobotContainer {
   // Dashboard inputs
   private final LoggedDashboardChooser<Command> autoChooser;
   private final LoggedDashboardNumber flywheelSpeedInput =
-      new LoggedDashboardNumber("Flywheel Speed", 1500.0);
+      new LoggedDashboardNumber("Shooter Speed", 1500.0);
 
   /** The container for the robot. Contains subsystems, OI devices, and commands. */
   public RobotContainer() {
@@ -72,7 +74,7 @@ public class RobotContainer {
                 new ModuleIOSparkMax(1),
                 new ModuleIOSparkMax(2),
                 new ModuleIOSparkMax(3));
-        flywheel = new Flywheel(new FlywheelIOSparkMax());
+        shooter = new Shooter(new ShooterIOSparkMax());
         feeder = new Feeder(new FeederIO() {});
         // drive = new Drive(
         // new GyroIOPigeon2(),
@@ -80,7 +82,7 @@ public class RobotContainer {
         // new ModuleIOTalonFX(1),
         // new ModuleIOTalonFX(2),
         // new ModuleIOTalonFX(3));
-        // flywheel = new Flywheel(new FlywheelIOTalonFX());
+        // shooter = new Shooter(new ShooterIOTalonFX());
         break;
 
       case SIM:
@@ -92,7 +94,7 @@ public class RobotContainer {
                 new ModuleIOSim(),
                 new ModuleIOSim(),
                 new ModuleIOSim());
-        flywheel = new Flywheel(new FlywheelIOSim());
+        shooter = new Shooter(new ShooterIOSim());
         feeder = new Feeder(new FeederIOSim());
         break;
 
@@ -105,28 +107,28 @@ public class RobotContainer {
                 new ModuleIO() {},
                 new ModuleIO() {},
                 new ModuleIO() {});
-        flywheel = new Flywheel(new FlywheelIO() {});
+        shooter = new Shooter(new ShooterIO() {});
         feeder = new Feeder(new FeederIO() {});
         break;
     }
 
     // Set up auto routines
     NamedCommands.registerCommand(
-        "Run Flywheel",
+        "Run Shooter",
         Commands.startEnd(
-                () -> flywheel.runVelocity(flywheelSpeedInput.get()), flywheel::stop, flywheel)
+                () -> shooter.runVelocity(flywheelSpeedInput.get()), shooter::stop, shooter)
             .withTimeout(5.0));
     autoChooser = new LoggedDashboardChooser<>("Auto Choices", AutoBuilder.buildAutoChooser());
 
     // Set up feedforward characterization
-    autoChooser.addOption(
-        "Drive FF Characterization",
-        new FeedForwardCharacterization(
-            drive, drive::runCharacterizationVolts, drive::getCharacterizationVelocity));
-    autoChooser.addOption(
-        "Flywheel FF Characterization",
-        new FeedForwardCharacterization(
-            flywheel, flywheel::runVolts, flywheel::getCharacterizationVelocity));
+    //    autoChooser.addOption(
+    //        "Drive FF Characterization",
+    //        new FeedForwardCharacterization(
+    //            drive, drive::runCharacterizationVolts, drive::getCharacterizationVelocity));
+    //    autoChooser.addOption(
+    //        "Flywheel FF Characterization",
+    //        new FeedForwardCharacterization(
+    //            flywheel, flywheel::runVolts, flywheel::getCharacterizationVelocity));
 
     // Configure the button bindings
     configureButtonBindings();
@@ -145,6 +147,10 @@ public class RobotContainer {
             () -> -controller.getLeftY(),
             () -> -controller.getLeftX(),
             () -> -controller.getRightX()));
+    controller
+        .leftTrigger()
+        .and(feeder::getSensorFeed)
+        .onTrue(new RunCommand(() -> feeder.runVolts(6.0)).until(() -> !feeder.getSensorFeed()));
     controller.x().onTrue(Commands.runOnce(drive::stopWithX, drive));
     controller
         .b()
@@ -163,9 +169,14 @@ public class RobotContainer {
         .leftTrigger()
         .onTrue(
                 new RunCommand(() -> intake.setRollerPercentage(0.75)));
-
-
-
+    controller
+        .a()
+        .whileTrue(
+            Commands.startEnd(
+                () -> shooter.runVelocity(flywheelSpeedInput.get()), shooter::stop, shooter));
+    controller
+            .rightTrigger()
+            .onTrue(new RunCommand(() -> shooter.runVolts(6.0)));
 
   }
 
