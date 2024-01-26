@@ -45,6 +45,7 @@ public class RobotContainer {
   private final Drive drive;
   private final Shooter shooter;
   private final Feeder feeder;
+  private final Test testSubsystem;
 
   // Controller
   private final CommandXboxController controller = new CommandXboxController(0);
@@ -61,13 +62,14 @@ public class RobotContainer {
         // Real robot, instantiate hardware IO implementations
         drive =
             new Drive(
-                new GyroIOPigeon2(),
-                new ModuleIOSparkMax(0),
-                new ModuleIOSparkMax(1),
-                new ModuleIOSparkMax(2),
-                new ModuleIOSparkMax(3));
-        shooter = new Shooter(new ShooterIOSparkMax());
+                    new GyroIO() {},
+                    new ModuleIOSim(),//new ModuleIOSparkMax(0),
+                    new ModuleIOSim(),//new ModuleIOSparkMax(1),
+                    new ModuleIOSim(),//new ModuleIOSparkMax(2),
+                    new ModuleIOSim());//new ModuleIOSparkMax(3));
+        shooter = new Shooter(new ShooterIOSim());
         feeder = new Feeder(new FeederIO() {});
+        testSubsystem = new Test(new TestIOSparkMax());
         // drive = new Drive(
         // new GyroIOPigeon2(),
         // new ModuleIOTalonFX(0),
