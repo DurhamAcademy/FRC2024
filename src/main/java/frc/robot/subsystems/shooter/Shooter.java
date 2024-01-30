@@ -28,7 +28,7 @@ public class Shooter extends SubsystemBase {
   private ProfiledPIDController pid;
   private final SimpleMotorFeedforward ffModel;
   private static final double ENCODER_ANGLE_FIX = 1.5;
-  //the ration for turning the shooter
+  // the ration for turning the shooter
   private static final double TURN_SHOOTER_RATIO = 5.4;
   private static double targetShooterAngleRad = 0.0;
 
