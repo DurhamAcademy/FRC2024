@@ -14,7 +14,7 @@
 package frc.robot;
 
 import static edu.wpi.first.units.BaseUnits.Voltage;
-import static edu.wpi.first.units.Units.*;
+import static edu.wpi.first.units.Units.Seconds;
 
 import com.pathplanner.lib.auto.AutoBuilder;
 import com.pathplanner.lib.auto.NamedCommands;
@@ -23,7 +23,9 @@ import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.units.Units;
 import edu.wpi.first.wpilibj.GenericHID;
 import edu.wpi.first.wpilibj.XboxController;
-import edu.wpi.first.wpilibj2.command.*;
+import edu.wpi.first.wpilibj2.command.Command;
+import edu.wpi.first.wpilibj2.command.Commands;
+import edu.wpi.first.wpilibj2.command.RunCommand;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine.Config;
@@ -34,10 +36,10 @@ import frc.robot.subsystems.drive.*;
 import frc.robot.subsystems.feeder.Feeder;
 import frc.robot.subsystems.feeder.FeederIO;
 import frc.robot.subsystems.feeder.FeederIOSim;
-import frc.robot.subsystems.flywheel.Flywheel;
-import frc.robot.subsystems.flywheel.FlywheelIO;
-import frc.robot.subsystems.flywheel.FlywheelIOSim;
-import frc.robot.subsystems.flywheel.FlywheelIOSparkMax;
+import frc.robot.subsystems.shooter.Shooter;
+import frc.robot.subsystems.shooter.ShooterIO;
+import frc.robot.subsystems.shooter.ShooterIOSim;
+import frc.robot.subsystems.shooter.ShooterIOSparkMax;
 import org.littletonrobotics.junction.networktables.LoggedDashboardChooser;
 import org.littletonrobotics.junction.networktables.LoggedDashboardNumber;
 
@@ -50,7 +52,7 @@ import org.littletonrobotics.junction.networktables.LoggedDashboardNumber;
 public class RobotContainer {
   // Subsystems
   private final Drive drive;
-  private final Flywheel flywheel;
+  private Shooter shooter;
   private final Feeder feeder;
 
   // Controller
@@ -73,7 +75,7 @@ public class RobotContainer {
                 new ModuleIOSparkMax(1),
                 new ModuleIOSparkMax(2),
                 new ModuleIOSparkMax(3));
-        flywheel = new Flywheel(new FlywheelIOSparkMax());
+        shooter = new Shooter(new ShooterIOSparkMax());
         feeder = new Feeder(new FeederIO() {});
         // drive = new Drive(
         // new GyroIOPigeon2(),
@@ -93,7 +95,7 @@ public class RobotContainer {
                 new ModuleIOSim(),
                 new ModuleIOSim(),
                 new ModuleIOSim());
-        flywheel = new Flywheel(new FlywheelIOSim());
+        shooter = new Shooter(new ShooterIOSim());
         feeder = new Feeder(new FeederIOSim());
         break;
 
@@ -106,7 +108,7 @@ public class RobotContainer {
                 new ModuleIO() {},
                 new ModuleIO() {},
                 new ModuleIO() {});
-        flywheel = new Flywheel(new FlywheelIO() {});
+        shooter = new Shooter(new ShooterIO() {});
         feeder = new Feeder(new FeederIO() {});
         break;
     }
@@ -115,7 +117,7 @@ public class RobotContainer {
     NamedCommands.registerCommand(
         "Run Flywheel",
         Commands.startEnd(
-                () -> flywheel.runVelocity(flywheelSpeedInput.get()), flywheel::stop, flywheel)
+                () -> shooter.runVelocity(flywheelSpeedInput.get()), shooter::stop, shooter)
             .withTimeout(5.0));
     autoChooser = new LoggedDashboardChooser<>("Auto Choices", AutoBuilder.buildAutoChooser());
 
@@ -171,7 +173,7 @@ public class RobotContainer {
             .a()
             .whileTrue(
                 Commands.startEnd(
-                    () -> flywheel.runVelocity(flywheelSpeedInput.get()), flywheel::stop, flywheel));
+                    () -> shooter.runVelocity(flywheelSpeedInput.get()), shooter::stop, shooter));
         break;
       case DriveMotors:
         drive.setDefaultCommand(
@@ -181,50 +183,56 @@ public class RobotContainer {
                 () -> -controller.getLeftX(),
                 () -> -controller.getRightX()));
         var drivetrainDriveSysID =
-                new SysIdRoutine(
-                        new Config(Voltage.per(Units.Second).of(.5), Voltage.of(8.0), Seconds.of(12.0)),
-                        new Mechanism(
-                                drive::runCharacterizationVolts,
-                                drive::populateDriveCharacterizationData,
-                                drive,
-                                "DrivetrainDriveMotors"));
+            new SysIdRoutine(
+                new Config(Voltage.per(Units.Second).of(.5), Voltage.of(8.0), Seconds.of(12.0)),
+                new Mechanism(
+                    drive::runCharacterizationVolts,
+                    drive::populateDriveCharacterizationData,
+                    drive,
+                    "DrivetrainDriveMotors"));
         controller
-                .x()
-                .whileTrue(drivetrainDriveSysID.dynamic(Direction.kForward))
-                .onFalse(Commands.runOnce(drive::stopWithX, drive));
+            .x()
+            .whileTrue(drivetrainDriveSysID.dynamic(Direction.kForward))
+            .onFalse(Commands.runOnce(drive::stopWithX, drive));
         controller
-                .y()
-                .whileTrue(drivetrainDriveSysID.dynamic(Direction.kReverse))
-                .onFalse(Commands.runOnce(drive::stopWithX, drive));
+            .y()
+            .whileTrue(drivetrainDriveSysID.dynamic(Direction.kReverse))
+            .onFalse(Commands.runOnce(drive::stopWithX, drive));
         controller
-                .a()
-                .whileTrue(drivetrainDriveSysID.quasistatic(Direction.kForward).withTimeout(2.0))
-                .onFalse(Commands.runOnce(drive::stopWithX, drive));
+            .a()
+            .whileTrue(drivetrainDriveSysID.quasistatic(Direction.kForward).withTimeout(2.0))
+            .onFalse(Commands.runOnce(drive::stopWithX, drive));
         controller
-                .b()
-                .whileTrue(drivetrainDriveSysID.quasistatic(Direction.kReverse).withTimeout(2.0))
-                .onFalse(Commands.runOnce(drive::stopWithX, drive));
+            .b()
+            .whileTrue(drivetrainDriveSysID.quasistatic(Direction.kReverse).withTimeout(2.0))
+            .onFalse(Commands.runOnce(drive::stopWithX, drive));
         break;
       case TurnMotors:
         var drivetrainTurnSysID =
-                new SysIdRoutine(
-                        new Config(Voltage.per(Units.Second).of(.5), Voltage.of(8.0), Seconds.of(12.0)),
-                        new Mechanism(
-                                drive::runCharacterizationVolts,
-                                drive::populateTurnCharacterizationData,
-                                drive,
-                                "DrivetrainDriveMotors"));
+            new SysIdRoutine(
+                new Config(Voltage.per(Units.Second).of(.5), Voltage.of(8.0), Seconds.of(12.0)),
+                new Mechanism(
+                    drive::runCharacterizationVolts,
+                    drive::populateTurnCharacterizationData,
+                    drive,
+                    "DrivetrainDriveMotors"));
         controller
-                .x()
-                .whileTrue(drivetrainTurnSysID.dynamic(Direction.kForward)
-                        .andThen(drivetrainTurnSysID.dynamic(Direction.kReverse))
-                        .andThen(drivetrainTurnSysID.quasistatic(Direction.kForward))
-                        .andThen(drivetrainTurnSysID.quasistatic(Direction.kReverse))
-                        .andThen(Commands.runOnce(drive::stopWithX, drive))
-                )
-                .onFalse(Commands.runOnce(drive::stopWithX, drive));
+            .x()
+            .whileTrue(
+                drivetrainTurnSysID
+                    .dynamic(Direction.kForward)
+                    .andThen(drivetrainTurnSysID.dynamic(Direction.kReverse))
+                    .andThen(drivetrainTurnSysID.quasistatic(Direction.kForward))
+                    .andThen(drivetrainTurnSysID.quasistatic(Direction.kReverse))
+                    .andThen(Commands.runOnce(drive::stopWithX, drive)))
+            .onFalse(Commands.runOnce(drive::stopWithX, drive));
         break;
       case EverythingElse:
+        controller
+                .start()
+                .and(feeder::getSensorFeed)
+                .whileTrue(
+                        Commands.run((Runnable) new RunCommand(() -> feeder.runVolts(6.0)).until(() -> !feeder.getSensorFeed())));
         break;
     }
   }
