@@ -22,7 +22,7 @@ package frc.robot;
  * constants are needed, to reduce verbosity.
  */
 public final class Constants {
-  public static final Mode currentMode = Mode.SIM;
+  public static final Mode currentMode = Mode.REAL;
   // *START OF CONSTANTS FOR SWERVE* (STILL MISSING WHEEL POSITIONS - Im not on the cad thingy so i
   // cant see it)
   //  double WHEEL_RADIUS = 0.0508;
