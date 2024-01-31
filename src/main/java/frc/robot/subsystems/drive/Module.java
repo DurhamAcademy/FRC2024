@@ -48,6 +48,30 @@ public class Module {
     // separate robot with different tuning)
     switch (Constants.currentMode) {
       case REAL:
+        switch (index) {
+          case 0:
+            driveFeedforward = new SimpleMotorFeedforward(0.01626, 0.82954, 0.14095);
+            driveFeedback = new PIDController(0.21268, 0.0, 0.0);
+            break;
+          case 1:
+            driveFeedforward = new SimpleMotorFeedforward(0.081671, 0.82741, 0.081036);
+            driveFeedback = new PIDController(0.75099, 0.0, 0.0);
+            break;
+          case 2:
+            driveFeedforward = new SimpleMotorFeedforward(0.082023, 0.81434, 0.12098);
+            driveFeedback = new PIDController(0.096474, 0.0, 0.0);
+            break;
+          case 3:
+            driveFeedforward = new SimpleMotorFeedforward(0.040377, 0.84332, 0.13969);
+            driveFeedback = new PIDController(0.015087, 0.0, 0.0);
+            break;
+          default:
+            driveFeedforward = new SimpleMotorFeedforward(0.1, 0.13);
+            driveFeedback = new PIDController(0.05, 0.0, 0.0);
+            break;
+        }
+        turnFeedback = new PIDController(7.0, 0.0, 0.0);
+        break;
       case REPLAY:
         driveFeedforward = new SimpleMotorFeedforward(0.1, 0.13);
         driveFeedback = new PIDController(0.05, 0.0, 0.0);
@@ -97,7 +121,7 @@ public class Module {
 
         // Run drive controller
         double velocityRadPerSec = adjustSpeedSetpoint / WHEEL_RADIUS;
-        io.setDriveVoltage(
+        io.setDriveVoltage( // fixme
             driveFeedforward.calculate(velocityRadPerSec)
                 + driveFeedback.calculate(inputs.driveVelocityRadPerSec, velocityRadPerSec));
       }
@@ -124,6 +148,7 @@ public class Module {
 
     // Open loop drive control
     io.setDriveVoltage(volts);
+    Logger.recordOutput("Voltage for motor" + this.index, volts);
     speedSetpoint = null;
   }
 
