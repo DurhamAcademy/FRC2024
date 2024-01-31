@@ -228,16 +228,10 @@ public class RobotContainer {
             .onFalse(Commands.runOnce(drive::stopWithX, drive));
         break;
       case EverythingElse:
-        controller
-            .start()
-            .and(feeder::getSensorFeed)
-            .whileTrue(
-                Commands.run(
-                    (Runnable)
-                        new RunCommand(() -> feeder.runVolts(6.0))
-                            .until(() -> !feeder.getSensorFeed())));
+
         break;
     }
+    feeder.setDefaultCommand(new RunCommand(feeder::stop));
   }
 
   /**
