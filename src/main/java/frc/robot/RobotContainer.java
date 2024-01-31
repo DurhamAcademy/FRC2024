@@ -229,10 +229,13 @@ public class RobotContainer {
         break;
       case EverythingElse:
         controller
-                .start()
-                .and(feeder::getSensorFeed)
-                .whileTrue(
-                        Commands.run((Runnable) new RunCommand(() -> feeder.runVolts(6.0)).until(() -> !feeder.getSensorFeed())));
+            .start()
+            .and(feeder::getSensorFeed)
+            .whileTrue(
+                Commands.run(
+                    (Runnable)
+                        new RunCommand(() -> feeder.runVolts(6.0))
+                            .until(() -> !feeder.getSensorFeed())));
         break;
     }
   }
