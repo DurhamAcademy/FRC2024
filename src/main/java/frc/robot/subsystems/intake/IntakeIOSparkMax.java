@@ -59,6 +59,7 @@ public class IntakeIOSparkMax implements IntakeIO {
     inputs.driveTemperature = new double[] {arm.getMotorTemperature(), roller.getMotorTemperature()};
   }
 
+
   public void setVoltage(double volts) {
     arm.setVoltage(volts);
   }

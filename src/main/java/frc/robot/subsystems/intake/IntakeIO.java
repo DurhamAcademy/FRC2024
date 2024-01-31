@@ -17,6 +17,7 @@ public interface IntakeIO {
     public double wheelPositionRad = 0.0;
   }
 
+  
   /** Updates the set of loggable inputs. */
   public default void updateInputs(IntakeIOInputs inputs) {}
 
