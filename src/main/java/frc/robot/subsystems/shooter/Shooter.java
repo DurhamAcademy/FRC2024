@@ -15,6 +15,7 @@ package frc.robot.subsystems.shooter;
 
 import edu.wpi.first.math.controller.ProfiledPIDController;
 import edu.wpi.first.math.controller.SimpleMotorFeedforward;
+import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.trajectory.TrapezoidProfile;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
@@ -28,7 +29,7 @@ public class Shooter extends SubsystemBase {
   private ProfiledPIDController pid;
   private final SimpleMotorFeedforward ffModel;
   private static final double ENCODER_ANGLE_FIX = 1.5;
-  //the ration for turning the shooter
+  // the ration for turning the shooter
   private static final double TURN_SHOOTER_RATIO = 5.4;
   private static double targetShooterAngleRad = 0.0;
 
@@ -97,5 +98,9 @@ public class Shooter extends SubsystemBase {
   /** Returns the current velocity in radians per second. */
   public double getCharacterizationVelocity() {
     return inputs.flywheelVelocityRadPerSec;
+  }
+
+  public void setTargetShooterAngleRad(Rotation2d anglediff) {
+    targetShooterAngleRad = anglediff.getRadians() * TURN_SHOOTER_RATIO;
   }
 }
