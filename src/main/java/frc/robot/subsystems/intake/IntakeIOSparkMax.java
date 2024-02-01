@@ -57,7 +57,7 @@ public class IntakeIOSparkMax implements IntakeIO {
     inputs.armAppliedVolts = arm.getAppliedOutput() * arm.getBusVoltage();
     inputs.armCurrentAmps = new double[] {arm.getOutputCurrent(), roller.getOutputCurrent()};
     inputs.armTemperature = new double[] {arm.getMotorTemperature()};
-    inputs.wheelTemperature = new double[] {roller.getMotorTemperature()};
+    inputs.rollerTemperature = new double[] {roller.getMotorTemperature()};
   }
 
 
