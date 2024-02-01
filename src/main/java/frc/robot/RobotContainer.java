@@ -25,7 +25,6 @@ import edu.wpi.first.wpilibj.GenericHID;
 import edu.wpi.first.wpilibj.XboxController;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
-import edu.wpi.first.wpilibj2.command.RunCommand;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine.Config;
@@ -39,7 +38,6 @@ import frc.robot.subsystems.feeder.FeederIOSim;
 import frc.robot.subsystems.intake.Intake;
 import frc.robot.subsystems.shooter.*;
 import frc.robot.subsystems.shooter.ShooterIO;
-import frc.robot.subsystems.shooter.ShooterIOSparkMax;
 import org.littletonrobotics.junction.networktables.LoggedDashboardChooser;
 import org.littletonrobotics.junction.networktables.LoggedDashboardNumber;
 
@@ -76,7 +74,7 @@ public class RobotContainer {
                 new ModuleIOSparkMax(1),
                 new ModuleIOSparkMax(2),
                 new ModuleIOSparkMax(3));
-        shooter = new Shooter(new ShooterIOSparkMax());
+        shooter = new Shooter(new ShooterIOSim());
         feeder = new Feeder(new FeederIO() {});
         // drive = new Drive(
         // new GyroIOPigeon2(),
@@ -136,9 +134,9 @@ public class RobotContainer {
     configureButtonBindings();
   }
 
-  public SysIDMode sysIDMode = SysIDMode.Disabled;
+  public SysIDMode sysIDMode = SysIDMode.DriveMotors;
 
-  enum SysIDMode {
+  public enum SysIDMode {
     Disabled,
     DriveMotors,
     TurnMotors,
@@ -179,7 +177,6 @@ public class RobotContainer {
                         },
                         drive)
                     .ignoringDisable(true));
-
         controller // intake motor
             .leftTrigger() // not a()
             .onTrue(new RunCommand(() -> intake.setIntakePosition(new Rotation2d(115.0))));
@@ -200,7 +197,7 @@ public class RobotContainer {
                 () -> -controller.getRightX()));
         var drivetrainDriveSysID =
             new SysIdRoutine(
-                new Config(Voltage.per(Units.Second).of(.5), Voltage.of(8.0), Seconds.of(12.0)),
+                new Config(Voltage.per(Units.Second).of(.75), Voltage.of(8.0), Seconds.of(12.0)),
                 new Mechanism(
                     drive::runCharacterizationVolts,
                     drive::populateDriveCharacterizationData,
@@ -216,11 +213,11 @@ public class RobotContainer {
             .onFalse(Commands.runOnce(drive::stopWithX, drive));
         controller
             .a()
-            .whileTrue(drivetrainDriveSysID.quasistatic(Direction.kForward).withTimeout(2.0))
+            .whileTrue(drivetrainDriveSysID.quasistatic(Direction.kForward))
             .onFalse(Commands.runOnce(drive::stopWithX, drive));
         controller
             .b()
-            .whileTrue(drivetrainDriveSysID.quasistatic(Direction.kReverse).withTimeout(2.0))
+            .whileTrue(drivetrainDriveSysID.quasistatic(Direction.kReverse))
             .onFalse(Commands.runOnce(drive::stopWithX, drive));
         break;
       case TurnMotors:
@@ -235,12 +232,13 @@ public class RobotContainer {
         controller
             .x()
             .whileTrue(
-                drivetrainTurnSysID
-                    .dynamic(Direction.kForward)
-                    .andThen(drivetrainTurnSysID.dynamic(SysIdRoutine.Direction.kReverse))
-                    .andThen(drivetrainTurnSysID.quasistatic(Direction.kForward))
-                    .andThen(drivetrainTurnSysID.quasistatic(Direction.kReverse))
-                    .andThen(Commands.runOnce(drive::stopWithX, drive)))
+                drivetrainTurnSysID.dynamic(Direction.kForward)
+                //
+                // .andThen(drivetrainTurnSysID.dynamic(SysIdRoutine.Direction.kReverse))
+                //                    .andThen(drivetrainTurnSysID.quasistatic(Direction.kForward))
+                //                    .andThen(drivetrainTurnSysID.quasistatic(Direction.kReverse))
+                //                    .andThen(Commands.runOnce(drive::stopWithX, drive))
+                )
             .onFalse(Commands.runOnce(drive::stopWithX, drive));
         break;
       case EverythingElse:
