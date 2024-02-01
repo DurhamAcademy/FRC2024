@@ -10,14 +10,14 @@ public interface IntakeIO {
     public double armVelocityRadPerSec = 0.0;
     public double armAppliedVolts = 0.0;
     public double[] armCurrentAmps = new double[] {};
-    public double[] driveTemperature = new double[] {};
+    public double[] armTemperature = new double[] {};
     public double wheelVelocityRadPerSec;
     public double wheelAppliedVolts = 0.0;
     public double[] wheelCurrentAmps = new double[] {};
     public double wheelPositionRad = 0.0;
+    public double[] rollerTemperature = new double[] {};
   }
 
-  
   /** Updates the set of loggable inputs. */
   public default void updateInputs(IntakeIOInputs inputs) {}
 

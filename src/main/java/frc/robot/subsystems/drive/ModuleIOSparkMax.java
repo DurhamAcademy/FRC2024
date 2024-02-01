@@ -132,7 +132,7 @@ public class ModuleIOSparkMax implements ModuleIO {
             / TURN_GEAR_RATIO;
     inputs.turnAppliedVolts = turnSparkMax.getAppliedOutput() * turnSparkMax.getBusVoltage();
     inputs.turnCurrentAmps = new double[] {turnSparkMax.getOutputCurrent()};
-    inputs.driveTemperature = new double[] {turnSparkMax.getMotorTemperature()};
+    inputs.turnTemperature = new double[] {turnSparkMax.getMotorTemperature()};
   }
 
   @Override

@@ -45,5 +45,6 @@ public interface ModuleIO {
     public double turnVelocityRadPerSec = 0.0;
     public double turnAppliedVolts = 0.0;
     public double[] turnCurrentAmps = new double[] {};
+    public double[] turnTemperature = new double[] {};
   }
 }
