@@ -14,7 +14,7 @@
 package frc.robot;
 
 import static edu.wpi.first.units.BaseUnits.Voltage;
-import static edu.wpi.first.units.Units.*;
+import static edu.wpi.first.units.Units.Seconds;
 
 import com.pathplanner.lib.auto.AutoBuilder;
 import com.pathplanner.lib.auto.NamedCommands;
@@ -23,9 +23,9 @@ import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.units.Units;
 import edu.wpi.first.wpilibj.GenericHID;
 import edu.wpi.first.wpilibj.XboxController;
-import edu.wpi.first.wpilibj2.command.*;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
+import edu.wpi.first.wpilibj2.command.RunCommand;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine.Config;
@@ -37,8 +37,10 @@ import frc.robot.subsystems.feeder.Feeder;
 import frc.robot.subsystems.feeder.FeederIO;
 import frc.robot.subsystems.feeder.FeederIOSim;
 import frc.robot.subsystems.intake.Intake;
-import frc.robot.subsystems.shooter.*;
+import frc.robot.subsystems.shooter.Shooter;
 import frc.robot.subsystems.shooter.ShooterIO;
+import frc.robot.subsystems.shooter.ShooterIOSim;
+import frc.robot.subsystems.shooter.ShooterIOSparkMax;
 import org.littletonrobotics.junction.networktables.LoggedDashboardChooser;
 import org.littletonrobotics.junction.networktables.LoggedDashboardNumber;
 
@@ -53,7 +55,7 @@ public class RobotContainer {
   private final Drive drive;
   private final Shooter shooter;
   private final Feeder feeder;
-  private Intake intake; // final?
+  private Intake intake;
 
   // Controller
   private final CommandXboxController controller = new CommandXboxController(0);
@@ -61,7 +63,7 @@ public class RobotContainer {
   // Dashboard inputs
   private final LoggedDashboardChooser<Command> autoChooser;
   private final LoggedDashboardNumber flywheelSpeedInput =
-      new LoggedDashboardNumber("Shooter Speed", 1500.0);
+      new LoggedDashboardNumber("Flywheel Speed", 1500.0);
 
   /** The container for the robot. Contains subsystems, OI devices, and commands. */
   public RobotContainer() {
@@ -75,7 +77,7 @@ public class RobotContainer {
                 new ModuleIOSparkMax(1),
                 new ModuleIOSparkMax(2),
                 new ModuleIOSparkMax(3));
-        shooter = new Shooter(new ShooterIOSim());
+        shooter = new Shooter(new ShooterIOSparkMax());
         feeder = new Feeder(new FeederIO() {});
         // drive = new Drive(
         // new GyroIOPigeon2(),
@@ -83,7 +85,7 @@ public class RobotContainer {
         // new ModuleIOTalonFX(1),
         // new ModuleIOTalonFX(2),
         // new ModuleIOTalonFX(3));
-        // shooter = new Shooter(new ShooterIOTalonFX());
+        // flywheel = new Flywheel(new FlywheelIOTalonFX());
         break;
 
       case SIM:
@@ -115,7 +117,7 @@ public class RobotContainer {
 
     // Set up auto routines
     NamedCommands.registerCommand(
-        "Run Shooter",
+        "Run Flywheel",
         Commands.startEnd(
                 () -> shooter.runVelocity(flywheelSpeedInput.get()), shooter::stop, shooter)
             .withTimeout(5.0));
@@ -125,19 +127,19 @@ public class RobotContainer {
     //    autoChooser.addOption(
     //        "Drive FF Characterization",
     //        new FeedForwardCharacterization(
-    //            drive, drive::runCharacterizationVolts, drive::getCharacterizationVelocity));
+    //            drive, drive::runCharacterizationVolts, drive::getCharacterizationDriveVelocity));
     //    autoChooser.addOption(
     //        "Flywheel FF Characterization",
     //        new FeedForwardCharacterization(
-    //            flywheel, flywheel::runVolts, flywheel::getCharacterizationVelocity));
+    //            flywheel, flywheel::runVolts, flywheel::getCharacterizationDriveVelocity));
 
     // Configure the button bindings
     configureButtonBindings();
   }
 
-  public SysIDMode sysIDMode = SysIDMode.DriveMotors;
+  public static SysIDMode sysIDMode = SysIDMode.Disabled;
 
-  public enum SysIDMode {
+  enum SysIDMode {
     Disabled,
     DriveMotors,
     TurnMotors,
@@ -159,11 +161,6 @@ public class RobotContainer {
                 () -> -controller.getLeftY(),
                 () -> -controller.getLeftX(),
                 () -> -controller.getRightX()));
-        controller
-            .leftTrigger()
-            .and(feeder::getSensorFeed)
-            .onTrue(
-                new RunCommand(() -> feeder.runVolts(6.0)).until(() -> !feeder.getSensorFeed()));
         controller.x().onTrue(Commands.runOnce(drive::stopWithX, drive));
         controller
             .b()
@@ -174,16 +171,11 @@ public class RobotContainer {
                                 new Pose2d(drive.getPose().getTranslation(), new Rotation2d())),
                         drive)
                     .ignoringDisable(true));
-        controller // intake motor
-            .leftTrigger() // not a()
-            .onTrue(new RunCommand(() -> intake.setIntakePosition(new Rotation2d(115.0))));
-        controller.leftTrigger().onTrue(new RunCommand(() -> intake.setRollerPercentage(0.75)));
         controller
             .a()
             .whileTrue(
                 Commands.startEnd(
                     () -> shooter.runVelocity(flywheelSpeedInput.get()), shooter::stop, shooter));
-        controller.rightTrigger().onTrue(new RunCommand(() -> shooter.runVolts(6.0)));
         break;
       case DriveMotors:
         drive.setDefaultCommand(
@@ -194,7 +186,7 @@ public class RobotContainer {
                 () -> -controller.getRightX()));
         var drivetrainDriveSysID =
             new SysIdRoutine(
-                new Config(Voltage.per(Units.Second).of(.75), Voltage.of(8.0), Seconds.of(12.0)),
+                new Config(Voltage.per(Units.Second).of(.5), Voltage.of(8.0), Seconds.of(12.0)),
                 new Mechanism(
                     drive::runCharacterizationVolts,
                     drive::populateDriveCharacterizationData,
@@ -210,11 +202,11 @@ public class RobotContainer {
             .onFalse(Commands.runOnce(drive::stopWithX, drive));
         controller
             .a()
-            .whileTrue(drivetrainDriveSysID.quasistatic(Direction.kForward))
+            .whileTrue(drivetrainDriveSysID.quasistatic(Direction.kForward).withTimeout(2.0))
             .onFalse(Commands.runOnce(drive::stopWithX, drive));
         controller
             .b()
-            .whileTrue(drivetrainDriveSysID.quasistatic(Direction.kReverse))
+            .whileTrue(drivetrainDriveSysID.quasistatic(Direction.kReverse).withTimeout(2.0))
             .onFalse(Commands.runOnce(drive::stopWithX, drive));
         break;
       case TurnMotors:
@@ -229,18 +221,36 @@ public class RobotContainer {
         controller
             .x()
             .whileTrue(
-                drivetrainTurnSysID.dynamic(Direction.kForward)
-                //
-                // .andThen(drivetrainTurnSysID.dynamic(SysIdRoutine.Direction.kReverse))
-                //                    .andThen(drivetrainTurnSysID.quasistatic(Direction.kForward))
-                //                    .andThen(drivetrainTurnSysID.quasistatic(Direction.kReverse))
-                //                    .andThen(Commands.runOnce(drive::stopWithX, drive))
-                )
+                drivetrainTurnSysID
+                    .dynamic(Direction.kForward)
+                    .andThen(drivetrainTurnSysID.dynamic(Direction.kReverse))
+                    .andThen(drivetrainTurnSysID.quasistatic(Direction.kForward))
+                    .andThen(drivetrainTurnSysID.quasistatic(Direction.kReverse))
+                    .andThen(Commands.runOnce(drive::stopWithX, drive)))
             .onFalse(Commands.runOnce(drive::stopWithX, drive));
         break;
       case EverythingElse:
+
         break;
     }
+    controller
+            .leftTrigger()
+            .and(feeder::getSensorFeed)
+            .onTrue(
+                    new RunCommand(() -> feeder.runVolts(6.0)).until(() -> !feeder.getSensorFeed()));
+
+    controller // intake motor
+            .leftTrigger() // not a()
+            .onTrue(new RunCommand(() -> intake.setIntakePosition(new Rotation2d(115.0))));
+    controller.leftTrigger().onTrue(new RunCommand(() -> intake.setRollerPercentage(0.75)));
+    controller
+            .a()
+            .whileTrue(
+                    Commands.startEnd(
+                            () -> shooter.runVelocity(flywheelSpeedInput.get()), shooter::stop, shooter));
+    controller.rightTrigger().onTrue(new RunCommand(() -> shooter.runVolts(6.0)));
+
+    feeder.setDefaultCommand(new RunCommand(feeder::stop));
   }
 
   /**
