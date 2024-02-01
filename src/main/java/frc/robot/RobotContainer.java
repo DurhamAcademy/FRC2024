@@ -36,6 +36,7 @@ import frc.robot.subsystems.drive.*;
 import frc.robot.subsystems.feeder.Feeder;
 import frc.robot.subsystems.feeder.FeederIO;
 import frc.robot.subsystems.feeder.FeederIOSim;
+import frc.robot.subsystems.intake.Intake;
 import frc.robot.subsystems.shooter.Shooter;
 import frc.robot.subsystems.shooter.ShooterIO;
 import frc.robot.subsystems.shooter.ShooterIOSim;
@@ -52,8 +53,9 @@ import org.littletonrobotics.junction.networktables.LoggedDashboardNumber;
 public class RobotContainer {
   // Subsystems
   private final Drive drive;
-  private Shooter shooter;
+  private final Shooter shooter;
   private final Feeder feeder;
+  private Intake intake;
 
   // Controller
   private final CommandXboxController controller = new CommandXboxController(0);
@@ -231,6 +233,23 @@ public class RobotContainer {
 
         break;
     }
+    controller
+            .leftTrigger()
+            .and(feeder::getSensorFeed)
+            .onTrue(
+                    new RunCommand(() -> feeder.runVolts(6.0)).until(() -> !feeder.getSensorFeed()));
+
+    controller // intake motor
+            .leftTrigger() // not a()
+            .onTrue(new RunCommand(() -> intake.setIntakePosition(new Rotation2d(115.0))));
+    controller.leftTrigger().onTrue(new RunCommand(() -> intake.setRollerPercentage(0.75)));
+    controller
+            .a()
+            .whileTrue(
+                    Commands.startEnd(
+                            () -> shooter.runVelocity(flywheelSpeedInput.get()), shooter::stop, shooter));
+    controller.rightTrigger().onTrue(new RunCommand(() -> shooter.runVolts(6.0)));
+
     feeder.setDefaultCommand(new RunCommand(feeder::stop));
   }
 
