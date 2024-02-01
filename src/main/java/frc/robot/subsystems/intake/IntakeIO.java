@@ -11,7 +11,7 @@ public interface IntakeIO {
     public double armAppliedVolts = 0.0;
     public double[] armCurrentAmps = new double[] {};
     public double rollerVelocityRadPerSec;
-    public double rollerAppliedVolts = 0.0;
+    public double rollerAppliedVolts = 0.0; //fixed
     public double[] rollerCurrentAmps = new double[] {};
     public double rollerPositionRad = 0.0;
   }
