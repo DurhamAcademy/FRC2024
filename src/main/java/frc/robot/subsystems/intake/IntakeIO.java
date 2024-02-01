@@ -10,6 +10,8 @@ public interface IntakeIO {
     public double armVelocityRadPerSec = 0.0;
     public double armAppliedVolts = 0.0;
     public double[] armCurrentAmps = new double[] {};
+    public double[] armTemperature = new double[] {};
+
     public double rollerVelocityRadPerSec;
     public double rollerAppliedVolts = 0.0;
     public double[] rollerCurrentAmps = new double[] {};
