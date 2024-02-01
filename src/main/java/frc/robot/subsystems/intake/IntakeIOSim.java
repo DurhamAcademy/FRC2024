@@ -20,7 +20,7 @@ public class IntakeIOSim implements IntakeIO {
           true,
           -.2);
   private double armVoltage = 0.0;
-  private double wheelVoltage = 0.0;
+  private double rollerVoltage = 0.0;
 
   @Override
   public void updateInputs(IntakeIOInputs inputs) {
@@ -29,9 +29,9 @@ public class IntakeIOSim implements IntakeIO {
     inputs.armPositionRad = armSim.getAngleRads();
     inputs.armVelocityRadPerSec = armSim.getVelocityRadPerSec();
 
-    inputs.wheelCurrentAmps = new double[] {wheelSim.getCurrentDrawAmps()};
-    inputs.wheelAppliedVolts = wheelVoltage;
-    inputs.wheelVelocityRadPerSec = wheelSim.getAngularVelocityRadPerSec();
+    inputs.rollerCurrentAmps = new double[] {wheelSim.getCurrentDrawAmps()};
+    inputs.rollerAppliedVolts = rollerVoltage;
+    inputs.rollerVelocityRadPerSec = wheelSim.getAngularVelocityRadPerSec();
   }
 
   @Override
@@ -42,7 +42,7 @@ public class IntakeIOSim implements IntakeIO {
 
   @Override
   public void setRollerPercent(double percent) {
-    wheelVoltage = percent * 12.0;
-    wheelSim.setInputVoltage(wheelVoltage);
+    rollerVoltage = percent * 12.0;
+    wheelSim.setInputVoltage(rollerVoltage);
   }
 }
