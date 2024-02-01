@@ -23,7 +23,6 @@ import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.units.Units;
 import edu.wpi.first.wpilibj.GenericHID;
 import edu.wpi.first.wpilibj.XboxController;
-import edu.wpi.first.wpilibj2.command.*;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.RunCommand;
@@ -171,9 +170,13 @@ public class RobotContainer {
             .b()
             .onTrue(
                 Commands.runOnce(
-                        () ->
+                        () -> {
+                          try {
                             drive.setPose(
-                                new Pose2d(drive.getPose().getTranslation(), new Rotation2d())),
+                                new Pose2d(drive.getPose().getTranslation(), new Rotation2d()));
+                          } catch (Drive.GyroConnectionException ignored) {
+                          }
+                        },
                         drive)
                     .ignoringDisable(true));
 
