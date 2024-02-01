@@ -98,4 +98,8 @@ public class Shooter extends SubsystemBase {
   public double getCharacterizationVelocity() {
     return inputs.flywheelVelocityRadPerSec;
   }
+
+  public void setTargetShooterAngleRad(double anglediff) {
+    targetShooterAngleRad = anglediff * TURN_SHOOTER_RATIO;
+  }
 }
