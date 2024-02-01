@@ -8,7 +8,7 @@ import edu.wpi.first.wpilibj.simulation.FlywheelSim;
 import edu.wpi.first.wpilibj.simulation.SingleJointedArmSim;
 
 public class IntakeIOSim implements IntakeIO {
-  private FlywheelSim wheelSim = new FlywheelSim(DCMotor.getNEO(1), 3, .01);
+  private FlywheelSim rollerSim = new FlywheelSim(DCMotor.getNEO(1), 3, .01);
   private SingleJointedArmSim armSim =
       new SingleJointedArmSim(
           DCMotor.getNEO(1),
@@ -29,9 +29,9 @@ public class IntakeIOSim implements IntakeIO {
     inputs.armPositionRad = armSim.getAngleRads();
     inputs.armVelocityRadPerSec = armSim.getVelocityRadPerSec();
 
-    inputs.wheelCurrentAmps = new double[] {wheelSim.getCurrentDrawAmps()};
-    inputs.wheelAppliedVolts = wheelVoltage;
-    inputs.wheelVelocityRadPerSec = wheelSim.getAngularVelocityRadPerSec();
+    inputs.rollerCurrentAmps = new double[] {rollerSim.getCurrentDrawAmps()};
+    inputs.rollerAppliedVolts = wheelVoltage;
+    inputs.rollerVelocityRadPerSec = rollerSim.getAngularVelocityRadPerSec();
   }
 
   @Override
@@ -43,6 +43,6 @@ public class IntakeIOSim implements IntakeIO {
   @Override
   public void setRollerPercent(double percent) {
     wheelVoltage = percent * 12.0;
-    wheelSim.setInputVoltage(wheelVoltage);
+    rollerSim.setInputVoltage(wheelVoltage);
   }
 }

@@ -15,6 +15,7 @@ package frc.robot.subsystems.shooter;
 
 import edu.wpi.first.math.controller.ProfiledPIDController;
 import edu.wpi.first.math.controller.SimpleMotorFeedforward;
+import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.trajectory.TrapezoidProfile;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
@@ -99,7 +100,7 @@ public class Shooter extends SubsystemBase {
     return inputs.flywheelVelocityRadPerSec;
   }
 
-  public void setTargetShooterAngleRad(double anglediff) {
-    targetShooterAngleRad = anglediff * TURN_SHOOTER_RATIO;
+  public void setTargetShooterAngleRad(Rotation2d anglediff) {
+    targetShooterAngleRad = anglediff.getRadians() * TURN_SHOOTER_RATIO;
   }
 }
