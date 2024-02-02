@@ -166,9 +166,13 @@ public class RobotContainer {
             .b()
             .onTrue(
                 Commands.runOnce(
-                        () ->
+                        () -> {
+                          try {
                             drive.setPose(
-                                new Pose2d(drive.getPose().getTranslation(), new Rotation2d())),
+                                new Pose2d(drive.getPose().getTranslation(), new Rotation2d()));
+                          } catch (Drive.GyroConnectionException ignored) {
+                          }
+                        },
                         drive)
                     .ignoringDisable(true));
         controller
