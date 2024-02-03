@@ -37,6 +37,9 @@ import frc.robot.subsystems.feeder.Feeder;
 import frc.robot.subsystems.feeder.FeederIO;
 import frc.robot.subsystems.feeder.FeederIOSim;
 import frc.robot.subsystems.intake.Intake;
+import frc.robot.subsystems.intake.IntakeIO;
+import frc.robot.subsystems.intake.IntakeIOSim;
+import frc.robot.subsystems.intake.IntakeIOSparkMax;
 import frc.robot.subsystems.shooter.Shooter;
 import frc.robot.subsystems.shooter.ShooterIO;
 import frc.robot.subsystems.shooter.ShooterIOSim;
@@ -55,7 +58,7 @@ public class RobotContainer {
   private final Drive drive;
   private final Shooter shooter;
   private final Feeder feeder;
-  private Intake intake;
+  private final Intake intake;
 
   // Controller
   private final CommandXboxController controller = new CommandXboxController(0);
@@ -79,6 +82,7 @@ public class RobotContainer {
                 new ModuleIOSparkMax(3));
         shooter = new Shooter(new ShooterIOSparkMax());
         feeder = new Feeder(new FeederIO() {});
+        intake = new Intake(new IntakeIOSparkMax());
         // drive = new Drive(
         // new GyroIOPigeon2(),
         // new ModuleIOTalonFX(0),
@@ -99,6 +103,7 @@ public class RobotContainer {
                 new ModuleIOSim());
         shooter = new Shooter(new ShooterIOSim());
         feeder = new Feeder(new FeederIOSim());
+        intake = new Intake(new IntakeIOSim());
         break;
 
       default:
@@ -112,6 +117,7 @@ public class RobotContainer {
                 new ModuleIO() {});
         shooter = new Shooter(new ShooterIO() {});
         feeder = new Feeder(new FeederIO() {});
+        intake = new Intake(new IntakeIO() {});
         break;
     }
 
@@ -123,23 +129,12 @@ public class RobotContainer {
             .withTimeout(5.0));
     autoChooser = new LoggedDashboardChooser<>("Auto Choices", AutoBuilder.buildAutoChooser());
 
-    // Set up feedforward characterization
-    //    autoChooser.addOption(
-    //        "Drive FF Characterization",
-    //        new FeedForwardCharacterization(
-    //            drive, drive::runCharacterizationVolts, drive::getCharacterizationDriveVelocity));
-    //    autoChooser.addOption(
-    //        "Flywheel FF Characterization",
-    //        new FeedForwardCharacterization(
-    //            flywheel, flywheel::runVolts, flywheel::getCharacterizationDriveVelocity));
-
-    // Configure the button bindings
     configureButtonBindings();
   }
 
   public static SysIDMode sysIDMode = SysIDMode.Disabled;
 
-  enum SysIDMode {
+  public enum SysIDMode {
     Disabled,
     DriveMotors,
     TurnMotors,
@@ -155,12 +150,20 @@ public class RobotContainer {
   private void configureButtonBindings() {
     switch (sysIDMode) {
       case Disabled:
+        // ---- DEFAULT COMMANDS ----
         drive.setDefaultCommand(
             DriveCommands.joystickDrive(
                 drive,
                 () -> -controller.getLeftY(),
                 () -> -controller.getLeftX(),
                 () -> -controller.getRightX()));
+        intake.setDefaultCommand(
+            new RunCommand(
+                () -> intake.setIntakePosition(new Rotation2d(-15.0)),
+                intake)); // FIXME: NEED THE REAL ANGLE FOR THIS DEFAULT COMMAND STILL!
+        feeder.setDefaultCommand(new RunCommand(feeder::stop, feeder));
+
+        // ---- DRIVETRAIN COMMANDS ----
         controller.x().onTrue(Commands.runOnce(drive::stopWithX, drive));
         controller
             .b()
@@ -175,11 +178,36 @@ public class RobotContainer {
                         },
                         drive)
                     .ignoringDisable(true));
+
+        // ---- FEEDER COMMANDS ----
+        controller
+            .leftTrigger()
+            .and(feeder::getSensorFeed)
+            .onTrue(
+                new RunCommand(() -> feeder.runVolts(6.0), feeder)
+                    .until(() -> !feeder.getSensorFeed()));
+
+        // ---- INTAKE COMMANDS ----
+        controller
+            .leftTrigger() // not a()
+            .onTrue(new RunCommand(() -> intake.setIntakePosition(new Rotation2d(115.0)), intake));
+        controller
+            .leftTrigger()
+            .onTrue(new RunCommand(() -> intake.setRollerPercentage(0.75), intake));
+
+        // ---- SHOOTER COMMANDS ----
         controller
             .a()
             .whileTrue(
                 Commands.startEnd(
                     () -> shooter.runVelocity(flywheelSpeedInput.get()), shooter::stop, shooter));
+        controller.rightTrigger().onTrue(new RunCommand(() -> shooter.runVolts(6.0), shooter));
+        controller
+            .a()
+            .whileTrue(
+                Commands.startEnd(
+                    () -> shooter.runVelocity(flywheelSpeedInput.get()), shooter::stop, shooter));
+
         break;
       case DriveMotors:
         drive.setDefaultCommand(
@@ -213,49 +241,9 @@ public class RobotContainer {
             .whileTrue(drivetrainDriveSysID.quasistatic(Direction.kReverse).withTimeout(2.0))
             .onFalse(Commands.runOnce(drive::stopWithX, drive));
         break;
-      case TurnMotors:
-        var drivetrainTurnSysID =
-            new SysIdRoutine(
-                new Config(Voltage.per(Units.Second).of(.5), Voltage.of(8.0), Seconds.of(12.0)),
-                new Mechanism(
-                    drive::runCharacterizationVolts,
-                    drive::populateTurnCharacterizationData,
-                    drive,
-                    "DrivetrainDriveMotors"));
-        controller
-            .x()
-            .whileTrue(
-                drivetrainTurnSysID
-                    .dynamic(Direction.kForward)
-                    .andThen(drivetrainTurnSysID.dynamic(Direction.kReverse))
-                    .andThen(drivetrainTurnSysID.quasistatic(Direction.kForward))
-                    .andThen(drivetrainTurnSysID.quasistatic(Direction.kReverse))
-                    .andThen(Commands.runOnce(drive::stopWithX, drive)))
-            .onFalse(Commands.runOnce(drive::stopWithX, drive));
-        break;
       case EverythingElse:
-
         break;
     }
-    intake.setDefaultCommand(new RunCommand(() -> intake.setIntakePosition(new Rotation2d(-15.0)))); // FIXME: NEED THE REAL ANGLE FOR THIS DEFAULT COMMAND STILL!
-    controller
-            .leftTrigger()
-            .and(feeder::getSensorFeed)
-            .onTrue(
-                    new RunCommand(() -> feeder.runVolts(6.0)).until(() -> !feeder.getSensorFeed()));
-
-    controller // intake motor
-            .leftTrigger() // not a()
-            .onTrue(new RunCommand(() -> intake.setIntakePosition(new Rotation2d(115.0))));
-    controller.leftTrigger().onTrue(new RunCommand(() -> intake.setRollerPercentage(0.75)));
-    controller
-            .a()
-            .whileTrue(
-                    Commands.startEnd(
-                            () -> shooter.runVelocity(flywheelSpeedInput.get()), shooter::stop, shooter));
-    controller.rightTrigger().onTrue(new RunCommand(() -> shooter.runVolts(6.0)));
-
-    feeder.setDefaultCommand(new RunCommand(feeder::stop));
   }
 
   /**
