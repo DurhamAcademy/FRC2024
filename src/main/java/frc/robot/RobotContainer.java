@@ -189,10 +189,10 @@ public class RobotContainer {
 
         // ---- INTAKE COMMANDS ----
         controller
-            .leftTrigger() // not a()
+            .leftBumper() // not a()
             .onTrue(new RunCommand(() -> intake.setIntakePosition(new Rotation2d(115.0)), intake));
         controller
-            .leftTrigger()
+            .rightBumper()
             .onTrue(new RunCommand(() -> intake.setRollerPercentage(0.75), intake));
 
         // ---- SHOOTER COMMANDS ----
