@@ -27,4 +27,6 @@ public interface IntakeIO {
 
   /** Set intake wheel voltage. */
   public default void setRollerPercent(double percent) {}
+
+
 }

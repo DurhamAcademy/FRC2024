@@ -13,10 +13,8 @@
 
 package frc.robot.subsystems.intake;
 
+import com.revrobotics.*;
 import com.revrobotics.CANSparkLowLevel.MotorType;
-import com.revrobotics.CANSparkMax;
-import com.revrobotics.RelativeEncoder;
-import com.revrobotics.SparkPIDController;
 import edu.wpi.first.math.util.Units;
 
 /**
@@ -29,7 +27,7 @@ public class IntakeIOSparkMax implements IntakeIO {
 
   private final CANSparkMax arm = new CANSparkMax(0, MotorType.kBrushless);
   private final CANSparkMax roller = new CANSparkMax(1, MotorType.kBrushless);
-  private final RelativeEncoder encoder = arm.getEncoder();
+  private final AbsoluteEncoder encoder = arm.getAbsoluteEncoder(SparkAbsoluteEncoder.Type.kDutyCycle);
   private final SparkPIDController pid = arm.getPIDController();
 
   public IntakeIOSparkMax() {
