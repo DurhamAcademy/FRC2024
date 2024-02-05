@@ -13,6 +13,7 @@
 
 package frc.robot.subsystems.shooter;
 
+import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.controller.ProfiledPIDController;
 import edu.wpi.first.math.controller.SimpleMotorFeedforward;
 import edu.wpi.first.math.geometry.Rotation2d;
@@ -36,7 +37,6 @@ public class Shooter extends SubsystemBase {
   /** Creates a new Shooter. */
   public Shooter(ShooterIO io) {
     this.io = io;
-
     // Switch constants based on mode (the physics simulator is treated as a
     // separate robot with different tuning)
     switch (Constants.currentMode) {
