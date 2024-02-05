@@ -25,7 +25,6 @@ public interface ShooterIO {
     public double[] flywheelTemperature = new double[] {};
   }
 
-
   /** Updates the set of loggable inputs. */
   public default void updateInputs(ShooterIOInputs inputs) {}
 
