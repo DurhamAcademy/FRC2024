@@ -17,8 +17,8 @@ public class IntakeIOSim implements IntakeIO {
           100,
           .1819,
           Units.inchesToMeters(7.063364),
-          PI * .6,
           PI * -.25,
+          PI * .6,
           true,
           0); // mass is 8.495 lbs
   private double armVoltage = 0.0;
