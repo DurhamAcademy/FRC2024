@@ -2,6 +2,8 @@ package frc.robot.subsystems.climb;
 
 import org.littletonrobotics.junction.AutoLog;
 
+import edu.wpi.first.math.geometry.Rotation2d;
+
 public interface ClimbIO {
 
   /** Updates the set of loggable inputs. */
@@ -13,7 +15,10 @@ public interface ClimbIO {
   default void setRightVoltage(double volts) {}
 
   /** Stop in open loop. */
-  public default void stop() {}
+  public default void leftStop() {}
+
+   /** Stop in open loop. */
+  public default void rightStop() {}
 
   @AutoLog
   public static class ClimbIOInputs {
@@ -21,9 +26,13 @@ public interface ClimbIO {
     public double leftVelocityRadPerSec = 0.0;
     public double leftAppliedVolts = 0.0;
     public double[] leftCurrentAmps = new double[] {};
+    public Rotation2d leftPosition = new Rotation2d();
+    public Rotation2d leftAbsolutePosition = new Rotation2d();
     public double rightPositionRad = 0.0;
     public double rightVelocityRadPerSec = 0.0;
     public double rightAppliedVolts = 0.0;
     public double[] rightCurrentAmps = new double[] {};
+    public Rotation2d rightPosition = new Rotation2d();
+    public Rotation2d rightAbsolutePosition = new Rotation2d();
   }
 }
