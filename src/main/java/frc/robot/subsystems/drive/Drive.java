@@ -194,8 +194,9 @@ public class Drive extends SubsystemBase {
           camPose.transformBy(Constants.kCameraToRobot).toPose2d(), imageCaptureTime);
     }
   }*/
-  public void addVisionMeasurement(Pose2d visionRobotPoseMeters, double timestampSeconds) {
-    poseEstimator.addVisionMeasurement(visionRobotPoseMeters, timestampSeconds);
+  public void addVisionMeasurement() {
+    Optional<EstimatedRobotPose> estPose = getEstimatedGlobalPose(pose);
+    estPose.ifPresent(estimatedRobotPose -> poseEstimator.addVisionMeasurement(estimatedRobotPose.estimatedPose.toPose2d(), estimatedRobotPose.timestampSeconds));
   }
 
   public Optional<EstimatedRobotPose> getEstimatedGlobalPose(Pose2d prevEstimatedRobotPose) {
