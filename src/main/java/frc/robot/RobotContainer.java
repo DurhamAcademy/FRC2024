@@ -171,9 +171,14 @@ public class RobotContainer {
             .b()
             .onTrue(
                 Commands.runOnce(
-                        () ->
+                        () -> {
+                          try {
                             drive.setPose(
-                                new Pose2d(drive.getPose().getTranslation(), new Rotation2d())),
+                                new Pose2d(drive.getPose().getTranslation(), new Rotation2d()));
+                          } catch (Drive.GyroConnectionException e) {
+                            throw new RuntimeException(e);
+                          }
+                        },
                         drive)
                     .ignoringDisable(true));
 
