@@ -20,8 +20,8 @@ import frc.robot.subsystems.climb.ClimbIO.ClimbIOInputs;
 
 public class ClimbIOSim implements ClimbIO {
 
-  private DCMotorSim leftSim = new DCMotorSim(DCMotor.getNEO(1), 6.75, 0.025);
-  private DCMotorSim rightSim = new DCMotorSim(DCMotor.getNEO(1), 150.0 / 7.0, 0.004);
+  private DCMotorSim leftSim = new DCMotorSim(DCMotor.getNEO(1), 16.0, 0.025);
+  private DCMotorSim rightSim = new DCMotorSim(DCMotor.getNEO(1), 16.0, 0.025);
 
   private final Rotation2d leftAbsoluteInitPosition = new Rotation2d(Math.random() * 2.0 * Math.PI);
   private final Rotation2d rightAbsoluteInitPosition = new Rotation2d(Math.random() * 2.0 * Math.PI);

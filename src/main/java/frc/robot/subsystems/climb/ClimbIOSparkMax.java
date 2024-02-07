@@ -25,13 +25,13 @@ import frc.robot.subsystems.climb.ClimbIO;
  * "CANSparkFlex".
  */
 public class ClimbIOSparkMax implements ClimbIO {
-  private static final double LEFT_GEAR_RATIO = 100.0;
-  private static final double RIGHT_GEAR_RATIO = 3.0;
+  private static final double LEFT_GEAR_RATIO = 16.0;
+  private static final double RIGHT_GEAR_RATIO = 16.0;
 
   private final CANSparkMax left = new CANSparkMax(0, MotorType.kBrushless);
   private final CANSparkMax right = new CANSparkMax(1, MotorType.kBrushless);
-  private final RelativeEncoder encoder = left.getEncoder();
-  private final SparkPIDController pid = left.getPIDController();
+  private final RelativeEncoder leftEncoder = left.getEncoder();
+  private final RelativeEncoder rightEncoder = right.getEncoder();
 
   public ClimbIOSparkMax() {
     left.restoreFactoryDefaults();
@@ -40,11 +40,11 @@ public class ClimbIOSparkMax implements ClimbIO {
     left.setCANTimeout(250);
     right.setCANTimeout(250);
 
-    left.setInverted(false);
-    right.follow(left, false);
+    left.enableVoltageCompensation(12.0);  // wait for aarav to do climb wiring
+    left.setSmartCurrentLimit(30); // wait for aarav to do climb wiring
 
-    left.enableVoltageCompensation(12.0);
-    right.setSmartCurrentLimit(30);
+    right.enableVoltageCompensation(12.0);  // wait for aarav to do climb wiring
+    right.setSmartCurrentLimit(30);  // wait for aarav to do climb wiring
 
     left.burnFlash();
     right.burnFlash();
@@ -52,40 +52,29 @@ public class ClimbIOSparkMax implements ClimbIO {
 
   @Override
   public void updateInputs(ClimbIOInputs inputs) {
-    inputs.leftPositionRad = Units.rotationsToRadians(encoder.getPosition() / LEFT_GEAR_RATIO);
+    inputs.leftPositionRad = Units.rotationsToRadians(leftEncoder.getPosition() / LEFT_GEAR_RATIO);
     inputs.leftVelocityRadPerSec =
-        Units.rotationsPerMinuteToRadiansPerSecond(encoder.getVelocity() / LEFT_GEAR_RATIO);
+        Units.rotationsPerMinuteToRadiansPerSecond(leftEncoder.getVelocity() / LEFT_GEAR_RATIO);
     inputs.leftAppliedVolts = left.getAppliedOutput() * left.getBusVoltage();
     inputs.leftCurrentAmps = new double[] {left.getOutputCurrent()};
     inputs.leftTemperature = new double[] {left.getMotorTemperature()};
-    inputs.rightPositionRad = Units.rotationsToRadians(encoder.getPosition() / RIGHT_GEAR_RATIO);
+    inputs.rightPositionRad = Units.rotationsToRadians(rightEncoder.getPosition() / RIGHT_GEAR_RATIO);
     inputs.rightVelocityRadPerSec =
-        Units.rotationsPerMinuteToRadiansPerSecond(encoder.getVelocity() / RIGHT_GEAR_RATIO);
+        Units.rotationsPerMinuteToRadiansPerSecond(rightEncoder.getVelocity() / RIGHT_GEAR_RATIO);
     inputs.rightAppliedVolts = right.getAppliedOutput() * right.getBusVoltage();
     inputs.rightCurrentAmps = new double[] {right.getOutputCurrent()};
     inputs.rightTemperature = new double[] {right.getMotorTemperature()};
   }
 
-  public void setVoltage(double volts) {
+  // sets the left motor voltage
+  public void setLeftVoltage(double volts) {
     left.setVoltage(volts);
+  }
+
+  // sets the right motor voltage
+  public void setRightVoltage(double volts) {
     right.setVoltage(volts);
   }
-  //
-  //    @Override
-  //    public void setArmVelocity(double velocityRadPerSec, double ffVolts) {
-  //        pid.setReference(
-  //                Units.radiansPerSecondToRotationsPerMinute(velocityRadPerSec) * ARM_GEAR_RATIO,
-  //                ControlType.kVelocity,
-  //                0,
-  //                ffVolts,
-  //                ArbFFUnits.kVoltage);
-  //    }
-  //
-  //    @Override
-  //    public void stop() {
-  //        arm.stopMotor();
-  //    }
-  //
   //    @Override
   //    public void configurePID(double kP, double kI, double kD) {
   //        pid.setP(kP, 0);

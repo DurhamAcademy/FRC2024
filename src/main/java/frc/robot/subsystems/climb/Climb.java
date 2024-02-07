@@ -10,15 +10,20 @@ import frc.robot.Constants;
 import org.littletonrobotics.junction.Logger;
 
 public class Climb extends SubsystemBase {
-  private static final double LEFT_RADIUS = Units.inchesToMeters(2.0); // FIGURE OUT RADIUS
-  private static final double RIGHT_RADIUS = Units.inchesToMeters(2.0); // FIGURE OUT RADIUS
+  private static final double LEFT_RADIUS = Units.inchesToMeters(0.8); // FIGURE OUT RADIUS
+  private static final double RIGHT_RADIUS = Units.inchesToMeters(0.8); // FIGURE OUT RADIUS
   private final ClimbIO io;
   private final ClimbIOInputsAutoLogged inputs = new ClimbIOInputsAutoLogged();
   private final SimpleMotorFeedforward ffModel;
   private final ProfiledPIDController pidController;
   private Rotation2d leftRelativeOffset = null; // Relative + Offset = Absolute
   private Rotation2d rightRelativeOffset = null; // Relative + Offset = Absolute
-  double offset = 0.0;
+  double leftOffset = 0.0;
+  double rightOffset = 0.0;
+  double leftVelocity = 0.0;
+  double rightVelocity = 0.0;
+  double leftMeasuredPosition;
+  double rightMeasuredPosition;
 
   public Climb(ClimbIO io) {
     this.io = io;
@@ -66,6 +71,7 @@ public class Climb extends SubsystemBase {
       rightRelativeOffset = inputs.rightAbsolutePosition.minus(inputs.rightPosition);
     }
     io.updateInputs(inputs);
+    // sets voltages
     io.setLeftVoltage(
         pidController.calculate(inputs.leftPositionRad)
             + ffModel.calculate(pidController.getSetpoint().velocity));
@@ -85,30 +91,33 @@ public class Climb extends SubsystemBase {
     io.setRightVoltage(volts);
   }
 
-  /** Run closed loop to the specified position. */
-  public void runPosition(double position) {
-    pidController.setGoal(position + offset);
-    // Log flywheel setpoint
-    Logger.recordOutput("Flywheel/SetpointRPM", position);
+  /** Run closed loop to the specified position. (for left motor) */
+  public void runLeftPosition(double leftPosition) {
+    pidController.setGoal(leftPosition + leftOffset);
+    // Log climb setpoint
+    Logger.recordOutput("Climb left motor/SetpointRPM", leftPosition);
   }
 
+  /** Run closed loop to the specified position. (for right motor) */
+  public void runRightPosition(double rightPosition) {
+    pidController.setGoal(rightPosition + rightOffset);
+    // Log climb setpoint
+    Logger.recordOutput("Climb right motor/SetpointRPM", rightPosition);
+  }
+
+    // idk what this does (for the left)
   public void resetLeftPosition() {
-    var oldGoal =
-        new TrapezoidProfile.State(
-            pidController.getGoal().position - offset, pidController.getGoal().velocity);
-    offset = inputs.leftPositionRad;
-    pidController.setGoal(new TrapezoidProfile.State(oldGoal.position + offset, oldGoal.velocity));
+    leftOffset = inputs.leftPositionRad;
+    pidController.reset(leftMeasuredPosition, leftVelocity = 0);
   }
 
+  // idk what this does (for the right)
   public void resetRightPosition() {
-    var oldGoal =
-        new TrapezoidProfile.State(
-            pidController.getGoal().position - offset, pidController.getGoal().velocity);
-    offset = inputs.rightPositionRad;
-    pidController.setGoal(new TrapezoidProfile.State(oldGoal.position + offset, oldGoal.velocity));
+    rightOffset = inputs.rightPositionRad;
+    pidController.reset(rightMeasuredPosition, rightVelocity = 0);
   }
 
-  /** Stops the left. */
+  /** Stops the left. (and right) */
   public void stop() {
     io.leftStop();
     io.rightStop();
