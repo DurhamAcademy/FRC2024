@@ -230,34 +230,24 @@ public class RobotContainer {
             .onFalse(Commands.runOnce(drive::stopWithX, drive));
         break;
       case EverythingElse:
+
         break;
     }
     controller
-        .leftTrigger()
-        .and(feeder::getSensorFeed)
-        .onTrue(new RunCommand(() -> feeder.runVolts(6.0)).until(() -> !feeder.getSensorFeed()));
-
-    controller // this will be <against the wall shooter>
-        .rightTrigger() // please change the controller inputs, whatever is fit
-        .onTrue(
-            new RunCommand(() -> shooter.setTargetShooterAngleRad(new Rotation2d(115.0)))
-                .andThen(
-                    new RunCommand(
-                        () ->
-                            shooter.runVelocity(
-                                5000.00)))); // this angle is not correct. according to aarav, this
-    // has to be figured out after testing
+            .leftTrigger()
+            .and(feeder::getSensorFeed)
+            .onTrue(
+                    new RunCommand(() -> feeder.runVolts(6.0)).until(() -> !feeder.getSensorFeed()));
 
     controller // intake motor
-        .leftTrigger() // not a()
-        .onTrue(new RunCommand(() -> intake.setIntakePosition(new Rotation2d(115.0))));
-
+            .leftTrigger() // not a()
+            .onTrue(new RunCommand(() -> intake.setIntakePosition(new Rotation2d(115.0))));
     controller.leftTrigger().onTrue(new RunCommand(() -> intake.setRollerPercentage(0.75)));
     controller
-        .a()
-        .whileTrue(
-            Commands.startEnd(
-                () -> shooter.runVelocity(flywheelSpeedInput.get()), shooter::stop, shooter));
+            .a()
+            .whileTrue(
+                    Commands.startEnd(
+                            () -> shooter.runVelocity(flywheelSpeedInput.get()), shooter::stop, shooter));
     controller.rightTrigger().onTrue(new RunCommand(() -> shooter.runVolts(6.0)));
 
     feeder.setDefaultCommand(new RunCommand(feeder::stop));

@@ -20,14 +20,11 @@ import com.pathplanner.lib.pathfinding.Pathfinding;
 import com.pathplanner.lib.util.HolonomicPathFollowerConfig;
 import com.pathplanner.lib.util.PathPlannerLogging;
 import com.pathplanner.lib.util.ReplanningConfig;
+import edu.wpi.first.math.estimator.SwerveDrivePoseEstimator;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
-import edu.wpi.first.math.geometry.Twist2d;
-import edu.wpi.first.math.kinematics.ChassisSpeeds;
-import edu.wpi.first.math.kinematics.SwerveDriveKinematics;
-import edu.wpi.first.math.kinematics.SwerveModulePosition;
-import edu.wpi.first.math.kinematics.SwerveModuleState;
+import edu.wpi.first.math.kinematics.*;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.units.*;
 import edu.wpi.first.wpilibj.DriverStation;
@@ -49,10 +46,15 @@ public class Drive extends SubsystemBase {
   private final GyroIO gyroIO;
   private final GyroIOInputsAutoLogged gyroInputs = new GyroIOInputsAutoLogged();
   private final Module[] modules = new Module[4]; // FL, FR, BL, BR
+  private final SwerveModulePosition[] swerveModulePositions;
 
   private SwerveDriveKinematics kinematics = new SwerveDriveKinematics(getModuleTranslations());
+  private SwerveDrivePoseEstimator poseEstimator;
   private Pose2d pose = new Pose2d();
   private Rotation2d lastGyroRotation = new Rotation2d();
+
+  SwerveDrivePoseEstimator noGyroPoseEstimation;
+  Rotation2d noGyroRotation;
 
   public Drive(
       GyroIO gyroIO,
@@ -69,7 +71,13 @@ public class Drive extends SubsystemBase {
     // Configure AutoBuilder for PathPlanner
     AutoBuilder.configureHolonomic(
         this::getPose,
-        this::setPose,
+        pose1 -> {
+          try {
+            setPose(pose1);
+          } catch (GyroConnectionException e) {
+            throw new RuntimeException(e);
+          }
+        },
         () -> kinematics.toChassisSpeeds(getModuleStates()),
         this::runVelocity,
         new HolonomicPathFollowerConfig(
@@ -86,6 +94,22 @@ public class Drive extends SubsystemBase {
                 "Odometry/Trajectory", activePath.toArray(new Pose2d[activePath.size()])));
     PathPlannerLogging.setLogTargetPoseCallback(
         (targetPose) -> Logger.recordOutput("Odometry/TrajectorySetpoint", targetPose));
+
+    poseEstimator =
+        new SwerveDrivePoseEstimator(
+            kinematics,
+            gyroInputs.yawPosition,
+            new SwerveModulePosition[] {
+              modules[0].getPosition(),
+              modules[1].getPosition(),
+              modules[2].getPosition(),
+              modules[3].getPosition()
+            },
+            new Pose2d(3.0, 5.0, new Rotation2d(3.0)));
+
+    swerveModulePositions = new SwerveModulePosition[modules.length];
+    noGyroPoseEstimation = null;
+    noGyroRotation = null;
   }
 
   public void periodic() {
@@ -109,25 +133,47 @@ public class Drive extends SubsystemBase {
       Logger.recordOutput("SwerveStates/SetpointsOptimized", new SwerveModuleState[] {});
     }
 
+    updateSwerveModulePositions();
     // Update odometry
     SwerveModulePosition[] wheelDeltas = new SwerveModulePosition[4];
     for (int i = 0; i < 4; i++) {
       wheelDeltas[i] = modules[i].getPositionDelta();
     }
+
     // The twist represents the motion of the robot since the last
     // loop cycle in x, y, and theta based only on the modules,
     // without the gyro. The gyro is always disconnected in simulation.
     var twist = kinematics.toTwist2d(wheelDeltas);
     if (gyroInputs.connected) {
+      if (noGyroPoseEstimation != null) {
+        // todo: make the next line conditional, only update pose if cameras are
+        //  online, otherwise don't do it.
+        poseEstimator.resetPosition(gyroInputs.yawPosition, swerveModulePositions, pose);
+        noGyroPoseEstimation = null;
+      }
       // If the gyro is connected, replace the theta component of the twist
       // with the change in angle since the last loop cycle.
-      twist =
-          new Twist2d(
-              twist.dx, twist.dy, gyroInputs.yawPosition.minus(lastGyroRotation).getRadians());
-      lastGyroRotation = gyroInputs.yawPosition;
+
+      // update the pose estimator
+      pose = poseEstimator.update(gyroInputs.yawPosition, swerveModulePositions);
+
+    } else {
+      if (noGyroPoseEstimation == null) {
+        noGyroRotation = pose.getRotation();
+        noGyroPoseEstimation =
+            new SwerveDrivePoseEstimator(
+                kinematics, pose.getRotation(), swerveModulePositions, pose);
+      }
+
+      // Apply the twist (change since last loop cycle) to the current pose
+      noGyroRotation = pose.exp(twist).getRotation();
+      pose = noGyroPoseEstimation.update(noGyroRotation, swerveModulePositions);
     }
-    // Apply the twist (change since last loop cycle) to the current pose
-    pose = pose.exp(twist);
+  }
+
+  private void updateSwerveModulePositions() {
+    // populate the list
+    for (int i = 0; i < modules.length; i++) swerveModulePositions[i] = modules[i].getPosition();
   }
 
   /**
@@ -248,8 +294,63 @@ public class Drive extends SubsystemBase {
   }
 
   /** Resets the current odometry pose. */
-  public void setPose(Pose2d pose) {
+  public void setPose(Pose2d pose) throws GyroConnectionException {
     this.pose = pose;
+    if (gyroInputs.connected)
+      this.poseEstimator.resetPosition(gyroInputs.yawPosition, swerveModulePositions, pose);
+    else this.noGyroPoseEstimation.resetPosition(noGyroRotation, swerveModulePositions, pose);
+    throw new GyroConnectionException(
+        "Pose estimator was written to without gyroscope data (idk what"
+            + " will happen after this because now if the gyroscope comes back online pose may act weird");
+  }
+
+  /**
+   * An exception that describes any problem that happens due to a disconnect from the gyroscope.
+   */
+  public static class GyroConnectionException extends Exception {
+    /**
+     * Constructs a new exception with the specified detail message. The cause is not initialized,
+     * and may subsequently be initialized by a call to {@link #initCause}.
+     *
+     * @param message the detail message. The detail message is saved for later retrieval by the
+     *     {@link #getMessage()} method.
+     */
+    public GyroConnectionException(String message) {
+      super(message);
+    }
+
+    /**
+     * Constructs a new exception with the specified detail message and cause.
+     *
+     * <p>Note that the detail message associated with {@code cause} is <i>not</i> automatically
+     * incorporated in this exception's detail message.
+     *
+     * @param message the detail message (which is saved for later retrieval by the {@link
+     *     #getMessage()} method).
+     * @param cause the cause (which is saved for later retrieval by the {@link #getCause()}
+     *     method). (A {@code null} value is permitted, and indicates that the cause is nonexistent
+     *     or unknown.)
+     * @since 1.4
+     */
+    public GyroConnectionException(String message, Throwable cause) {
+      super(message, cause);
+    }
+
+    /**
+     * Constructs a new exception with the specified detail message, cause, suppression enabled or
+     * disabled, and writable stack trace enabled or disabled.
+     *
+     * @param message the detail message.
+     * @param cause the cause. (A {@code null} value is permitted, and indicates that the cause is
+     *     nonexistent or unknown.)
+     * @param enableSuppression whether or not suppression is enabled or disabled
+     * @param writableStackTrace whether or not the stack trace should be writable
+     * @since 1.7
+     */
+    public GyroConnectionException(
+        String message, Throwable cause, boolean enableSuppression, boolean writableStackTrace) {
+      super(message, cause, enableSuppression, writableStackTrace);
+    }
   }
 
   /** Returns the maximum linear speed in meters per sec. */
