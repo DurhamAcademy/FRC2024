@@ -13,8 +13,10 @@
 
 package frc.robot.subsystems.climb;
 
+import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.system.plant.DCMotor;
 import edu.wpi.first.wpilibj.simulation.SingleJointedArmSim;
+import frc.robot.subsystems.feeder.FeederIO.FeederIOInputs;
 
 public class ClimbIOSim implements ClimbIO {
   private SingleJointedArmSim sim =
@@ -27,7 +29,7 @@ public class ClimbIOSim implements ClimbIO {
   private double appliedVolts = 0.0;
 
   @Override
-  public void updateInputs(FeederIOInputs inputs) {
+  public void updateInputs(ClimbIOInputs inputs) {
     if (closedLoop) {
       //      appliedVolts = MathUtil.clamp(pid.calculate(sim.getAngleRads()) + ffVolts, -12.0,
       // 12.0);
@@ -36,21 +38,27 @@ public class ClimbIOSim implements ClimbIO {
 
     sim.update(0.02);
 
-    inputs.positionRad = sim.getAngleRads();
-    inputs.velocityRadPerSec = sim.getVelocityRadPerSec();
-    inputs.appliedVolts = appliedVolts;
-    inputs.currentAmps = new double[] {sim.getCurrentDrawAmps()};
+    inputs.leftPositionRad = sim.getAngleRads();
+    inputs.leftVelocityRadPerSec = sim.getVelocityRadPerSec();
+    inputs.leftAppliedVolts = appliedVolts;
+    inputs.leftCurrentAmps = new double[] {sim.getCurrentDrawAmps()};
+    inputs.rightPositionRad = sim.getAngleRads();
+    inputs.rightVelocityRadPerSec = sim.getVelocityRadPerSec();
+    inputs.rightAppliedVolts = appliedVolts;
+    inputs.rightCurrentAmps = new double[] {sim.getCurrentDrawAmps()};
   }
 
   @Override
-  public void setVoltage(double volts) {
+  public void setLeftVoltage(double volts) {
     closedLoop = false;
     appliedVolts = 0.0;
     sim.setInputVoltage(volts);
   }
 
   @Override
-  public void stop() {
-    setVoltage(0.0);
+  public void setRightVoltage(double volts) {
+    closedLoop = false;
+    appliedVolts = 0.0;
+    sim.setInputVoltage(volts);
   }
 }

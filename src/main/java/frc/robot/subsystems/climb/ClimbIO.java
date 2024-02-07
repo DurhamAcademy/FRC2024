@@ -17,7 +17,7 @@ public interface ClimbIO {
   /** Stop in open loop. */
   public default void leftStop() {}
 
-   /** Stop in open loop. */
+  /** Stop in open loop. */
   public default void rightStop() {}
 
   @AutoLog
