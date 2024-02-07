@@ -18,51 +18,57 @@ import com.revrobotics.CANSparkMax;
 import com.revrobotics.RelativeEncoder;
 import com.revrobotics.SparkPIDController;
 import edu.wpi.first.math.util.Units;
-import frc.robot.subsystems.intake.IntakeIO;
+import frc.robot.subsystems.climb.ClimbIO;
 
 /**
  * NOTE: To use the Spark Flex / NEO Vortex, replace all instances of "CANSparkMax" with
  * "CANSparkFlex".
  */
-public class ClimbIOSparkMax implements IntakeIO {
-  private static final double ARM_GEAR_RATIO = 100.0;
-  private static final double ROLLER_GEAR_RATIO = 3.0;
+public class ClimbIOSparkMax implements ClimbIO {
+  private static final double LEFT_GEAR_RATIO = 100.0;
+  private static final double RIGHT_GEAR_RATIO = 3.0;
 
-  private final CANSparkMax arm = new CANSparkMax(0, MotorType.kBrushless);
-  private final CANSparkMax roller = new CANSparkMax(1, MotorType.kBrushless);
-  private final RelativeEncoder encoder = arm.getEncoder();
-  private final SparkPIDController pid = arm.getPIDController();
+  private final CANSparkMax left = new CANSparkMax(0, MotorType.kBrushless);
+  private final CANSparkMax right = new CANSparkMax(1, MotorType.kBrushless);
+  private final RelativeEncoder encoder = left.getEncoder();
+  private final SparkPIDController pid = left.getPIDController();
 
   public ClimbIOSparkMax() {
-    arm.restoreFactoryDefaults();
-    roller.restoreFactoryDefaults();
+    left.restoreFactoryDefaults();
+    right.restoreFactoryDefaults();
 
-    arm.setCANTimeout(250);
-    roller.setCANTimeout(250);
+    left.setCANTimeout(250);
+    right.setCANTimeout(250);
 
-    arm.setInverted(false);
-    roller.follow(arm, false);
+    left.setInverted(false);
+    right.follow(left, false);
 
-    arm.enableVoltageCompensation(12.0);
-    roller.setSmartCurrentLimit(30);
+    left.enableVoltageCompensation(12.0);
+    right.setSmartCurrentLimit(30);
 
-    arm.burnFlash();
-    roller.burnFlash();
+    left.burnFlash();
+    right.burnFlash();
   }
 
   @Override
-  public void updateInputs(IntakeIOInputs inputs) {
-    inputs.armPositionRad = Units.rotationsToRadians(encoder.getPosition() / ARM_GEAR_RATIO);
-    inputs.armVelocityRadPerSec =
-        Units.rotationsPerMinuteToRadiansPerSecond(encoder.getVelocity() / ARM_GEAR_RATIO);
-    inputs.armAppliedVolts = arm.getAppliedOutput() * arm.getBusVoltage();
-    inputs.armCurrentAmps = new double[] {arm.getOutputCurrent(), roller.getOutputCurrent()};
-    inputs.armTemperature = new double[] {arm.getMotorTemperature()};
-    inputs.rollerTemperature = new double[] {roller.getMotorTemperature()};
+  public void updateInputs(ClimbIOInputs inputs) {
+    inputs.leftPositionRad = Units.rotationsToRadians(encoder.getPosition() / LEFT_GEAR_RATIO);
+    inputs.leftVelocityRadPerSec =
+        Units.rotationsPerMinuteToRadiansPerSecond(encoder.getVelocity() / LEFT_GEAR_RATIO);
+    inputs.leftAppliedVolts = left.getAppliedOutput() * left.getBusVoltage();
+    inputs.leftCurrentAmps = new double[] {left.getOutputCurrent()};
+    inputs.leftTemperature = new double[] {left.getMotorTemperature()};
+    inputs.rightPositionRad = Units.rotationsToRadians(encoder.getPosition() / RIGHT_GEAR_RATIO);
+    inputs.rightVelocityRadPerSec =
+        Units.rotationsPerMinuteToRadiansPerSecond(encoder.getVelocity() / RIGHT_GEAR_RATIO);
+    inputs.rightAppliedVolts = right.getAppliedOutput() * right.getBusVoltage();
+    inputs.rightCurrentAmps = new double[] {right.getOutputCurrent()};
+    inputs.rightTemperature = new double[] {right.getMotorTemperature()};
   }
 
   public void setVoltage(double volts) {
-    arm.setVoltage(volts);
+    left.setVoltage(volts);
+    right.setVoltage(volts);
   }
   //
   //    @Override

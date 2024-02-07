@@ -15,50 +15,61 @@ package frc.robot.subsystems.climb;
 
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.system.plant.DCMotor;
-import edu.wpi.first.wpilibj.simulation.SingleJointedArmSim;
-import frc.robot.subsystems.feeder.FeederIO.FeederIOInputs;
+import edu.wpi.first.wpilibj.simulation.DCMotorSim;
+import frc.robot.subsystems.climb.ClimbIO.ClimbIOInputs;
 
 public class ClimbIOSim implements ClimbIO {
-  private SingleJointedArmSim sim =
-      new SingleJointedArmSim(
-          DCMotor.getNEO(1), 1.5, 0.025, 0.1, -Math.PI / 4, Math.PI / 2, true, 0);
+
+  private DCMotorSim leftSim = new DCMotorSim(DCMotor.getNEO(1), 6.75, 0.025);
+  private DCMotorSim rightSim = new DCMotorSim(DCMotor.getNEO(1), 150.0 / 7.0, 0.004);
+
+  private final Rotation2d leftAbsoluteInitPosition = new Rotation2d(Math.random() * 2.0 * Math.PI);
+  private final Rotation2d rightAbsoluteInitPosition = new Rotation2d(Math.random() * 2.0 * Math.PI);
+  private double leftAppliedVolts = 0.0;
+  private double rightAppliedVolts = 0.0;
+
   //  private ProfiledPIDController pid = new ProfiledPIDController(0.0, 0.0, 0.0);
   //  private SimpleMotorFeedforward ffModel = new SimpleMotorFeedforward(0.0, 0.0);
 
   private boolean closedLoop = false;
-  private double appliedVolts = 0.0;
 
   @Override
   public void updateInputs(ClimbIOInputs inputs) {
     if (closedLoop) {
       //      appliedVolts = MathUtil.clamp(pid.calculate(sim.getAngleRads()) + ffVolts, -12.0,
       // 12.0);
-      sim.setInputVoltage(appliedVolts);
+      leftSim.setInputVoltage(leftAppliedVolts);
+      rightSim.setInputVoltage(rightAppliedVolts);
     }
 
-    sim.update(0.02);
+    leftSim.update(0.02);
+    rightSim.update(0.02);
 
-    inputs.leftPositionRad = sim.getAngleRads();
-    inputs.leftVelocityRadPerSec = sim.getVelocityRadPerSec();
-    inputs.leftAppliedVolts = appliedVolts;
-    inputs.leftCurrentAmps = new double[] {sim.getCurrentDrawAmps()};
-    inputs.rightPositionRad = sim.getAngleRads();
-    inputs.rightVelocityRadPerSec = sim.getVelocityRadPerSec();
-    inputs.rightAppliedVolts = appliedVolts;
-    inputs.rightCurrentAmps = new double[] {sim.getCurrentDrawAmps()};
+    inputs.leftAbsolutePosition = new Rotation2d(leftSim.getAngularPositionRad()).plus(leftAbsoluteInitPosition);
+    inputs.leftPositionRad = leftSim.getAngularPositionRad();
+    inputs.leftPosition = new Rotation2d(leftSim.getAngularPositionRad());
+    inputs.leftVelocityRadPerSec = leftSim.getAngularVelocityRadPerSec();
+    inputs.leftAppliedVolts = leftAppliedVolts;
+    inputs.leftCurrentAmps = new double[] {Math.abs(leftSim.getCurrentDrawAmps())};
+    inputs.rightAbsolutePosition = new Rotation2d(rightSim.getAngularPositionRad()).plus(rightAbsoluteInitPosition);
+    inputs.rightPositionRad = rightSim.getAngularPositionRad();
+    inputs.rightPosition = new Rotation2d(rightSim.getAngularPositionRad());
+    inputs.rightVelocityRadPerSec = rightSim.getAngularVelocityRadPerSec();
+    inputs.rightAppliedVolts = rightAppliedVolts;
+    inputs.rightCurrentAmps = new double[] {Math.abs(rightSim.getCurrentDrawAmps())};
   }
 
   @Override
   public void setLeftVoltage(double volts) {
     closedLoop = false;
-    appliedVolts = 0.0;
-    sim.setInputVoltage(volts);
+    leftAppliedVolts = 0.0;
+    leftSim.setInputVoltage(volts);
   }
 
   @Override
   public void setRightVoltage(double volts) {
     closedLoop = false;
-    appliedVolts = 0.0;
-    sim.setInputVoltage(volts);
+    rightAppliedVolts = 0.0;
+    rightSim.setInputVoltage(volts);
   }
 }
