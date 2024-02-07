@@ -151,6 +151,8 @@ public class Drive extends SubsystemBase {
       wheelDeltas[i] = modules[i].getPositionDelta();
     }
 
+    addVisionMeasurement();
+
     // The twist represents the motion of the robot since the last
     // loop cycle in x, y, and theta based only on the modules,
     // without the gyro. The gyro is always disconnected in simulation.
@@ -196,8 +198,16 @@ public class Drive extends SubsystemBase {
   }*/
   public void addVisionMeasurement() {
     Optional<EstimatedRobotPose> estPose = getEstimatedGlobalPose(pose);
-    estPose.ifPresent(estimatedRobotPose -> poseEstimator.addVisionMeasurement(estimatedRobotPose.estimatedPose.toPose2d(), estimatedRobotPose.timestampSeconds));
+    estPose.ifPresent(
+            estimatedRobotPose ->
+                    poseEstimator.addVisionMeasurement(
+                            estimatedRobotPose.estimatedPose.toPose2d(),
+                            estimatedRobotPose.timestampSeconds
+
+                    ));
   }
+
+
 
   public Optional<EstimatedRobotPose> getEstimatedGlobalPose(Pose2d prevEstimatedRobotPose) {
     photonPoseEstimator.setReferencePose(prevEstimatedRobotPose);
