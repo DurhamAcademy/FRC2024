@@ -40,11 +40,11 @@ public class ClimbIOSparkMax implements ClimbIO {
     left.setCANTimeout(250);
     right.setCANTimeout(250);
 
-    left.enableVoltageCompensation(12.0);  // wait for aarav to do climb wiring
-    left.setSmartCurrentLimit(30); // wait for aarav to do climb wiring
+    left.enableVoltageCompensation(12.0);  // wait for electrical to do climb wiring
+    left.setSmartCurrentLimit(30); // wait for electrical to find the right breaker for the climb
 
-    right.enableVoltageCompensation(12.0);  // wait for aarav to do climb wiring
-    right.setSmartCurrentLimit(30);  // wait for aarav to do climb wiring
+    right.enableVoltageCompensation(12.0);  // wait for electrical to do climb wiring
+    right.setSmartCurrentLimit(30);  // wait for electrical to find the right breaker for the climb
 
     left.burnFlash();
     right.burnFlash();
