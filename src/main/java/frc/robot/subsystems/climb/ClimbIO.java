@@ -34,7 +34,6 @@ public interface ClimbIO {
     public double rightAppliedVolts = 0.0;
     public double[] rightCurrentAmps = new double[] {};
     public Rotation2d rightPosition = new Rotation2d();
-    public Rotation2d rightAbsolutePosition = new Rotation2d();
     public double[] rightTemperature = new double[] {};
     
   }
