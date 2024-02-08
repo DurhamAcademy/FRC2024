@@ -97,7 +97,6 @@ public class Climb extends SubsystemBase {
   /** Run closed loop to the specified position. (for left motor) */
   public void runLeftPosition(double leftPosition) {
     double leftGoalPosition = leftPosition;
-    pidController.setGoal(leftGoalPosition + leftOffset);
     // Log climb setpoint
     Logger.recordOutput("Climb left motor/SetpointRPM", leftGoalPosition);
   }
@@ -105,7 +104,6 @@ public class Climb extends SubsystemBase {
   /** Run closed loop to the specified position. (for right motor) */
   public void runRightPosition(double rightPosition) {
     double rightGoalPosition = rightPosition;
-    pidController.setGoal(rightGoalPosition + rightOffset);
     // Log climb setpoint
     Logger.recordOutput("Climb right motor/SetpointRPM", rightGoalPosition);
   }
