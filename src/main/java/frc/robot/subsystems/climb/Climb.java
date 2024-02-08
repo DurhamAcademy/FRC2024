@@ -117,12 +117,6 @@ public class Climb extends SubsystemBase {
     pidController.reset(rightMeasuredPosition, rightVelocity = 0);
   }
 
-  /** Stops the left. (and right) */
-  public void stop() {
-    io.leftStop();
-    io.rightStop();
-  }
-
   /** Returns the current left motor angle of climb. */
   public Rotation2d getLeftAngle() {
     if (leftRelativeOffset == null) {
