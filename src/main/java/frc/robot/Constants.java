@@ -42,4 +42,19 @@ public final class Constants {
     /** Replaying from a log file. */
     REPLAY
   }
+
+  public enum IntakePositions {
+    EXTENDED(0),
+    IDLE(0);
+
+    private final double position;
+
+    IntakePositions(double position) {
+      this.position = position;
+    }
+
+    public double getValue() {
+      return position;
+    }
+  }
 }

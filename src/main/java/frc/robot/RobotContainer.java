@@ -55,16 +55,16 @@ import org.littletonrobotics.junction.networktables.LoggedDashboardNumber;
  */
 public class RobotContainer {
   // Subsystems
-  private final Drive drive;
-  private final Shooter shooter;
-  private final Feeder feeder;
-  private final Intake intake;
+  private Drive drive;
+  private Shooter shooter;
+  private Feeder feeder;
+  private Intake intake;
 
   // Controller
   private final CommandXboxController controller = new CommandXboxController(0);
 
   // Dashboard inputs
-  private final LoggedDashboardChooser<Command> autoChooser;
+  private LoggedDashboardChooser<Command> autoChooser;
   private final LoggedDashboardNumber flywheelSpeedInput =
       new LoggedDashboardNumber("Flywheel Speed", 1500.0);
 
@@ -126,7 +126,28 @@ public class RobotContainer {
         "Run Flywheel",
         Commands.startEnd(
                 () -> shooter.runVelocity(flywheelSpeedInput.get()), shooter::stop, shooter)
-            .withTimeout(5.0));
+            .withTimeout(1.5));
+    NamedCommands.registerCommand("Lock Drivetrain", Commands.runOnce(drive::stop, drive));
+    NamedCommands.registerCommand(
+        "Intake out",
+        new RunCommand(
+                () -> {
+                  intake.setIntakePosition(
+                      Rotation2d.fromDegrees(Constants.IntakePositions.EXTENDED.getValue()));
+                  intake.setRollerPercentage(0.75);
+                },
+                intake)
+            .withTimeout(3.0));
+    NamedCommands.registerCommand(
+        "Intake in",
+        new RunCommand(
+                () -> {
+                  intake.setIntakePosition(
+                      Rotation2d.fromDegrees(Constants.IntakePositions.IDLE.getValue()));
+                  intake.setRollerPercentage(0.00);
+                },
+                intake)
+            .withTimeout(3.0));
     autoChooser = new LoggedDashboardChooser<>("Auto Choices", AutoBuilder.buildAutoChooser());
 
     configureButtonBindings();
@@ -256,9 +277,13 @@ public class RobotContainer {
             .whileTrue(drivetrainDriveSysID.quasistatic(Direction.kReverse).withTimeout(2.0))
             .onFalse(Commands.runOnce(drive::stopWithX, drive));
         controller
-                .rightTrigger()
-                .whileTrue(new RunCommand(() -> shooter.setTargetShooterAngleRad(new Rotation2d(-0.61)))
-                        .andThen((new RunCommand(() -> shooter.runVelocity(5000)/*THIS NUMBER NEEDS TO BE CALIBRATED*/, intake))));
+            .rightTrigger()
+            .whileTrue(
+                new RunCommand(() -> shooter.setTargetShooterAngleRad(new Rotation2d(-0.61)))
+                    .andThen(
+                        (new RunCommand(
+                            () -> shooter.runVelocity(5000) /*THIS NUMBER NEEDS TO BE CALIBRATED*/,
+                            intake))));
         break;
       case EverythingElse:
         break;
