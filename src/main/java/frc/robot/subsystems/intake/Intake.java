@@ -44,7 +44,7 @@ public class Intake extends SubsystemBase {
         armFF = new ArmFeedforward(0.0, 0.21, 0.195, 0.0);
         armFB =
             new ProfiledPIDController(
-                1.0,
+                5.0,
                 0.0,
                 0.0,
                 new Constraints(RotationsPerSecond.of(3), RotationsPerSecond.per(Second).of(9)));
@@ -60,13 +60,21 @@ public class Intake extends SubsystemBase {
         new MechanismLigament2d("Intake", .135, off1.getDegrees(), .1, new Color8Bit(1, 1, 1));
     ligament1A =
         new MechanismLigament2d(
-            "Intake", 0.232427, -off1A.plus(off1).getDegrees(), .5, new Color8Bit(1, 1, 1));
+            "Intake",
+            0.232427,
+            off1A.plus(off1).minus(quarterTurn).getDegrees(),
+            .5,
+            new Color8Bit(1, 1, 1));
     //    ligament1
     ligament2 =
         new MechanismLigament2d("Intake2", .227, off2.getDegrees(), .1, new Color8Bit(1, 1, 1));
     ligament2A =
         new MechanismLigament2d(
-            "Intake2", 0.232983, -off2A.plus(off2).getDegrees(), .5, new Color8Bit(1, 1, 1));
+            "Intake2",
+            0.232983,
+            off2A.plus(off2).minus(quarterTurn).getDegrees(),
+            .5,
+            new Color8Bit(1, 1, 1));
     root.append(ligament1).append(ligament1A);
     root.append(ligament2).append(ligament2A);
   }
@@ -77,6 +85,7 @@ public class Intake extends SubsystemBase {
   Rotation2d off2A = new Rotation2d(0.154247715);
   // double position = 0.0;
   Rotation2d armTarget = Rotation2d.fromDegrees(0);
+  Rotation2d quarterTurn = Rotation2d.fromRadians(Math.PI / 2);
 
   @Override
   public void periodic() {
@@ -88,10 +97,10 @@ public class Intake extends SubsystemBase {
               + armFF.calculate(armFB.getSetpoint().position, armFB.getSetpoint().velocity));
     else io.setArmVoltage(0.0);
 
-    Logger.recordOutput("Intake", mechanism2d);
     Rotation2d rotation2d = new Rotation2d(inputs.armPositionRad);
-    ligament1.setAngle(rotation2d.plus(off1));
-    ligament2.setAngle(rotation2d.plus(off2));
+    ligament1.setAngle(rotation2d.plus(off1).minus(quarterTurn));
+    ligament2.setAngle(rotation2d.plus(off2).minus(quarterTurn));
+    Logger.recordOutput("Intake", mechanism2d);
   }
 
   public void setIntakePosition(Rotation2d position) {
