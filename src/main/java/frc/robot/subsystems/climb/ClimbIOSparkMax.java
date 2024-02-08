@@ -75,11 +75,4 @@ public class ClimbIOSparkMax implements ClimbIO {
   public void setRightVoltage(double volts) {
     right.setVoltage(volts);
   }
-  //    @Override
-  //    public void configurePID(double kP, double kI, double kD) {
-  //        pid.setP(kP, 0);
-  //        pid.setI(kI, 0);
-  //        pid.setD(kD, 0);
-  //        pid.setFF(0, 0);
-  //    }
 }
