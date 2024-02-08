@@ -23,8 +23,6 @@ public class ClimbIOSim implements ClimbIO {
   private DCMotorSim leftSim = new DCMotorSim(DCMotor.getNEO(1), 16.0, 0.025);
   private DCMotorSim rightSim = new DCMotorSim(DCMotor.getNEO(1), 16.0, 0.025);
 
-  private final Rotation2d leftAbsoluteInitPosition = new Rotation2d(Math.random() * 2.0 * Math.PI);
-  private final Rotation2d rightAbsoluteInitPosition = new Rotation2d(Math.random() * 2.0 * Math.PI);
   private double leftAppliedVolts = 0.0;
   private double rightAppliedVolts = 0.0;
 
