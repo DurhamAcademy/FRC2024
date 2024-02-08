@@ -60,21 +60,13 @@ public class Intake extends SubsystemBase {
         new MechanismLigament2d("Intake", .135, off1.getDegrees(), .1, new Color8Bit(1, 1, 1));
     ligament1A =
         new MechanismLigament2d(
-            "Intake",
-            0.232427,
-            off1A.plus(off1).minus(quarterTurn).getDegrees(),
-            .5,
-            new Color8Bit(1, 1, 1));
+            "Intake", 0.232427, off1A.minus(quarterTurn).getDegrees(), .5, new Color8Bit(1, 1, 1));
     //    ligament1
     ligament2 =
         new MechanismLigament2d("Intake2", .227, off2.getDegrees(), .1, new Color8Bit(1, 1, 1));
     ligament2A =
         new MechanismLigament2d(
-            "Intake2",
-            0.232983,
-            off2A.plus(off2).minus(quarterTurn).getDegrees(),
-            .5,
-            new Color8Bit(1, 1, 1));
+            "Intake2", 0.232983, off2A.minus(quarterTurn).getDegrees(), .5, new Color8Bit(1, 1, 1));
     root.append(ligament1).append(ligament1A);
     root.append(ligament2).append(ligament2A);
   }
@@ -98,8 +90,8 @@ public class Intake extends SubsystemBase {
     else io.setArmVoltage(0.0);
 
     Rotation2d rotation2d = new Rotation2d(inputs.armPositionRad);
-    ligament1.setAngle(rotation2d.plus(off1).minus(quarterTurn));
-    ligament2.setAngle(rotation2d.plus(off2).minus(quarterTurn));
+    ligament1.setAngle(rotation2d.plus(off1).minus(quarterTurn).times(-1));
+    ligament2.setAngle(rotation2d.plus(off2).minus(quarterTurn).times(-1));
     Logger.recordOutput("Intake", mechanism2d);
   }
 
