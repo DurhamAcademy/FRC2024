@@ -27,7 +27,6 @@ public interface ClimbIO {
     public double leftAppliedVolts = 0.0;
     public double[] leftCurrentAmps = new double[] {};
     public Rotation2d leftPosition = new Rotation2d();
-    public Rotation2d leftAbsolutePosition = new Rotation2d();
     public double[] leftTemperature = new double[] {};
     public double rightPositionRad = 0.0;
     public double rightVelocityRadPerSec = 0.0;
