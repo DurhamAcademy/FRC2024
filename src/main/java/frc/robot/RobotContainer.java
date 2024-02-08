@@ -159,15 +159,18 @@ public class RobotContainer {
                 () -> -controller.getRightX()));
         intake.setDefaultCommand(
             new RunCommand(
-                () -> intake.setIntakePosition(new Rotation2d(-15.0)),
-                intake)); // FIXME: NEED THE REAL ANGLE FOR THIS DEFAULT COMMAND STILL!
+                () -> {
+                  intake.setIntakePosition(Rotation2d.fromDegrees(-130));
+                  intake.setRollerPercentage(0.0);
+                },
+                intake));
         feeder.setDefaultCommand(new RunCommand(feeder::stop, feeder));
 
         // ---- DRIVETRAIN COMMANDS ----
-        controller.x().onTrue(Commands.runOnce(drive::stopWithX, drive));
+        controller.x().whileTrue(Commands.runOnce(drive::stopWithX, drive));
         controller
             .b()
-            .onTrue(
+            .whileTrue(
                 Commands.runOnce(
                         () -> {
                           try {
@@ -183,17 +186,29 @@ public class RobotContainer {
         controller
             .leftTrigger()
             .and(feeder::getSensorFeed)
-            .onTrue(
+            .whileTrue(
                 new RunCommand(() -> feeder.runVolts(6.0), feeder)
                     .until(() -> !feeder.getSensorFeed()));
 
         // ---- INTAKE COMMANDS ----
         controller
             .leftBumper() // not a()
-            .onTrue(new RunCommand(() -> intake.setIntakePosition(new Rotation2d(115.0)), intake));
+            .whileTrue(
+                new RunCommand(
+                    () -> {
+                      intake.setIntakePosition(Rotation2d.fromDegrees(0.0));
+                      intake.setRollerPercentage(0.75);
+                    },
+                    intake));
         controller
             .rightBumper()
-            .onTrue(new RunCommand(() -> intake.setRollerPercentage(0.75), intake));
+            .whileTrue(
+                new RunCommand(
+                    () -> {
+                      intake.setIntakePosition(Rotation2d.fromDegrees(-90.0));
+                      intake.setRollerPercentage(0.0);
+                    },
+                    intake));
 
         // ---- SHOOTER COMMANDS ----
         controller
@@ -240,6 +255,10 @@ public class RobotContainer {
             .b()
             .whileTrue(drivetrainDriveSysID.quasistatic(Direction.kReverse).withTimeout(2.0))
             .onFalse(Commands.runOnce(drive::stopWithX, drive));
+        controller
+                .rightTrigger()
+                .whileTrue(new RunCommand(() -> shooter.setTargetShooterAngleRad(new Rotation2d(-0.61)))
+                        .andThen((new RunCommand(() -> shooter.runVelocity(5000)/*THIS NUMBER NEEDS TO BE CALIBRATED*/, intake))));
         break;
       case EverythingElse:
         break;
