@@ -45,7 +45,6 @@ public class ClimbIOSim implements ClimbIO {
     leftSim.update(0.02);
     rightSim.update(0.02);
 
-    inputs.leftAbsolutePosition = new Rotation2d(leftSim.getAngularPositionRad()).plus(leftAbsoluteInitPosition);
     inputs.leftPositionRad = leftSim.getAngularPositionRad();
     inputs.leftPosition = new Rotation2d(leftSim.getAngularPositionRad());
     inputs.leftVelocityRadPerSec = leftSim.getAngularVelocityRadPerSec();
