@@ -51,7 +51,6 @@ public class ClimbIOSim implements ClimbIO {
     inputs.leftVelocityRadPerSec = leftSim.getAngularVelocityRadPerSec();
     inputs.leftAppliedVolts = leftAppliedVolts;
     inputs.leftCurrentAmps = new double[] {Math.abs(leftSim.getCurrentDrawAmps())};
-    inputs.rightAbsolutePosition = new Rotation2d(rightSim.getAngularPositionRad()).plus(rightAbsoluteInitPosition);
     inputs.rightPositionRad = rightSim.getAngularPositionRad();
     inputs.rightPosition = new Rotation2d(rightSim.getAngularPositionRad());
     inputs.rightVelocityRadPerSec = rightSim.getAngularVelocityRadPerSec();
