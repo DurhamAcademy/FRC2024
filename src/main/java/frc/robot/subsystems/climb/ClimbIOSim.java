@@ -18,6 +18,7 @@ import edu.wpi.first.math.system.plant.DCMotor;
 import edu.wpi.first.wpilibj.simulation.DCMotorSim;
 import frc.robot.subsystems.climb.ClimbIO.ClimbIOInputs;
 
+@SuppressWarnings("unused")
 public class ClimbIOSim implements ClimbIO {
 
   private DCMotorSim leftSim = new DCMotorSim(DCMotor.getNEO(1), 16.0, 0.025);

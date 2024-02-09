@@ -24,6 +24,7 @@ import frc.robot.subsystems.climb.ClimbIO;
  * NOTE: To use the Spark Flex / NEO Vortex, replace all instances of "CANSparkMax" with
  * "CANSparkFlex".
  */
+@SuppressWarnings("unused")
 public class ClimbIOSparkMax implements ClimbIO {
   private static final double LEFT_GEAR_RATIO = 16.0;
   private static final double RIGHT_GEAR_RATIO = 16.0;
