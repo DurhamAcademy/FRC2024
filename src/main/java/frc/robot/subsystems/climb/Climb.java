@@ -2,7 +2,6 @@ package frc.robot.subsystems.climb;
 
 import edu.wpi.first.math.controller.ProfiledPIDController;
 import edu.wpi.first.math.controller.SimpleMotorFeedforward;
-import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.trajectory.TrapezoidProfile;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
@@ -16,8 +15,8 @@ public class Climb extends SubsystemBase {
   private final ClimbIOInputsAutoLogged inputs = new ClimbIOInputsAutoLogged();
   private final SimpleMotorFeedforward ffModel;
   private final ProfiledPIDController pidController;
-  private double leftRelativeOffset = 0; // Relative + Offset = Absolute
-  private double rightRelativeOffset = 0; // Relative + Offset = Absolute
+  private Double leftRelativeOffset = null; // Relative + Offset = Absolute
+  private Double rightRelativeOffset = null; // Relative + Offset = Absolute
 
   double leftOffset = 0.0;
   double rightOffset = 0.0;
@@ -66,12 +65,12 @@ public class Climb extends SubsystemBase {
     // On first cycle, reset relative turn encoder
     // Wait until absolute angle is nonzero in case it wasn't initialized yet
     if (leftRelativeOffset == null && inputs.leftPosition.getRadians() != 0.0) {
-      leftRelativeOffset = 0;
+      leftRelativeOffset = 0.0;
     }
     // On first cycle, reset relative turn encoder
     // Wait until absolute angle is nonzero in case it wasn't initialized yet
     if (rightRelativeOffset == null && inputs.rightPosition.getRadians() != 0.0) {
-      rightRelativeOffset = 0;
+      rightRelativeOffset = 0.0;
     }
     io.updateInputs(inputs);
     // sets voltages
@@ -108,7 +107,7 @@ public class Climb extends SubsystemBase {
     Logger.recordOutput("Climb right motor/SetpointRPM", rightGoalPosition);
   }
 
-    // idk what this does (for the left)
+  // idk what this does (for the left)
   public void resetLeftPosition() {
     leftOffset = inputs.leftPositionRad;
     pidController.reset(inputs.leftPositionRad, leftVelocity = 0);
@@ -119,7 +118,6 @@ public class Climb extends SubsystemBase {
     rightOffset = inputs.rightPositionRad;
     pidController.reset(inputs.rightPositionRad, rightVelocity = 0);
   }
-
 
   /** Returns the current left position of the climb in meters. */
   public double getLeftPositionMeters() {

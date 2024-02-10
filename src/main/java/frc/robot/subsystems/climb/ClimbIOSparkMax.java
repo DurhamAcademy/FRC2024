@@ -16,9 +16,7 @@ package frc.robot.subsystems.climb;
 import com.revrobotics.CANSparkLowLevel.MotorType;
 import com.revrobotics.CANSparkMax;
 import com.revrobotics.RelativeEncoder;
-import com.revrobotics.SparkPIDController;
 import edu.wpi.first.math.util.Units;
-import frc.robot.subsystems.climb.ClimbIO;
 
 /**
  * NOTE: To use the Spark Flex / NEO Vortex, replace all instances of "CANSparkMax" with
@@ -41,11 +39,11 @@ public class ClimbIOSparkMax implements ClimbIO {
     left.setCANTimeout(250);
     right.setCANTimeout(250);
 
-    left.enableVoltageCompensation(12.0);  // wait for electrical to do climb wiring
+    left.enableVoltageCompensation(12.0); // wait for electrical to do climb wiring
     left.setSmartCurrentLimit(30); // wait for electrical to find the right breaker for the climb
 
-    right.enableVoltageCompensation(12.0);  // wait for electrical to do climb wiring
-    right.setSmartCurrentLimit(30);  // wait for electrical to find the right breaker for the climb
+    right.enableVoltageCompensation(12.0); // wait for electrical to do climb wiring
+    right.setSmartCurrentLimit(30); // wait for electrical to find the right breaker for the climb
 
     left.burnFlash();
     right.burnFlash();
@@ -59,7 +57,8 @@ public class ClimbIOSparkMax implements ClimbIO {
     inputs.leftAppliedVolts = left.getAppliedOutput() * left.getBusVoltage();
     inputs.leftCurrentAmps = new double[] {left.getOutputCurrent()};
     inputs.leftTemperature = new double[] {left.getMotorTemperature()};
-    inputs.rightPositionRad = Units.rotationsToRadians(rightEncoder.getPosition() / RIGHT_GEAR_RATIO);
+    inputs.rightPositionRad =
+        Units.rotationsToRadians(rightEncoder.getPosition() / RIGHT_GEAR_RATIO);
     inputs.rightVelocityRadPerSec =
         Units.rotationsPerMinuteToRadiansPerSecond(rightEncoder.getVelocity() / RIGHT_GEAR_RATIO);
     inputs.rightAppliedVolts = right.getAppliedOutput() * right.getBusVoltage();
