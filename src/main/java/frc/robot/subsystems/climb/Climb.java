@@ -16,8 +16,8 @@ public class Climb extends SubsystemBase {
   private final ClimbIOInputsAutoLogged inputs = new ClimbIOInputsAutoLogged();
   private final SimpleMotorFeedforward ffModel;
   private final ProfiledPIDController pidController;
-  private Rotation2d leftRelativeOffset = null; // Relative + Offset = Absolute
-  private Rotation2d rightRelativeOffset = null; // Relative + Offset = Absolute
+  private double leftRelativeOffset = 0; // Relative + Offset = Absolute
+  private double rightRelativeOffset = 0; // Relative + Offset = Absolute
 
   double leftOffset = 0.0;
   double rightOffset = 0.0;
@@ -66,12 +66,12 @@ public class Climb extends SubsystemBase {
     // On first cycle, reset relative turn encoder
     // Wait until absolute angle is nonzero in case it wasn't initialized yet
     if (leftRelativeOffset == null && inputs.leftPosition.getRadians() != 0.0) {
-      leftRelativeOffset = inputs.leftPosition.minus(inputs.leftPosition);
+      leftRelativeOffset = 0;
     }
     // On first cycle, reset relative turn encoder
     // Wait until absolute angle is nonzero in case it wasn't initialized yet
     if (rightRelativeOffset == null && inputs.rightPosition.getRadians() != 0.0) {
-      rightRelativeOffset = inputs.rightPosition.minus(inputs.rightPosition);
+      rightRelativeOffset = 0
     }
     io.updateInputs(inputs);
     // sets voltages
@@ -111,32 +111,15 @@ public class Climb extends SubsystemBase {
     // idk what this does (for the left)
   public void resetLeftPosition() {
     leftOffset = inputs.leftPositionRad;
-    pidController.reset(leftMeasuredPosition, leftVelocity = 0);
+    pidController.reset(inputs.leftPositionRad, leftVelocity = 0);
   }
 
   // idk what this does (for the right)
   public void resetRightPosition() {
     rightOffset = inputs.rightPositionRad;
-    pidController.reset(rightMeasuredPosition, rightVelocity = 0);
+    pidController.reset(inputs.rightPositionRad, rightVelocity = 0);
   }
 
-  /** Returns the current left motor angle of climb. */
-  public Rotation2d getLeftAngle() {
-    if (leftRelativeOffset == null) {
-      return new Rotation2d();
-    } else {
-      return inputs.leftPosition.plus(leftRelativeOffset);
-    }
-  }
-
-  /** Returns the current right angle of climb. */
-  public Rotation2d getRightAngle() {
-    if (rightRelativeOffset == null) {
-      return new Rotation2d();
-    } else {
-      return inputs.rightPosition.plus(rightRelativeOffset);
-    }
-  }
 
   /** Returns the current left position of the climb in meters. */
   public double getLeftPositionMeters() {
