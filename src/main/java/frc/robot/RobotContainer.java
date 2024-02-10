@@ -178,6 +178,15 @@ public class RobotContainer {
                         },
                         drive)
                     .ignoringDisable(true));
+        var command = DriveCommands.aimAtSpeakerCommand(
+                drive,
+                () -> -controller.getLeftY(),
+                () -> -controller.getLeftX(),
+                () -> -controller.getRightX());
+        controller
+            .povDown()
+            .onTrue(
+                    command.getCommand());
 
         // ---- FEEDER COMMANDS ----
         controller
