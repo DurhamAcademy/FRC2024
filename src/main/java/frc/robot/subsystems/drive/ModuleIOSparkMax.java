@@ -13,6 +13,8 @@
 
 package frc.robot.subsystems.drive;
 
+import static java.lang.Double.NaN;
+
 import com.ctre.phoenix6.BaseStatusSignal;
 import com.ctre.phoenix6.StatusSignal;
 import com.ctre.phoenix6.configs.CANcoderConfiguration;
@@ -126,8 +128,9 @@ public class ModuleIOSparkMax implements ModuleIO {
   @Override
   public void updateInputs(ModuleIOInputs inputs) {
     BaseStatusSignal.refreshAll(turnAbsolutePosition);
+    double position = driveEncoder.getPosition();
     inputs.drivePositionRad =
-        Units.rotationsToRadians(driveEncoder.getPosition()) / DRIVE_GEAR_RATIO;
+        Units.rotationsToRadians((position == NaN) ? 0.0 : position) / DRIVE_GEAR_RATIO;
     inputs.driveVelocityRadPerSec =
         Units.rotationsPerMinuteToRadiansPerSecond(driveEncoder.getVelocity()) / DRIVE_GEAR_RATIO;
     inputs.driveAppliedVolts = driveSparkMax.getAppliedOutput() * driveSparkMax.getBusVoltage();

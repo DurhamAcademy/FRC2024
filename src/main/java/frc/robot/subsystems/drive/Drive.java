@@ -51,6 +51,7 @@ public class Drive extends SubsystemBase {
   private SwerveDriveKinematics kinematics = new SwerveDriveKinematics(getModuleTranslations());
   private SwerveDrivePoseEstimator poseEstimator;
   private Pose2d pose = new Pose2d();
+  private Measure<Velocity<Angle>> angularVelocity = RadiansPerSecond.zero();
   private Rotation2d lastGyroRotation = new Rotation2d();
 
   SwerveDrivePoseEstimator noGyroPoseEstimation;
@@ -143,6 +144,7 @@ public class Drive extends SubsystemBase {
     // The twist represents the motion of the robot since the last
     // loop cycle in x, y, and theta based only on the modules,
     // without the gyro. The gyro is always disconnected in simulation.
+
     var twist = kinematics.toTwist2d(wheelDeltas);
     if (gyroInputs.connected) {
       if (noGyroPoseEstimation != null) {
@@ -156,6 +158,7 @@ public class Drive extends SubsystemBase {
 
       // update the pose estimator
       pose = poseEstimator.update(gyroInputs.yawPosition, swerveModulePositions);
+      angularVelocity = RadiansPerSecond.of(gyroInputs.yawVelocityRadPerSec);
 
     } else {
       if (noGyroPoseEstimation == null) {
@@ -168,6 +171,7 @@ public class Drive extends SubsystemBase {
       // Apply the twist (change since last loop cycle) to the current pose
       noGyroRotation = pose.exp(twist).getRotation();
       pose = noGyroPoseEstimation.update(noGyroRotation, swerveModulePositions);
+      angularVelocity = RadiansPerSecond.of(twist.dtheta / .02);
     }
   }
 
@@ -371,5 +375,9 @@ public class Drive extends SubsystemBase {
       new Translation2d(-TRACK_WIDTH_X / 2.0, TRACK_WIDTH_Y / 2.0),
       new Translation2d(-TRACK_WIDTH_X / 2.0, -TRACK_WIDTH_Y / 2.0)
     };
+  }
+
+  public Measure<Velocity<Angle>> getAnglularVelocity() {
+    return this.angularVelocity;
   }
 }

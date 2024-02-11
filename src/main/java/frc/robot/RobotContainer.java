@@ -37,13 +37,11 @@ import frc.robot.subsystems.feeder.Feeder;
 import frc.robot.subsystems.feeder.FeederIO;
 import frc.robot.subsystems.feeder.FeederIOSim;
 import frc.robot.subsystems.intake.Intake;
-import frc.robot.subsystems.intake.IntakeIO;
 import frc.robot.subsystems.intake.IntakeIOSim;
 import frc.robot.subsystems.intake.IntakeIOSparkMax;
 import frc.robot.subsystems.shooter.Shooter;
 import frc.robot.subsystems.shooter.ShooterIO;
 import frc.robot.subsystems.shooter.ShooterIOSim;
-import frc.robot.subsystems.shooter.ShooterIOSparkMax;
 import org.littletonrobotics.junction.networktables.LoggedDashboardChooser;
 import org.littletonrobotics.junction.networktables.LoggedDashboardNumber;
 
@@ -80,9 +78,9 @@ public class RobotContainer {
                 new ModuleIOSparkMax(1),
                 new ModuleIOSparkMax(2),
                 new ModuleIOSparkMax(3));
-        shooter = new Shooter(new ShooterIOSparkMax());
+        shooter = new Shooter(new ShooterIOSim());
         feeder = new Feeder(new FeederIO() {});
-        intake = new Intake(new IntakeIOSparkMax());
+        intake = new Intake(new IntakeIOSim());
         // drive = new Drive(
         // new GyroIOPigeon2(),
         // new ModuleIOTalonFX(0),
@@ -117,7 +115,7 @@ public class RobotContainer {
                 new ModuleIO() {});
         shooter = new Shooter(new ShooterIO() {});
         feeder = new Feeder(new FeederIO() {});
-        intake = new Intake(new IntakeIO() {});
+        intake = new Intake(new IntakeIOSparkMax() {});
         break;
     }
 
@@ -164,10 +162,10 @@ public class RobotContainer {
         feeder.setDefaultCommand(new RunCommand(feeder::stop, feeder));
 
         // ---- DRIVETRAIN COMMANDS ----
-        controller.x().onTrue(Commands.runOnce(drive::stopWithX, drive));
+        controller.x().whileTrue(Commands.runOnce(drive::stopWithX, drive));
         controller
             .b()
-            .onTrue(
+            .whileTrue(
                 Commands.runOnce(
                         () -> {
                           try {
@@ -178,22 +176,30 @@ public class RobotContainer {
                         },
                         drive)
                     .ignoringDisable(true));
+        var command =
+            DriveCommands.aimAtSpeakerCommand(
+                drive,
+                () -> -controller.getLeftY(),
+                () -> -controller.getLeftX(),
+                () -> -controller.getRightX());
+        controller.povDown().onTrue(command.getCommand());
 
         // ---- FEEDER COMMANDS ----
         controller
             .leftTrigger()
             .and(feeder::getSensorFeed)
-            .onTrue(
+            .whileTrue(
                 new RunCommand(() -> feeder.runVolts(6.0), feeder)
                     .until(() -> !feeder.getSensorFeed()));
 
         // ---- INTAKE COMMANDS ----
         controller
             .leftBumper() // not a()
-            .onTrue(new RunCommand(() -> intake.setIntakePosition(new Rotation2d(115.0)), intake));
+            .whileTrue(
+                new RunCommand(() -> intake.setIntakePosition(new Rotation2d(115.0)), intake));
         controller
             .rightBumper()
-            .onTrue(new RunCommand(() -> intake.setRollerPercentage(0.75), intake));
+            .whileTrue(new RunCommand(() -> intake.setRollerPercentage(0.75), intake));
 
         // ---- SHOOTER COMMANDS ----
         controller
@@ -241,9 +247,13 @@ public class RobotContainer {
             .whileTrue(drivetrainDriveSysID.quasistatic(Direction.kReverse).withTimeout(2.0))
             .onFalse(Commands.runOnce(drive::stopWithX, drive));
         controller
-                .rightTrigger()
-                .whileTrue(new RunCommand(() -> shooter.setTargetShooterAngleRad(new Rotation2d(-0.61)))
-                        .andThen((new RunCommand(() -> shooter.runVelocity(5000)/*THIS NUMBER NEEDS TO BE CALIBRATED*/, intake))));
+            .rightTrigger()
+            .whileTrue(
+                new RunCommand(() -> shooter.setTargetShooterAngleRad(new Rotation2d(-0.61)))
+                    .andThen(
+                        (new RunCommand(
+                            () -> shooter.runVelocity(5000) /*THIS NUMBER NEEDS TO BE CALIBRATED*/,
+                            intake))));
         break;
       case EverythingElse:
         break;
