@@ -13,11 +13,15 @@
 
 package frc.robot.commands;
 
+import static edu.wpi.first.units.Units.*;
+
 import static edu.wpi.first.math.MathUtil.applyDeadband;
 import static edu.wpi.first.units.Units.*;
 
 import edu.wpi.first.math.InterpolatingMatrixTreeMap;
 import edu.wpi.first.math.controller.ProfiledPIDController;
+import edu.wpi.first.math.controller.ProfiledPIDController;
+import edu.wpi.first.math.geometry.*;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Transform2d;
@@ -28,6 +32,8 @@ import edu.wpi.first.math.trajectory.TrapezoidProfile;
 import edu.wpi.first.units.Angle;
 import edu.wpi.first.units.Measure;
 import edu.wpi.first.units.Velocity;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
+import edu.wpi.first.math.trajectory.TrapezoidProfile;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
@@ -63,7 +69,7 @@ public class DriveCommands {
                 applyDeadband(Math.hypot(xSupplier.getAsDouble(), ySupplier.getAsDouble()), DEADBAND);
         Rotation2d linearDirection = new Rotation2d(xSupplier.getAsDouble(), ySupplier.getAsDouble());
 
-        // Square values
+  // Square values
         linearMagnitude = linearMagnitude * linearMagnitude;
 
         // Calcaulate new linear velocity
@@ -138,7 +144,7 @@ public class DriveCommands {
                 new ProfiledPIDController(
                         DRIVE_ROTATION_P_VALUE, 0, .0, new TrapezoidProfile.Constraints(0, 0));
 
-        SmartDashboard.putNumber("rotationPidP", DRIVE_ROTATION_P_VALUE);
+        SmartDashboard.putNumber("rotationPidP", 0.0);
         SmartDashboard.putNumber("rotationPidI", 0.0);
         SmartDashboard.putNumber("rotationPidD", 1.5);
         SmartDashboard.putNumber("rotationPidMV", 0.0);
