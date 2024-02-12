@@ -19,6 +19,7 @@ import static edu.wpi.first.math.MathUtil.applyDeadband;
 import static edu.wpi.first.units.Units.*;
 
 import edu.wpi.first.math.InterpolatingMatrixTreeMap;
+import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.controller.ProfiledPIDController;
 import edu.wpi.first.math.controller.ProfiledPIDController;
 import edu.wpi.first.math.geometry.*;
@@ -84,35 +85,44 @@ public class DriveCommands {
   ------------------
    */
 
-    /**
-     * Field relative drive command using two joysticks (controlling linear and angular velocities).
-     */
-    public static Command joystickDrive(
-            Drive drive,
-            DoubleSupplier xSupplier,
-            DoubleSupplier ySupplier,
-            DoubleSupplier omegaSupplier) {
-        return Commands.run(
-                () -> {
-                    // Apply deadband
-                    double omega = applyDeadband(omegaSupplier.getAsDouble(), DEADBAND);
+  /**
+   * Field relative drive command using two joysticks (controlling linear and angular velocities).
+   */
+  public static Command joystickDrive(
+      Drive drive,
+      DoubleSupplier xSupplier,
+      DoubleSupplier ySupplier,
+      DoubleSupplier omegaSupplier) {
+    return Commands.run(
+        () -> {
+          // Apply deadband
+          double linearMagnitude =
+              MathUtil.applyDeadband(
+                  Math.hypot(xSupplier.getAsDouble(), ySupplier.getAsDouble()), DEADBAND);
+          Rotation2d linearDirection =
+              new Rotation2d(xSupplier.getAsDouble(), ySupplier.getAsDouble());
+          double omega = MathUtil.applyDeadband(omegaSupplier.getAsDouble(), DEADBAND);
 
-                    // Square values
-                    omega = Math.copySign(omega * omega, omega);
+          // Square values
+          linearMagnitude = linearMagnitude * linearMagnitude;
+          omega = Math.copySign(omega * omega, omega);
 
-                    // Calcaulate new linear velocity
-                    Translation2d linearVelocity = getLinearVelocity(xSupplier, ySupplier);
+          // Calcaulate new linear velocity
+          Translation2d linearVelocity =
+              new Pose2d(new Translation2d(), linearDirection)
+                  .transformBy(new Transform2d(linearMagnitude, 0.0, new Rotation2d()))
+                  .getTranslation();
 
-                    // Convert to field relative speeds & send command
-                    drive.runVelocity(
-                            ChassisSpeeds.fromFieldRelativeSpeeds(
-                                    linearVelocity.getX() * drive.getMaxLinearSpeedMetersPerSec(),
-                                    linearVelocity.getY() * drive.getMaxLinearSpeedMetersPerSec(),
-                                    omega * drive.getMaxAngularSpeedRadPerSec(),
-                                    drive.getRotation()));
-                },
-                drive);
-    }
+          // Convert to field relative speeds & send command
+          drive.runVelocity(
+              ChassisSpeeds.fromFieldRelativeSpeeds(
+                  linearVelocity.getX() * drive.getMaxLinearSpeedMetersPerSec(),
+                  linearVelocity.getY() * drive.getMaxLinearSpeedMetersPerSec(),
+                  omega * drive.getMaxAngularSpeedRadPerSec(),
+                  drive.getRotation()));
+        },
+        drive);
+  }
 
     public static class CommandAndReadySupplier {
         private Command command;
@@ -141,20 +151,19 @@ public class DriveCommands {
         Pose2d speakerAimTargetPose = new Pose2d(.25, 5.5, new Rotation2d());
         final Pose2d[] previousPose = {null};
         ProfiledPIDController rotationController =
-                new ProfiledPIDController(
-                        DRIVE_ROTATION_P_VALUE, 0, .0, new TrapezoidProfile.Constraints(0, 0));
+        new ProfiledPIDController(0.0, 0, .0, new TrapezoidProfile.Constraints(25, 225));
 
-        SmartDashboard.putNumber("rotationPidP", 0.0);
+    SmartDashboard.putNumber("rotationPidP", DRIVE_ROTATION_P_VALUE);
         SmartDashboard.putNumber("rotationPidI", 0.0);
         SmartDashboard.putNumber("rotationPidD", 1.5);
         SmartDashboard.putNumber("rotationPidMV", 0.0);
         SmartDashboard.putNumber("rotationPidMA", 0.0);
         rotationController.enableContinuousInput(Rotations.toBaseUnits(-.5), Rotations.toBaseUnits(.5));
 
-        var command = new RunCommand(
+    var command =
+        new RunCommand(
                 () -> {
-                    rotationController.setP(
-                            SmartDashboard.getNumber("rotationPidP", DRIVE_ROTATION_P_VALUE));
+                  rotationController.setP(SmartDashboard.getNumber("rotationPidP", 0.0));
                     rotationController.setI(SmartDashboard.getNumber("rotationPidI", 0.0));
                     rotationController.setD(SmartDashboard.getNumber("rotationPidD", 0.0));
 
@@ -171,11 +180,14 @@ public class DriveCommands {
                     if (previousPose[0] != null) {
                         robotVelocity = previousPose[0].minus(drive.getPose());
 
-                        double distance = speakerAimTargetPose.getTranslation().getDistance(previousPose[0].getTranslation());
+                    double distance =
+                        speakerAimTargetPose
+                            .getTranslation()
+                            .getDistance(previousPose[0].getTranslation());
                         if (distance != 0) {
-                            movingWhileShootingTarget = speakerAimTargetPose.plus(
-                                    robotVelocity.times(0.02).times(16.5 / distance)
-                            );
+                      movingWhileShootingTarget =
+                          speakerAimTargetPose.plus(
+                              robotVelocity.times(0.02).times(16.5 / distance));
                         } else movingWhileShootingTarget = speakerAimTargetPose;
                     } else movingWhileShootingTarget = speakerAimTargetPose;
                     Logger.recordOutput("speakerAimTargetPose", movingWhileShootingTarget);
@@ -194,28 +206,31 @@ public class DriveCommands {
 
                     Measure<Velocity<Angle>> goalAngleVelocity = null;
                     if (previousPose[0] != null) {
-                        var previousAngle = movingWhileShootingTarget
+                    var previousAngle =
+                        movingWhileShootingTarget
                                 .getTranslation()
                                 .minus(previousPose[0].getTranslation())
                                 .getAngle();
                         var currentAngle = goalAngle;
-                        goalAngleVelocity = Radians.of(currentAngle.minus(previousAngle).getRadians()).per(Seconds.of(0.02));
+                    goalAngleVelocity =
+                        Radians.of(currentAngle.minus(previousAngle).getRadians())
+                            .per(Seconds.of(0.02));
                     } else goalAngleVelocity = RadiansPerSecond.zero();
 
                     // calculate how much speed is needed to get there
-                    var angularSpeed =
-                            rotationController.calculate(
-                                    Radians.toBaseUnits(
-                                            drive
-                                                    .getRotation()
-                                                    .getRadians()), // ensure we are giving the controller the base units
-                                    new TrapezoidProfile.State(Radians.toBaseUnits(goalAngle.getRadians()), goalAngleVelocity.baseUnitMagnitude()),
-                                    rotationConstraints);
+                  rotationController.setGoal(
+                      new TrapezoidProfile.State(
+                          Radians.of(goalAngle.getRadians()), goalAngleVelocity));
+                  rotationController.reset(
+                      new TrapezoidProfile.State(
+                          Radians.of(drive.getRotation().getRadians()),
+                          drive.getAnglularVelocity()));
+                  rotationController.calculate(Radians.toBaseUnits(goalAngle.getRadians()));
                     drive.runVelocity(
                             ChassisSpeeds.fromFieldRelativeSpeeds(
                                     linearVelocity.getX() * drive.getMaxLinearSpeedMetersPerSec(),
                                     linearVelocity.getY() * drive.getMaxLinearSpeedMetersPerSec(),
-                                    angularSpeed,
+                          rotationController.getSetpoint().velocity,
                                     drive.getRotation()));
                     previousPose[0] = drive.getPose();
                 })
@@ -227,10 +242,7 @@ public class DriveCommands {
                             var isLTE = omegaSupplier.getAsDouble() <= -CANCEL_COMMAND_DEADBAND;
                             return isLTE || isGTE;
                         });
-        return new CommandAndReadySupplier(
-                command,
-                () -> rotationController.atGoal()
-        );
+    return new CommandAndReadySupplier(command, () -> rotationController.atGoal());
     }
 
     public static CommandAndReadySupplier aimAtSpeakerCommand(

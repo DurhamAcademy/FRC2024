@@ -164,10 +164,10 @@ public class RobotContainer {
         feeder.setDefaultCommand(new RunCommand(feeder::stop, feeder));
 
         // ---- DRIVETRAIN COMMANDS ----
-        controller.x().onTrue(Commands.runOnce(drive::stopWithX, drive));
+        controller.x().whileTrue(Commands.runOnce(drive::stopWithX, drive));
         controller
             .b()
-            .onTrue(
+            .whileTrue(
                 Commands.runOnce(
                         () -> {
                           try {
@@ -178,31 +178,30 @@ public class RobotContainer {
                         },
                         drive)
                     .ignoringDisable(true));
-        var command = DriveCommands.aimAtSpeakerCommand(
+        var command =
+            DriveCommands.aimAtSpeakerCommand(
                 drive,
                 () -> -controller.getLeftY(),
                 () -> -controller.getLeftX(),
                 () -> -controller.getRightX());
-        controller
-            .povDown()
-            .onTrue(
-                    command.getCommand());
+        controller.povDown().onTrue(command.getCommand());
 
         // ---- FEEDER COMMANDS ----
         controller
             .leftTrigger()
             .and(feeder::getSensorFeed)
-            .onTrue(
+            .whileTrue(
                 new RunCommand(() -> feeder.runVolts(6.0), feeder)
                     .until(() -> !feeder.getSensorFeed()));
 
         // ---- INTAKE COMMANDS ----
         controller
             .leftBumper() // not a()
-            .onTrue(new RunCommand(() -> intake.setIntakePosition(new Rotation2d(115.0)), intake));
+            .whileTrue(
+                new RunCommand(() -> intake.setIntakePosition(new Rotation2d(115.0)), intake));
         controller
             .rightBumper()
-            .onTrue(new RunCommand(() -> intake.setRollerPercentage(0.75), intake));
+            .whileTrue(new RunCommand(() -> intake.setRollerPercentage(0.75), intake));
 
         // ---- SHOOTER COMMANDS ----
         controller
@@ -251,8 +250,12 @@ public class RobotContainer {
             .onFalse(Commands.runOnce(drive::stopWithX, drive));
         controller
                 .rightTrigger()
-                .whileTrue(new RunCommand(() -> shooter.setTargetShooterAngleRad(new Rotation2d(-0.61)))
-                        .andThen((new RunCommand(() -> shooter.runVelocity(5000)/*THIS NUMBER NEEDS TO BE CALIBRATED*/, intake))));
+            .whileTrue(
+                new RunCommand(() -> shooter.setTargetShooterAngleRad(new Rotation2d(-0.61)))
+                    .andThen(
+                        (new RunCommand(
+                            () -> shooter.runVelocity(5000) /*THIS NUMBER NEEDS TO BE CALIBRATED*/,
+                            intake))));
         break;
       case EverythingElse:
         break;

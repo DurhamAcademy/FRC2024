@@ -37,8 +37,8 @@ import org.littletonrobotics.junction.Logger;
 
 public class Drive extends SubsystemBase {
   private static final double MAX_LINEAR_SPEED = Units.feetToMeters(14.5);
-  public static final double TRACK_WIDTH_X = Units.inchesToMeters(20.75);
-  public static final double TRACK_WIDTH_Y = Units.inchesToMeters(20.75);
+  private static final double TRACK_WIDTH_X = Units.inchesToMeters(20.75);
+  private static final double TRACK_WIDTH_Y = Units.inchesToMeters(20.75);
   private static final double DRIVE_BASE_RADIUS =
       Math.hypot(TRACK_WIDTH_X / 2.0, TRACK_WIDTH_Y / 2.0);
   private static final double MAX_ANGULAR_SPEED = MAX_LINEAR_SPEED / DRIVE_BASE_RADIUS;
@@ -51,6 +51,7 @@ public class Drive extends SubsystemBase {
   private SwerveDriveKinematics kinematics = new SwerveDriveKinematics(getModuleTranslations());
   private SwerveDrivePoseEstimator poseEstimator;
   private Pose2d pose = new Pose2d();
+  private Measure<Velocity<Angle>> angularVelocity = RadiansPerSecond.zero();
   private Rotation2d lastGyroRotation = new Rotation2d();
 
   SwerveDrivePoseEstimator noGyroPoseEstimation;
@@ -156,6 +157,7 @@ public class Drive extends SubsystemBase {
 
       // update the pose estimator
       pose = poseEstimator.update(gyroInputs.yawPosition, swerveModulePositions);
+      angularVelocity = RadiansPerSecond.of(gyroInputs.yawVelocityRadPerSec);
 
     } else {
       if (noGyroPoseEstimation == null) {
@@ -168,6 +170,7 @@ public class Drive extends SubsystemBase {
       // Apply the twist (change since last loop cycle) to the current pose
       noGyroRotation = pose.exp(twist).getRotation();
       pose = noGyroPoseEstimation.update(noGyroRotation, swerveModulePositions);
+      angularVelocity = RadiansPerSecond.of(twist.dtheta / .02);
     }
   }
 
@@ -371,5 +374,9 @@ public class Drive extends SubsystemBase {
       new Translation2d(-TRACK_WIDTH_X / 2.0, TRACK_WIDTH_Y / 2.0),
       new Translation2d(-TRACK_WIDTH_X / 2.0, -TRACK_WIDTH_Y / 2.0)
     };
+  }
+
+  public Measure<Velocity<Angle>> getAnglularVelocity() {
+    return this.angularVelocity;
   }
 }
