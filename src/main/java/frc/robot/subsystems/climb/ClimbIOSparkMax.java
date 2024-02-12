@@ -16,6 +16,7 @@ package frc.robot.subsystems.climb;
 import com.revrobotics.CANSparkLowLevel.MotorType;
 import com.revrobotics.CANSparkMax;
 import com.revrobotics.RelativeEncoder;
+import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.util.Units;
 
 /**
@@ -31,9 +32,11 @@ public class ClimbIOSparkMax implements ClimbIO {
   private final CANSparkMax right = new CANSparkMax(1, MotorType.kBrushless);
   private final RelativeEncoder leftEncoder = left.getEncoder();
   private final RelativeEncoder rightEncoder = right.getEncoder();
+  private final PIDController ClimbAdjuster;
 
-  public ClimbIOSparkMax() {
-    left.restoreFactoryDefaults();
+  public ClimbIOSparkMax(PIDController climbAdjuster) {
+      ClimbAdjuster = climbAdjuster;
+      left.restoreFactoryDefaults();
     right.restoreFactoryDefaults();
 
     left.setCANTimeout(250);
