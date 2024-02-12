@@ -64,12 +64,12 @@ public class Climb extends SubsystemBase {
   public void periodic() {
     // On first cycle, reset relative turn encoder
     // Wait until absolute angle is nonzero in case it wasn't initialized yet
-    if (leftRelativeOffset == null && inputs.leftPosition.getRadians() != 0.0) {
+    if (leftRelativeOffset == null && inputs.leftPosition != 0.0) {
       leftRelativeOffset = 0.0;
     }
     // On first cycle, reset relative turn encoder
     // Wait until absolute angle is nonzero in case it wasn't initialized yet
-    if (rightRelativeOffset == null && inputs.rightPosition.getRadians() != 0.0) {
+    if (rightRelativeOffset == null && inputs.rightPosition != 0.0) {
       rightRelativeOffset = 0.0;
     }
     io.updateInputs(inputs);
