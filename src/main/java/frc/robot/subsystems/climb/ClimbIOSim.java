@@ -1,6 +1,5 @@
 package frc.robot.subsystems.climb;
 
-import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.system.plant.DCMotor;
 import edu.wpi.first.wpilibj.simulation.DCMotorSim;
 import frc.robot.subsystems.climb.ClimbIO.ClimbIOInputs;
