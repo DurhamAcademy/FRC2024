@@ -161,16 +161,56 @@ public class RobotContainer {
                 () -> -controller.getLeftY(),
                 () -> -controller.getLeftX(),
                 () -> -controller.getRightX()));
-        controller.x().onTrue(Commands.runOnce(drive::stopWithX, drive));
+        intake.setDefaultCommand(
+            new RunCommand(
+                () -> {
+                  intake.setIntakePosition(Rotation2d.fromDegrees(-130));
+                  intake.setRollerPercentage(0.0);
+                },
+                intake));
+        feeder.setDefaultCommand(new RunCommand(feeder::stop, feeder));
+
+        // ---- DRIVETRAIN COMMANDS ----
+        controller.x().whileTrue(Commands.runOnce(drive::stopWithX, drive));
         controller
             .b()
-            .onTrue(
+            .whileTrue(
                 Commands.runOnce(
                         () ->
                             drive.setPose(
                                 new Pose2d(drive.getPose().getTranslation(), new Rotation2d())),
                         drive)
                     .ignoringDisable(true));
+
+        // ---- FEEDER COMMANDS ----
+        controller
+            .leftTrigger()
+            .and(feeder::getSensorFeed)
+            .whileTrue(
+                new RunCommand(() -> feeder.runVolts(6.0), feeder)
+                    .until(() -> !feeder.getSensorFeed()));
+
+        // ---- INTAKE COMMANDS ----
+        controller
+            .leftBumper() // not a()
+            .whileTrue(
+                new RunCommand(
+                    () -> {
+                      intake.setIntakePosition(Rotation2d.fromDegrees(0.0));
+                      intake.setRollerPercentage(0.75);
+                    },
+                    intake));
+        controller
+            .rightBumper()
+            .whileTrue(
+                new RunCommand(
+                    () -> {
+                      intake.setIntakePosition(Rotation2d.fromDegrees(-90.0));
+                      intake.setRollerPercentage(0.0);
+                    },
+                    intake));
+
+        // ---- SHOOTER COMMANDS ----
         controller
             .a()
             .whileTrue(
