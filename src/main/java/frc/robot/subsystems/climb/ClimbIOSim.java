@@ -1,4 +1,3 @@
-
 package frc.robot.subsystems.climb;
 
 import edu.wpi.first.math.geometry.Rotation2d;
@@ -33,12 +32,12 @@ public class ClimbIOSim implements ClimbIO {
     rightSim.update(0.02);
 
     inputs.leftPositionRad = leftSim.getAngularPositionRad();
-    inputs.leftPosition = new Rotation2d(leftSim.getAngularPositionRad());
+    inputs.leftPosition = (Rotation2d) new Rotation2d(leftSim.getAngularPositionRad());
     inputs.leftVelocityRadPerSec = leftSim.getAngularVelocityRadPerSec();
     inputs.leftAppliedVolts = leftAppliedVolts;
     inputs.leftCurrentAmps = new double[] {Math.abs(leftSim.getCurrentDrawAmps())};
     inputs.rightPositionRad = rightSim.getAngularPositionRad();
-    inputs.rightPosition = new Rotation2d(rightSim.getAngularPositionRad());
+    inputs.rightPosition = (Rotation2d) new Rotation2d(rightSim.getAngularPositionRad());
     inputs.rightVelocityRadPerSec = rightSim.getAngularVelocityRadPerSec();
     inputs.rightAppliedVolts = rightAppliedVolts;
     inputs.rightCurrentAmps = new double[] {Math.abs(rightSim.getCurrentDrawAmps())};
