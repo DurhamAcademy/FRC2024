@@ -190,6 +190,16 @@ public class RobotContainer {
                 new RunCommand(() -> feeder.runVolts(6.0), feeder)
                     .until(() -> !feeder.getSensorFeed()));
 
+
+        // prepare the shooter for dumping into the amp
+        controller
+                .a().toggleOnTrue( Commands.sequence(
+                  Commands.run(() -> shooter.setTargetShooterAngleRad(Rotation2d.fromDegrees(-22.5)), shooter).until(() -> false), /* finish when arm in position */
+                  Commands.run(() -> feeder.runVolts(6.0), feeder).withTimeout(2.0).until(() -> !feeder.getSensorFeed()),
+                  Commands.runOnce(feeder::stop, feeder),
+                  Commands.run(() -> shooter.setTargetShooterAngleRad(Rotation2d.fromDegrees(45.0)))
+                ));
+
         // ---- INTAKE COMMANDS ----
         controller
             .leftBumper() // not a()
