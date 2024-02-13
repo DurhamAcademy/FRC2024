@@ -25,6 +25,7 @@ import edu.wpi.first.wpilibj.GenericHID;
 import edu.wpi.first.wpilibj.XboxController;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
+import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.RunCommand;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
@@ -44,6 +45,8 @@ import frc.robot.subsystems.shooter.Shooter;
 import frc.robot.subsystems.shooter.ShooterIO;
 import frc.robot.subsystems.shooter.ShooterIOSim;
 import frc.robot.subsystems.shooter.ShooterIOSparkMax;
+import frc.robot.util.Mode;
+import frc.robot.util.ModeHelper;
 import org.littletonrobotics.junction.networktables.LoggedDashboardChooser;
 import org.littletonrobotics.junction.networktables.LoggedDashboardNumber;
 
@@ -59,6 +62,17 @@ public class RobotContainer {
   private final Shooter shooter;
   private final Feeder feeder;
   private final Intake intake;
+
+  private final ModeHelper modeHelper = new ModeHelper(this);
+
+  //TODO: populate switch statements here
+  public Command getEnterCommand(Mode m) {
+    return new InstantCommand();
+  }
+
+  public Command getExitCommand(Mode m) {
+    return new InstantCommand();
+  }
 
   // Controller
   private final CommandXboxController controller = new CommandXboxController(0);
@@ -190,16 +204,24 @@ public class RobotContainer {
                 new RunCommand(() -> feeder.runVolts(6.0), feeder)
                     .until(() -> !feeder.getSensorFeed()));
 
-
         // prepare the shooter for dumping into the amp
         controller
-                .a().toggleOnTrue( Commands.sequence(
-                  Commands.run(() -> shooter.setTargetShooterAngleRad(Rotation2d.fromDegrees(-22.5)), shooter).until(() -> false), /* finish when arm in position */
-                  Commands.run(() -> feeder.runVolts(6.0), feeder).withTimeout(2.0).until(() -> !feeder.getSensorFeed()),
-                  Commands.runOnce(feeder::stop, feeder),
-                  Commands.run(() -> shooter.setTargetShooterAngleRad(Rotation2d.fromDegrees(45.0)))
-                ));
+            .a().onTrue(Commands.runOnce(() -> modeHelper.switchTo(Mode.AMP)));
 
+      /*
+            .toggleOnTrue(
+                Commands.sequence(
+                    Commands.run(
+                            () -> shooter.setTargetShooterAngleRad(Rotation2d.fromDegrees(-22.5)),
+                            shooter)
+                        .until(() -> false),
+                    Commands.run(() -> feeder.runVolts(6.0), feeder)
+                        .withTimeout(2.0)
+                        .until(() -> !feeder.getSensorFeed()),
+                    Commands.runOnce(feeder::stop, feeder),
+                    Commands.run(
+                        () -> shooter.setTargetShooterAngleRad(Rotation2d.fromDegrees(45.0)))));
+        */
         // ---- INTAKE COMMANDS ----
         controller
             .leftBumper() // not a()
