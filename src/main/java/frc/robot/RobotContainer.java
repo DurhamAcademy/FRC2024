@@ -183,12 +183,12 @@ public class RobotContainer {
                     .ignoringDisable(true));
 
         // ---- FEEDER COMMANDS ----
-        controller
-            .leftTrigger()
-            .and(feeder::getSensorFeed)
-            .whileTrue(
-                new RunCommand(() -> feeder.runVolts(6.0), feeder)
-                    .until(() -> !feeder.getSensorFeed()));
+        //        controller
+        //            .leftTrigger()
+        //            .and(feeder::getSensorFeed)
+        //            .whileTrue(
+        //                new RunCommand(() -> feeder.runVolts(6.0), feeder)
+        //                    .until(() -> !feeder.getSensorFeed()));
 
         // ---- INTAKE COMMANDS ----
         controller
@@ -211,17 +211,30 @@ public class RobotContainer {
                     intake));
 
         // ---- SHOOTER COMMANDS ----
+        //        controller
+        //            .a()
+        //            .whileTrue(
+        //                Commands.startEnd(
+        //                    () -> shooter.runVelocity(flywheelSpeedInput.get()), shooter::stop,
+        // shooter));
         controller
-            .a()
+            .rightTrigger()
+            .and(controller.leftTrigger().negate())
             .whileTrue(
-                Commands.startEnd(
-                    () -> shooter.runVelocity(flywheelSpeedInput.get()), shooter::stop, shooter));
-        controller.rightTrigger().onTrue(new RunCommand(() -> shooter.runVolts(6.0), shooter));
+                new RunCommand(
+                    () -> shooter.runVolts(controller.getRightTriggerAxis() * 12.0), shooter));
         controller
-            .a()
+            .leftTrigger()
+            .and(controller.rightTrigger().negate())
             .whileTrue(
-                Commands.startEnd(
-                    () -> shooter.runVelocity(flywheelSpeedInput.get()), shooter::stop, shooter));
+                new RunCommand(
+                    () -> shooter.runVolts(controller.getLeftTriggerAxis() * 12.0), shooter));
+        //        controller
+        //            .a()
+        //            .whileTrue(
+        //                Commands.startEnd(
+        //                    () -> shooter.runVelocity(flywheelSpeedInput.get()), shooter::stop,
+        // shooter));
 
         break;
       case DriveMotors:
@@ -255,14 +268,16 @@ public class RobotContainer {
             .b()
             .whileTrue(drivetrainDriveSysID.quasistatic(Direction.kReverse).withTimeout(2.0))
             .onFalse(Commands.runOnce(drive::stopWithX, drive));
-        controller
-            .rightTrigger()
-            .whileTrue(
-                new RunCommand(() -> shooter.setTargetShooterAngleRad(new Rotation2d(-0.61)))
-                    .andThen(
-                        (new RunCommand(
-                            () -> shooter.runVelocity(5000) /*THIS NUMBER NEEDS TO BE CALIBRATED*/,
-                            intake))));
+        //        controller
+        //            .rightTrigger()
+        //            .whileTrue(
+        //                new RunCommand(() -> shooter.setTargetShooterAngleRad(new
+        // Rotation2d(-0.61)))
+        //                    .andThen(
+        //                        (new RunCommand(
+        //                            () -> shooter.runVelocity(5000) /*THIS NUMBER NEEDS TO BE
+        // CALIBRATED*/,
+        //                            intake))));
         break;
       case EverythingElse:
         break;
