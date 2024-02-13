@@ -17,8 +17,8 @@ public class IntakeIOSim implements IntakeIO {
           100,
           .1819,
           Units.inchesToMeters(7.063364),
-          PI * -.25,
-          PI * .6,
+          PI * -.2,
+          PI * .8,
           true,
           0); // mass is 8.495 lbs
   private double armVoltage = 0.0;
@@ -35,9 +35,9 @@ public class IntakeIOSim implements IntakeIO {
     var ct = Timer.getFPGATimestamp();
     var dt = (timestamp == null) ? .02 : ct - timestamp;
     inputs.armCurrentAmps = new double[] {armSim.getCurrentDrawAmps()};
-    inputs.armAppliedVolts = armVoltage;
-    inputs.armPositionRad = armSim.getAngleRads();
-    inputs.armVelocityRadPerSec = armSim.getVelocityRadPerSec();
+    inputs.armAppliedVolts = -armVoltage;
+    inputs.armPositionRad = -armSim.getAngleRads();
+    inputs.armVelocityRadPerSec = -armSim.getVelocityRadPerSec();
     armSim.update(0.02);
 
     inputs.rollerCurrentAmps = new double[] {rollerSim.getCurrentDrawAmps()};
