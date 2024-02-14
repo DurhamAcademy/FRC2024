@@ -23,6 +23,7 @@ import edu.wpi.first.math.util.Units;
  * NOTE: To use the Spark Flex / NEO Vortex, replace all instances of "CANSparkMax" with
  * "CANSparkFlex".
  */
+@Deprecated
 public class ShooterIOSparkMax implements ShooterIO {
   private static final double GEAR_RATIO = 1.5;
 

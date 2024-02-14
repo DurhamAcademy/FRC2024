@@ -83,7 +83,7 @@ public class Shooter extends SubsystemBase {
     shooterio.setFlywheelVoltage(volts);
   }
 
-  public void wristrunvolts(double volts){
+  public void wristrunvolts(double volts) {
     wristio.setVoltage(volts);
   }
 
@@ -102,7 +102,7 @@ public class Shooter extends SubsystemBase {
     shooterio.flywheelStop();
   }
 
-  public void stopwrist(){
+  public void stopwrist() {
     wristio.wristStop();
   }
 
