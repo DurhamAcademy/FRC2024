@@ -27,7 +27,8 @@ public class IntakeIOSparkMax implements IntakeIO {
 
   private final CANSparkMax arm = new CANSparkMax(0, MotorType.kBrushless);
   private final CANSparkMax roller = new CANSparkMax(1, MotorType.kBrushless);
-  private final AbsoluteEncoder encoder = arm.getAbsoluteEncoder(SparkAbsoluteEncoder.Type.kDutyCycle);
+  private final AbsoluteEncoder encoder =
+      arm.getAbsoluteEncoder(SparkAbsoluteEncoder.Type.kDutyCycle);
   private final SparkPIDController pid = arm.getPIDController();
 
   public IntakeIOSparkMax() {
@@ -57,7 +58,6 @@ public class IntakeIOSparkMax implements IntakeIO {
     inputs.armTemperature = new double[] {arm.getMotorTemperature()};
     inputs.rollerTemperature = new double[] {roller.getMotorTemperature()};
   }
-
 
   public void setVoltage(double volts) {
     arm.setVoltage(volts);
