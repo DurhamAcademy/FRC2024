@@ -268,6 +268,14 @@ public class RobotContainer {
                     .andThen(drivetrainTurnSysID.quasistatic(Direction.kReverse))
                     .andThen(Commands.runOnce(drive::stopWithX, drive)))
             .onFalse(Commands.runOnce(drive::stopWithX, drive));
+        controller
+            .rightTrigger()
+            .whileTrue(
+                new RunCommand(() -> shooter.setTargetShooterAngleRad(new Rotation2d(-0.61)))
+                    .andThen(
+                        (new RunCommand(
+                            () -> shooter.runVelocity(5000) /*THIS NUMBER NEEDS TO BE CALIBRATED*/,
+                            intake))));
         break;
       case EverythingElse:
 
