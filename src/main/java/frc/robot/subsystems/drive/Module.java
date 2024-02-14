@@ -49,24 +49,25 @@ public class Module {
     switch (Constants.currentMode) {
       case REAL:
         switch (index) {
-          case 0:
-            driveFeedforward = new SimpleMotorFeedforward(0.01626, 0.82954, 0.14095);
-            driveFeedback = new PIDController(0.21268, 0.0, 0.0);
-            break;
-          case 1:
-            driveFeedforward = new SimpleMotorFeedforward(0.081671, 0.82741, 0.081036);
-            driveFeedback = new PIDController(0.75099, 0.0, 0.0);
-            break;
-          case 2:
-            driveFeedforward = new SimpleMotorFeedforward(0.082023, 0.81434, 0.12098);
-            driveFeedback = new PIDController(0.096474, 0.0, 0.0);
-            break;
-          case 3:
-            driveFeedforward = new SimpleMotorFeedforward(0.040377, 0.84332, 0.13969);
-            driveFeedback = new PIDController(0.015087, 0.0, 0.0);
-            break;
+            //          case 0:
+            //            driveFeedforward = new SimpleMotorFeedforward(0.01626, 0.82954, 0.14095);
+            //            driveFeedback = new PIDController(0.21268, 0.0, 0.0);
+            //            break;
+            //          case 1:
+            //            driveFeedforward = new SimpleMotorFeedforward(0.081671, 0.82741,
+            // 0.081036);
+            //            driveFeedback = new PIDController(.09, 0.0, 0.0);
+            //            break;
+            //          case 2:
+            //            driveFeedforward = new SimpleMotorFeedforward(0.082023, 0.81434, 0.12098);
+            //            driveFeedback = new PIDController(0.096474, 0.0, 0.0);
+            //            break;
+            //          case 3:
+            //            driveFeedforward = new SimpleMotorFeedforward(0.040377, 0.84332, 0.13969);
+            //            driveFeedback = new PIDController(0.015087, 0.0, 0.0);
+            //            break;
           default:
-            driveFeedforward = new SimpleMotorFeedforward(0.1, 0.13);
+            driveFeedforward = new SimpleMotorFeedforward(0.1, .83);
             driveFeedback = new PIDController(0.05, 0.0, 0.0);
             break;
         }
