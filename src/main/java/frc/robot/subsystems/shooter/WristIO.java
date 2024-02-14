@@ -25,8 +25,8 @@ public interface WristIO {
   public default void updateInputs(WristIOInputs inputs) {}
 
   /** Run open loop at the specified voltage. */
-  public default void setFlywheelVoltage(double volts) {}
+  public default void setVoltage(double volts) {}
 
   /** Stop in open loop. */
-  public default void flywheelStop() {}
+  public default void wristStop() {}
 }

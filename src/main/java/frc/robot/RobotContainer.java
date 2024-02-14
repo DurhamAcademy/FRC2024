@@ -136,7 +136,9 @@ public class RobotContainer {
     NamedCommands.registerCommand(
         "Run Flywheel",
         Commands.startEnd(
-                () -> shooter.runVelocity(flywheelSpeedInput.get()), shooter::stop, shooter)
+                () -> shooter.shooterrunVelocity(flywheelSpeedInput.get()),
+                shooter::stopshooter,
+                shooter)
             .withTimeout(5.0));
     autoChooser = new LoggedDashboardChooser<>("Auto Choices", AutoBuilder.buildAutoChooser());
 
@@ -243,13 +245,19 @@ public class RobotContainer {
             .a()
             .whileTrue(
                 Commands.startEnd(
-                    () -> shooter.runVelocity(flywheelSpeedInput.get()), shooter::stop, shooter));
-        controller.rightTrigger().onTrue(new RunCommand(() -> shooter.runVolts(6.0), shooter));
+                    () -> shooter.shooterrunVelocity(flywheelSpeedInput.get()),
+                    shooter::stopshooter,
+                    shooter));
+        controller
+            .rightTrigger()
+            .onTrue(new RunCommand(() -> shooter.shooterrunvolts(6.0), shooter));
         controller
             .a()
             .whileTrue(
                 Commands.startEnd(
-                    () -> shooter.runVelocity(flywheelSpeedInput.get()), shooter::stop, shooter));
+                    () -> shooter.shooterrunVelocity(flywheelSpeedInput.get()),
+                    shooter::stopshooter,
+                    shooter));
 
         break;
       case DriveMotors:
@@ -289,7 +297,9 @@ public class RobotContainer {
                 new RunCommand(() -> shooter.setTargetShooterAngleRad(new Rotation2d(-0.61)))
                     .andThen(
                         (new RunCommand(
-                            () -> shooter.runVelocity(5000) /*THIS NUMBER NEEDS TO BE CALIBRATED*/,
+                            () ->
+                                shooter.shooterrunVelocity(
+                                    5000) /*THIS NUMBER NEEDS TO BE CALIBRATED*/,
                             intake))));
         break;
       case EverythingElse:

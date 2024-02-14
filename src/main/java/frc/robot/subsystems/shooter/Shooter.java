@@ -20,14 +20,17 @@ import edu.wpi.first.math.trajectory.TrapezoidProfile;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants;
+import javax.swing.*;
 import org.littletonrobotics.junction.AutoLogOutput;
 import org.littletonrobotics.junction.Logger;
 
 public class Shooter extends SubsystemBase {
   private final ShooterIO shooterio;
   private final WristIO wristio;
-  private final ShooterIOInputsAutoLogged inputs = new ShooterIOInputsAutoLogged();
-  private ProfiledPIDController pid;
+  private final ShooterIOInputsAutoLogged shooterinputs = new ShooterIOInputsAutoLogged();
+  private final WristIOInputsAutoLogged wristinputs = new WristIOInputsAutoLogged();
+  private ProfiledPIDController shooterpid;
+  private ProfiledPIDController wristpid;
   private final SimpleMotorFeedforward ffModel;
   private static final double ENCODER_ANGLE_FIX = 1.5;
   // the ration for turning the shooter
@@ -45,13 +48,16 @@ public class Shooter extends SubsystemBase {
         // FIXME: characterize real robot
       case REPLAY:
         ffModel = new SimpleMotorFeedforward(0.1, 0.05);
-        pid =
+        shooterpid =
             new ProfiledPIDController(
                 1.0, 0.0, 0.0, new TrapezoidProfile.Constraints(0.5, 99)); // FIXME: remove profile?
+        wristpid = new ProfiledPIDController(4.0, 0.0, 0.0, new TrapezoidProfile.Constraints(1, 2));
         break;
       case SIM:
         ffModel = new SimpleMotorFeedforward(0.0, 0.03);
-        pid = new ProfiledPIDController(0.5, 0.0, 0.0, new TrapezoidProfile.Constraints(0.5, 99));
+        shooterpid =
+            new ProfiledPIDController(0.5, 0.0, 0.0, new TrapezoidProfile.Constraints(0.5, 99));
+        wristpid = new ProfiledPIDController(4.0, 0.0, 0.0, new TrapezoidProfile.Constraints(1, 2));
         break;
       default:
         ffModel = new SimpleMotorFeedforward(0.0, 0.0);
@@ -61,43 +67,54 @@ public class Shooter extends SubsystemBase {
 
   @Override
   public void periodic() {
-    shooterio.updateInputs(inputs);
+    shooterio.updateInputs(shooterinputs);
+    wristio.updateInputs(wristinputs);
     shooterio.setFlywheelVoltage(
-        pid.calculate(inputs.flywheelVelocityRadPerSec)
-            + ffModel.calculate(pid.getSetpoint().position, pid.getSetpoint().velocity));
-    targetShooterAngleRad = pid.getSetpoint().position * ENCODER_ANGLE_FIX;
-    Logger.processInputs("Shooter", inputs);
+        shooterpid.calculate(shooterinputs.flywheelVelocityRadPerSec)
+            + ffModel.calculate(
+                shooterpid.getSetpoint().position, shooterpid.getSetpoint().velocity));
+    targetShooterAngleRad = shooterpid.getSetpoint().position * ENCODER_ANGLE_FIX;
+    Logger.processInputs("Shooter", shooterinputs);
+    Logger.processInputs("Wrist", wristinputs);
   }
 
   /** Run open loop at the specified voltage. */
-  public void runVolts(double volts) {
+  public void shooterrunvolts(double volts) {
     shooterio.setFlywheelVoltage(volts);
   }
 
+  public void wristrunvolts(double volts){
+    wristio.setVoltage(volts);
+  }
+
   /** Run closed loop at the specified velocity. */
-  public void runVelocity(double velocityRPM) {
+  public void shooterrunVelocity(double velocityRPM) {
     var velocityRadPerSec = Units.rotationsPerMinuteToRadiansPerSecond(velocityRPM);
 
-    pid.setGoal(velocityRadPerSec);
+    shooterpid.setGoal(velocityRadPerSec);
 
     // Log flywheel setpoint
     Logger.recordOutput("Shooter/SetpointRPM", velocityRPM);
   }
 
   /** Stops the flywheel. */
-  public void stop() {
+  public void stopshooter() {
     shooterio.flywheelStop();
+  }
+
+  public void stopwrist(){
+    wristio.wristStop();
   }
 
   /** Returns the current velocity in RPM. */
   @AutoLogOutput
-  public double getVelocityRPM() {
-    return Units.radiansPerSecondToRotationsPerMinute(inputs.flywheelVelocityRadPerSec);
+  public double getShooterVelocityRPM() {
+    return Units.radiansPerSecondToRotationsPerMinute(shooterinputs.flywheelVelocityRadPerSec);
   }
 
   /** Returns the current velocity in radians per second. */
-  public double getCharacterizationVelocity() {
-    return inputs.flywheelVelocityRadPerSec;
+  public double getShooterCharacterizationVelocity() {
+    return shooterinputs.flywheelVelocityRadPerSec;
   }
 
   public void setTargetShooterAngleRad(Rotation2d anglediff) {
