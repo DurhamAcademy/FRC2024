@@ -39,11 +39,7 @@ import frc.robot.subsystems.feeder.FeederIOSim;
 import frc.robot.subsystems.intake.Intake;
 import frc.robot.subsystems.intake.IntakeIO;
 import frc.robot.subsystems.intake.IntakeIOSim;
-import frc.robot.subsystems.intake.IntakeIOSparkMax;
-import frc.robot.subsystems.shooter.Shooter;
-import frc.robot.subsystems.shooter.ShooterIO;
-import frc.robot.subsystems.shooter.ShooterIOSim;
-import frc.robot.subsystems.shooter.ShooterIOSparkMax;
+import frc.robot.subsystems.shooter.*;
 import org.littletonrobotics.junction.networktables.LoggedDashboardChooser;
 import org.littletonrobotics.junction.networktables.LoggedDashboardNumber;
 
@@ -80,9 +76,9 @@ public class RobotContainer {
                 new ModuleIOSparkMax(1),
                 new ModuleIOSparkMax(2),
                 new ModuleIOSparkMax(3));
-        shooter = new Shooter(new ShooterIOSparkMax());
+        shooter = new Shooter(new ShooterIOTalonFX());
         feeder = new Feeder(new FeederIO() {});
-        intake = new Intake(new IntakeIOSparkMax());
+        intake = new Intake(new IntakeIOSim());
         // drive = new Drive(
         // new GyroIOPigeon2(),
         // new ModuleIOTalonFX(0),
@@ -165,6 +161,7 @@ public class RobotContainer {
                 },
                 intake));
         feeder.setDefaultCommand(new RunCommand(feeder::stop, feeder));
+        shooter.setDefaultCommand(new RunCommand(shooter::stop, shooter));
 
         // ---- DRIVETRAIN COMMANDS ----
         controller.x().whileTrue(Commands.runOnce(drive::stopWithX, drive));
@@ -219,9 +216,8 @@ public class RobotContainer {
         // shooter));
         controller
             .rightTrigger()
-            .and(controller.leftTrigger().negate())
             .whileTrue(
-                new RunCommand(
+                Commands.run(
                     () -> shooter.runVolts(controller.getRightTriggerAxis() * 12.0), shooter));
         controller
             .leftTrigger()
