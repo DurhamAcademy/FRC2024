@@ -31,6 +31,7 @@ import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.DriverStation.Alliance;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
+import frc.robot.util.LocalADStarAK;
 import org.littletonrobotics.junction.AutoLogOutput;
 import org.littletonrobotics.junction.Logger;
 
@@ -76,13 +77,10 @@ public class Drive extends SubsystemBase {
             DriverStation.getAlliance().isPresent()
                 && DriverStation.getAlliance().get() == Alliance.Red,
         this);
-    //    Pathfinding.setPathfinder(new LocalADStarAK());
-    //        Pathfinding.setDynamicObstacles(
-    //            List.of(new Pair(new Translation2d(1.5, 1.5), new Translation2d(2.0, 3.0))),
-    //            new Translation2d(1.0, 2.0));
+        Pathfinding.setPathfinder(new LocalADStarAK());
     //noinspection ToArrayCallWithZeroLengthArrayArgument
     PathConstraints constraints =
-            new PathConstraints(3.0, 4.0, Units.degreesToRadians(540), Units.degreesToRadians(720));
+        new PathConstraints(3.0, 4.0, Units.degreesToRadians(540), Units.degreesToRadians(720));
 
     PathPlannerLogging.setLogActivePathCallback(
         (activePath) ->
