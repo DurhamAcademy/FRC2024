@@ -24,7 +24,8 @@ import org.littletonrobotics.junction.AutoLogOutput;
 import org.littletonrobotics.junction.Logger;
 
 public class Shooter extends SubsystemBase {
-  private final ShooterIO io;
+  private final ShooterIO shooterio;
+  private final WristIO wristio;
   private final ShooterIOInputsAutoLogged inputs = new ShooterIOInputsAutoLogged();
   private ProfiledPIDController pid;
   private final SimpleMotorFeedforward ffModel;
@@ -34,8 +35,9 @@ public class Shooter extends SubsystemBase {
   private static double targetShooterAngleRad = 0.0;
 
   /** Creates a new Shooter. */
-  public Shooter(ShooterIO io) {
-    this.io = io;
+  public Shooter(ShooterIO io, WristIO wristIO) {
+    this.shooterio = io;
+    this.wristio = wristIO;
     // Switch constants based on mode (the physics simulator is treated as a
     // separate robot with different tuning)
     switch (Constants.currentMode) {
@@ -59,9 +61,8 @@ public class Shooter extends SubsystemBase {
 
   @Override
   public void periodic() {
-    io.updateInputs(inputs);
-
-    io.setFlywheelVoltage(
+    shooterio.updateInputs(inputs);
+    shooterio.setFlywheelVoltage(
         pid.calculate(inputs.flywheelVelocityRadPerSec)
             + ffModel.calculate(pid.getSetpoint().position, pid.getSetpoint().velocity));
     targetShooterAngleRad = pid.getSetpoint().position * ENCODER_ANGLE_FIX;
@@ -70,7 +71,7 @@ public class Shooter extends SubsystemBase {
 
   /** Run open loop at the specified voltage. */
   public void runVolts(double volts) {
-    io.setFlywheelVoltage(volts);
+    shooterio.setFlywheelVoltage(volts);
   }
 
   /** Run closed loop at the specified velocity. */
@@ -85,7 +86,7 @@ public class Shooter extends SubsystemBase {
 
   /** Stops the flywheel. */
   public void stop() {
-    io.flywheelStop();
+    shooterio.flywheelStop();
   }
 
   /** Returns the current velocity in RPM. */

@@ -41,10 +41,7 @@ import frc.robot.subsystems.intake.Intake;
 import frc.robot.subsystems.intake.IntakeIO;
 import frc.robot.subsystems.intake.IntakeIOSim;
 import frc.robot.subsystems.intake.IntakeIOSparkMax;
-import frc.robot.subsystems.shooter.Shooter;
-import frc.robot.subsystems.shooter.ShooterIO;
-import frc.robot.subsystems.shooter.ShooterIOSim;
-import frc.robot.subsystems.shooter.ShooterIOSparkMax;
+import frc.robot.subsystems.shooter.*;
 import frc.robot.util.Mode;
 import frc.robot.util.ModeHelper;
 import org.littletonrobotics.junction.networktables.LoggedDashboardChooser;
@@ -65,7 +62,7 @@ public class RobotContainer {
 
   private final ModeHelper modeHelper = new ModeHelper(this);
 
-  //TODO: populate switch statements here
+  // TODO: populate switch statements here
   public Command getEnterCommand(Mode m) {
     return new InstantCommand();
   }
@@ -94,7 +91,7 @@ public class RobotContainer {
                 new ModuleIOSparkMax(1),
                 new ModuleIOSparkMax(2),
                 new ModuleIOSparkMax(3));
-        shooter = new Shooter(new ShooterIOSparkMax());
+        shooter = new Shooter(new ShooterIOTalonFX(), new WristIO() {});
         feeder = new Feeder(new FeederIO() {});
         intake = new Intake(new IntakeIOSparkMax());
         // drive = new Drive(
@@ -115,7 +112,7 @@ public class RobotContainer {
                 new ModuleIOSim(),
                 new ModuleIOSim(),
                 new ModuleIOSim());
-        shooter = new Shooter(new ShooterIOSim());
+        shooter = new Shooter(new ShooterIOSim(), new WristIO() {});
         feeder = new Feeder(new FeederIOSim());
         intake = new Intake(new IntakeIOSim());
         break;
@@ -129,7 +126,7 @@ public class RobotContainer {
                 new ModuleIO() {},
                 new ModuleIO() {},
                 new ModuleIO() {});
-        shooter = new Shooter(new ShooterIO() {});
+        shooter = new Shooter(new ShooterIO() {}, new WristIO() {});
         feeder = new Feeder(new FeederIO() {});
         intake = new Intake(new IntakeIO() {});
         break;
@@ -205,10 +202,9 @@ public class RobotContainer {
                     .until(() -> !feeder.getSensorFeed()));
 
         // prepare the shooter for dumping into the amp
-        controller
-            .a().onTrue(Commands.runOnce(() -> modeHelper.switchTo(Mode.AMP)));
+        controller.a().onTrue(Commands.runOnce(() -> modeHelper.switchTo(Mode.AMP)));
 
-      /*
+        /*
             .toggleOnTrue(
                 Commands.sequence(
                     Commands.run(

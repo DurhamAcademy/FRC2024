@@ -50,7 +50,6 @@ public class ShooterIOSparkMax implements ShooterIO {
 
   @Override
   public void updateInputs(ShooterIOInputs inputs) {
-    inputs.flywheelPositionRad = Units.rotationsToRadians(encoder.getPosition() / GEAR_RATIO);
     inputs.flywheelVelocityRadPerSec =
         Units.rotationsPerMinuteToRadiansPerSecond(encoder.getVelocity() / GEAR_RATIO);
     inputs.flywheelAppliedVolts = leader.getAppliedOutput() * leader.getBusVoltage();
