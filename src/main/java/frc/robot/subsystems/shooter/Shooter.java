@@ -13,111 +13,145 @@
 
 package frc.robot.subsystems.shooter;
 
+import edu.wpi.first.math.controller.ArmFeedforward;
+import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.controller.ProfiledPIDController;
 import edu.wpi.first.math.controller.SimpleMotorFeedforward;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.trajectory.TrapezoidProfile;
 import edu.wpi.first.math.util.Units;
+import edu.wpi.first.units.*;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants;
-import javax.swing.*;
 import org.littletonrobotics.junction.AutoLogOutput;
 import org.littletonrobotics.junction.Logger;
 
+import static edu.wpi.first.units.Units.*;
+
 public class Shooter extends SubsystemBase {
-  private final ShooterIO shooterio;
-  private final WristIO wristio;
-  private final ShooterIOInputsAutoLogged shooterinputs = new ShooterIOInputsAutoLogged();
-  private final WristIOInputsAutoLogged wristinputs = new WristIOInputsAutoLogged();
-  private ProfiledPIDController shooterpid;
-  private ProfiledPIDController wristpid;
-  private final SimpleMotorFeedforward ffModel;
-  private static final double ENCODER_ANGLE_FIX = 1.5;
-  // the ration for turning the shooter
+  private static final double HOOD_ENCODER_ANGLE_TO_REAL_ANGLE_RATIO = 1.5;
+  private static final double HOOD_ENCODER_ANGLE_TO_REAL_ANGLE_OFFSET = 0.0;
+  // the ratio for turning the shooter
   private static final double TURN_SHOOTER_RATIO = 5.4;
-  private static double targetShooterAngleRad = 0.0;
+  private static double targetHoodAngleRad = 0.0;
+  private final ShooterIO shooterIO;
+  private final HoodIO hoodIO;
+  private final ShooterIOInputsAutoLogged shooterInputs = new ShooterIOInputsAutoLogged();
+  private final HoodIOInputsAutoLogged hoodInputs = new HoodIOInputsAutoLogged();
+  private final ArmFeedforward hoodFF;
+  private PIDController shooterVelocityFB;
+  private SimpleMotorFeedforward shooterVelocityFF;
+  private ProfiledPIDController hoodFB;
+  private boolean characterizeMode;
 
   /** Creates a new Shooter. */
-  public Shooter(ShooterIO io, WristIO wristIO) {
-    this.shooterio = io;
-    this.wristio = wristIO;
+  public Shooter(ShooterIO io, HoodIO hoodIO) {
+    this.shooterIO = io;
+    this.hoodIO = hoodIO;
     // Switch constants based on mode (the physics simulator is treated as a
     // separate robot with different tuning)
     switch (Constants.currentMode) {
       case REAL:
         // FIXME: characterize real robot
       case REPLAY:
-        ffModel = new SimpleMotorFeedforward(0.1, 0.05);
-        shooterpid =
-            new ProfiledPIDController(
-                1.0, 0.0, 0.0, new TrapezoidProfile.Constraints(0.5, 99)); // FIXME: remove profile?
-        wristpid = new ProfiledPIDController(4.0, 0.0, 0.0, new TrapezoidProfile.Constraints(1, 2));
+        hoodFF = new ArmFeedforward(0.1, 0.05, 0);
+        shooterVelocityFB =
+                new PIDController(1.0, 0.0, 0.0 /*, new TrapezoidProfile.Constraints(0.5, 99)*/);
+        hoodFB = new ProfiledPIDController(4.0, 0.0, 0.0, new TrapezoidProfile.Constraints(1, 2));
         break;
       case SIM:
-        ffModel = new SimpleMotorFeedforward(0.0, 0.03);
-        shooterpid =
-            new ProfiledPIDController(0.5, 0.0, 0.0, new TrapezoidProfile.Constraints(0.5, 99));
-        wristpid = new ProfiledPIDController(4.0, 0.0, 0.0, new TrapezoidProfile.Constraints(1, 2));
+        hoodFF = new ArmFeedforward(0.0, 0.0, 0.03);
+        shooterVelocityFB =
+                new PIDController(0.5, 0.0, 0.0 /*, new TrapezoidProfile.Constraints(0.5, 99)*/);
+        hoodFB = new ProfiledPIDController(4.0, 0.0, 0.0, new TrapezoidProfile.Constraints(1, 2));
+        shooterVelocityFF = new SimpleMotorFeedforward(0, 0);
         break;
       default:
-        ffModel = new SimpleMotorFeedforward(0.0, 0.0);
+        hoodFF = new ArmFeedforward(0.0, 0.0, 0);
         break;
     }
   }
 
   @Override
   public void periodic() {
-    shooterio.updateInputs(shooterinputs);
-    wristio.updateInputs(wristinputs);
-    shooterio.setFlywheelVoltage(
-        shooterpid.calculate(shooterinputs.flywheelVelocityRadPerSec)
-            + ffModel.calculate(
-                shooterpid.getSetpoint().position, shooterpid.getSetpoint().velocity));
-    targetShooterAngleRad = shooterpid.getSetpoint().position * ENCODER_ANGLE_FIX;
-    Logger.processInputs("Shooter", shooterinputs);
-    Logger.processInputs("Wrist", wristinputs);
+    shooterIO.updateInputs(shooterInputs);
+    hoodIO.updateInputs(hoodInputs);
+    if (characterizeMode) {
+      shooterIO.setFlywheelVoltage(
+              shooterVelocityFB.calculate(shooterInputs.flywheelVelocityRadPerSec)
+                      + this.shooterVelocityFF.calculate(shooterInputs.flywheelVelocityRadPerSec));
+    }
+    hoodIO.setVoltage(hoodFB.calculate(hoodInputs.armPositionRad, hoodInputs.armVelocityRadPerSec));
+    targetHoodAngleRad =
+            hoodInputs.armPositionRad * HOOD_ENCODER_ANGLE_TO_REAL_ANGLE_RATIO
+                    + HOOD_ENCODER_ANGLE_TO_REAL_ANGLE_OFFSET;
+    Logger.processInputs("Shooter", shooterInputs);
+    Logger.processInputs("Hood", hoodInputs);
+  }
+
+  public void setCharacterizeMode(boolean on) {
+    characterizeMode = on;
   }
 
   /** Run open loop at the specified voltage. */
-  public void shooterrunvolts(double volts) {
-    shooterio.setFlywheelVoltage(volts);
+  public void shooterRunVolts(Measure<Voltage> voltage) {
+    shooterIO.setFlywheelVoltage(voltage.in(Volts));
   }
 
-  public void wristrunvolts(double volts) {
-    wristio.setVoltage(volts);
+  /**
+   * Run open loop at the specified voltage.
+   */
+  public void shooterRunVolts(double volts) {
+    shooterIO.setFlywheelVoltage(volts);
+  }
+
+  public Measure<Velocity<Angle>> getCharacterizationVelocity() {
+    return RadiansPerSecond.of(this.shooterInputs.flywheelVelocityRadPerSec);
+  }
+
+  public Measure<Current> getCharacterizationCurrent() {
+    return Amps.of(this.shooterInputs.flywheelCurrentAmps[0]);
+  }
+
+  public Measure<Voltage> getCharacterizationAppliedVolts() {
+    return Volts.of(this.shooterInputs.flywheelAppliedVolts);
+  }
+
+  public void hoodRunVolts(double volts) {
+    hoodIO.setVoltage(volts);
   }
 
   /** Run closed loop at the specified velocity. */
-  public void shooterrunVelocity(double velocityRPM) {
+  public void shooterRunVelocity(double velocityRPM) {
     var velocityRadPerSec = Units.rotationsPerMinuteToRadiansPerSecond(velocityRPM);
 
-    shooterpid.setGoal(velocityRadPerSec);
+    shooterVelocityFB.setGoal(velocityRadPerSec);
 
     // Log flywheel setpoint
     Logger.recordOutput("Shooter/SetpointRPM", velocityRPM);
   }
 
   /** Stops the flywheel. */
-  public void stopshooter() {
-    shooterio.flywheelStop();
+  public void stopShooter() {
+    shooterIO.flywheelStop();
   }
 
-  public void stopwrist() {
-    wristio.wristStop();
+  public void stopHood() {
+    hoodIO.wristStop();
   }
 
   /** Returns the current velocity in RPM. */
   @AutoLogOutput
   public double getShooterVelocityRPM() {
-    return Units.radiansPerSecondToRotationsPerMinute(shooterinputs.flywheelVelocityRadPerSec);
+    return Units.radiansPerSecondToRotationsPerMinute(shooterInputs.flywheelVelocityRadPerSec);
   }
 
   /** Returns the current velocity in radians per second. */
   public double getShooterCharacterizationVelocity() {
-    return shooterinputs.flywheelVelocityRadPerSec;
+    return shooterInputs.flywheelVelocityRadPerSec;
   }
 
   public void setTargetShooterAngleRad(Rotation2d anglediff) {
-    targetShooterAngleRad = anglediff.getRadians() * TURN_SHOOTER_RATIO;
+    targetHoodAngleRad = anglediff.getRadians() * TURN_SHOOTER_RATIO;
   }
 }

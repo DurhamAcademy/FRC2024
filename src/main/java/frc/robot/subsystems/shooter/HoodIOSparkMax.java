@@ -1,10 +1,12 @@
 package frc.robot.subsystems.shooter;
 
-import com.revrobotics.*;
+import com.revrobotics.CANSparkLowLevel;
+import com.revrobotics.CANSparkMax;
+import com.revrobotics.SparkAbsoluteEncoder;
 import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.geometry.Rotation2d;
 
-public class WristIOSparkMax implements WristIO {
+public class HoodIOSparkMax implements HoodIO {
   private static final double GEAR_RATIO = 1.5;
 
   private final CANSparkMax leader = new CANSparkMax(0, CANSparkLowLevel.MotorType.kBrushless);
@@ -12,7 +14,7 @@ public class WristIOSparkMax implements WristIO {
   private final SparkAbsoluteEncoder encoder =
       leader.getAbsoluteEncoder(SparkAbsoluteEncoder.Type.kDutyCycle);
 
-  public WristIOSparkMax() {
+    public HoodIOSparkMax() {
     leader.restoreFactoryDefaults();
     leader.setCANTimeout(250);
     leader.setInverted(false);
@@ -25,7 +27,7 @@ public class WristIOSparkMax implements WristIO {
     return Rotation2d.fromRadians(MathUtil.angleModulus(encoder.getPosition() * 6.28) / 1.5);
   }
 
-  public void updateInputs(WristIOInputs inputs) {
+    public void updateInputs(HoodIOInputs inputs) {
     inputs.wristPositionRad = encoder.getPosition();
   }
 

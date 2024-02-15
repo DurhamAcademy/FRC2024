@@ -15,14 +15,19 @@ package frc.robot.subsystems.shooter;
 
 import org.littletonrobotics.junction.AutoLog;
 
-public interface WristIO {
-  @AutoLog
-  public static class WristIOInputs {
-    public double wristPositionRad = 0.0;
+public interface HoodIO {
+  /** Updates the set of loggable inputs. */
+  public default void updateInputs(HoodIOInputs inputs) {
   }
 
-  /** Updates the set of loggable inputs. */
-  public default void updateInputs(WristIOInputs inputs) {}
+  @AutoLog
+  public static class HoodIOInputs {
+    public double armPositionRad = 0.0;
+    public double armVelocityRadPerSec = 0.0;
+    public double armAppliedVolts = 0.0;
+    public double[] armCurrentAmps = new double[]{};
+    public double[] armTemperature = new double[]{};
+  }
 
   /** Run open loop at the specified voltage. */
   public default void setVoltage(double volts) {}

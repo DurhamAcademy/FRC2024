@@ -13,9 +13,6 @@
 
 package frc.robot;
 
-import static edu.wpi.first.units.BaseUnits.Voltage;
-import static edu.wpi.first.units.Units.Seconds;
-
 import com.pathplanner.lib.auto.AutoBuilder;
 import com.pathplanner.lib.auto.NamedCommands;
 import edu.wpi.first.math.geometry.Pose2d;
@@ -46,6 +43,9 @@ import frc.robot.util.Mode;
 import frc.robot.util.ModeHelper;
 import org.littletonrobotics.junction.networktables.LoggedDashboardChooser;
 import org.littletonrobotics.junction.networktables.LoggedDashboardNumber;
+
+import static edu.wpi.first.units.BaseUnits.Voltage;
+import static edu.wpi.first.units.Units.Seconds;
 
 /**
  * This class is where the bulk of the robot should be declared. Since Command-based is a
@@ -91,7 +91,8 @@ public class RobotContainer {
                 new ModuleIOSparkMax(1),
                 new ModuleIOSparkMax(2),
                 new ModuleIOSparkMax(3));
-        shooter = new Shooter(new ShooterIOTalonFX(), new WristIO() {});
+        shooter = new Shooter(new ShooterIOTalonFX(), new HoodIO() {
+        });
         feeder = new Feeder(new FeederIO() {});
         intake = new Intake(new IntakeIOSparkMax());
         // drive = new Drive(
@@ -112,7 +113,8 @@ public class RobotContainer {
                 new ModuleIOSim(),
                 new ModuleIOSim(),
                 new ModuleIOSim());
-        shooter = new Shooter(new ShooterIOSim(), new WristIO() {});
+        shooter = new Shooter(new ShooterIOSim(), new HoodIO() {
+        });
         feeder = new Feeder(new FeederIOSim());
         intake = new Intake(new IntakeIOSim());
         break;
@@ -126,7 +128,9 @@ public class RobotContainer {
                 new ModuleIO() {},
                 new ModuleIO() {},
                 new ModuleIO() {});
-        shooter = new Shooter(new ShooterIO() {}, new WristIO() {});
+        shooter = new Shooter(new ShooterIO() {
+        }, new HoodIO() {
+        });
         feeder = new Feeder(new FeederIO() {});
         intake = new Intake(new IntakeIO() {});
         break;
@@ -136,8 +140,8 @@ public class RobotContainer {
     NamedCommands.registerCommand(
         "Run Flywheel",
         Commands.startEnd(
-                () -> shooter.shooterrunVelocity(flywheelSpeedInput.get()),
-                shooter::stopshooter,
+                        () -> shooter.shooterRunVelocity(flywheelSpeedInput.get()),
+                        shooter::stopShooter,
                 shooter)
             .withTimeout(5.0));
     autoChooser = new LoggedDashboardChooser<>("Auto Choices", AutoBuilder.buildAutoChooser());
@@ -245,18 +249,18 @@ public class RobotContainer {
             .a()
             .whileTrue(
                 Commands.startEnd(
-                    () -> shooter.shooterrunVelocity(flywheelSpeedInput.get()),
-                    shooter::stopshooter,
+                        () -> shooter.shooterRunVelocity(flywheelSpeedInput.get()),
+                        shooter::stopShooter,
                     shooter));
         controller
             .rightTrigger()
-            .onTrue(new RunCommand(() -> shooter.shooterrunvolts(6.0), shooter));
+                .onTrue(new RunCommand(() -> shooter.shooterRunVolts(6.0), shooter));
         controller
             .a()
             .whileTrue(
                 Commands.startEnd(
-                    () -> shooter.shooterrunVelocity(flywheelSpeedInput.get()),
-                    shooter::stopshooter,
+                        () -> shooter.shooterRunVelocity(flywheelSpeedInput.get()),
+                        shooter::stopShooter,
                     shooter));
 
         break;
@@ -298,11 +302,24 @@ public class RobotContainer {
                     .andThen(
                         (new RunCommand(
                             () ->
-                                shooter.shooterrunVelocity(
+                                    shooter.shooterRunVelocity(
                                     5000) /*THIS NUMBER NEEDS TO BE CALIBRATED*/,
                             intake))));
         break;
       case EverythingElse:
+        var shooterSysId =
+                new SysIdRoutine(
+                        new Config(Voltage.per(Units.Second).of(.5), Voltage.of(8.0), Seconds.of(12.0)),
+                        new Mechanism(
+                                shooter::shooterRunVolts,
+                                (log) -> {
+                                  var motor = log.motor("Shooter");
+                                  motor.voltage(shooter.getCharacterizationAppliedVolts());
+                                  motor.angularVelocity(shooter.getCharacterizationVelocity());
+                                  motor.current(shooter.getCharacterizationCurrent());
+                                },
+                                shooter,
+                                "FlywheelMotors"));
         break;
     }
   }
