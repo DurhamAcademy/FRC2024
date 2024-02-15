@@ -30,7 +30,14 @@ public class Intake extends SubsystemBase {
     this.io = io;
     switch (Constants.currentMode) {
       case REAL:
-        // FIXME: add arm FF and FB
+        armFF = new ArmFeedforward(0.0, 0.21, 0.195, 0.0);
+        armFB =
+            new ProfiledPIDController(
+                1.0,
+                0.0,
+                0.0,
+                new Constraints(RotationsPerSecond.of(3), RotationsPerSecond.per(Second).of(9)));
+        break;
       case REPLAY:
         armFF = new ArmFeedforward(0.1, .15, 1.95);
         armFB =
