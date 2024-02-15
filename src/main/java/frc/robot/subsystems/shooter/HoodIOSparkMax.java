@@ -14,7 +14,7 @@ public class HoodIOSparkMax implements HoodIO {
   private final SparkAbsoluteEncoder encoder =
       leader.getAbsoluteEncoder(SparkAbsoluteEncoder.Type.kDutyCycle);
 
-    public HoodIOSparkMax() {
+  public HoodIOSparkMax() {
     leader.restoreFactoryDefaults();
     leader.setCANTimeout(250);
     leader.setInverted(false);
@@ -27,8 +27,8 @@ public class HoodIOSparkMax implements HoodIO {
     return Rotation2d.fromRadians(MathUtil.angleModulus(encoder.getPosition() * 6.28) / 1.5);
   }
 
-    public void updateInputs(HoodIOInputs inputs) {
-    inputs.wristPositionRad = encoder.getPosition();
+  public void updateInputs(HoodIOInputs inputs) {
+    inputs.hoodPositionRad = encoder.getPosition();
   }
 
   @Override

@@ -81,9 +81,11 @@ public class Shooter extends SubsystemBase {
               shooterVelocityFB.calculate(shooterInputs.flywheelVelocityRadPerSec)
                       + this.shooterVelocityFF.calculate(shooterInputs.flywheelVelocityRadPerSec));
     }
-    hoodIO.setVoltage(hoodFB.calculate(hoodInputs.armPositionRad, hoodInputs.armVelocityRadPerSec));
+    hoodIO.setVoltage(
+            hoodFB.calculate(hoodInputs.hoodPositionRad, hoodInputs.hoodVelocityRadPerSec)
+                    + hoodFF.calculate(hoodFB.getSetpoint().position, hoodFB.getSetpoint().velocity));
     targetHoodAngleRad =
-            hoodInputs.armPositionRad * HOOD_ENCODER_ANGLE_TO_REAL_ANGLE_RATIO
+            hoodInputs.hoodPositionRad * HOOD_ENCODER_ANGLE_TO_REAL_ANGLE_RATIO
                     + HOOD_ENCODER_ANGLE_TO_REAL_ANGLE_OFFSET;
     Logger.processInputs("Shooter", shooterInputs);
     Logger.processInputs("Hood", hoodInputs);
@@ -125,7 +127,7 @@ public class Shooter extends SubsystemBase {
   public void shooterRunVelocity(double velocityRPM) {
     var velocityRadPerSec = Units.rotationsPerMinuteToRadiansPerSecond(velocityRPM);
 
-    shooterVelocityFB.setGoal(velocityRadPerSec);
+    shooterVelocityFB.setSetpoint(velocityRadPerSec);
 
     // Log flywheel setpoint
     Logger.recordOutput("Shooter/SetpointRPM", velocityRPM);
