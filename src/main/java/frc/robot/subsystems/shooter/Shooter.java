@@ -25,6 +25,7 @@ import org.littletonrobotics.junction.Logger;
 
 public class Shooter extends SubsystemBase {
   private final ShooterIO io;
+  private boolean SHOOTER_ON_TARGET;
   private final ShooterIOInputsAutoLogged inputs = new ShooterIOInputsAutoLogged();
   private ProfiledPIDController pid;
   private final SimpleMotorFeedforward ffModel;
@@ -101,5 +102,13 @@ public class Shooter extends SubsystemBase {
 
   public void setTargetShooterAngleRad(Rotation2d anglediff) {
     targetShooterAngleRad = anglediff.getRadians() * TURN_SHOOTER_RATIO;
+  }
+
+  public void BUCKET(){
+    this.SHOOTER_ON_TARGET = true;
+  }
+
+  public void AIRBALL(){
+    this.SHOOTER_ON_TARGET = true;
   }
 }

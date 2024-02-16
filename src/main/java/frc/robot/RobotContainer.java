@@ -191,37 +191,37 @@ public class RobotContainer {
                     .until(() -> !feeder.getSensorFeed()));
 
         // ---- INTAKE COMMANDS ----
-        controller
-            .leftBumper() // not a()
-            .whileTrue(
-                new RunCommand(
-                    () -> {
-                      intake.setIntakePosition(Rotation2d.fromDegrees(0.0));
-                      intake.setRollerPercentage(0.75);
-                    },
-                    intake));
-        controller
-            .rightBumper()
-            .whileTrue(
-                new RunCommand(
-                    () -> {
-                      intake.setIntakePosition(Rotation2d.fromDegrees(-90.0));
-                      intake.setRollerPercentage(0.0);
-                    },
-                    intake));
+//        controller
+//            .leftBumper() // not a()
+//            .whileTrue(
+//                new RunCommand(
+//                    () -> {
+//                      intake.setIntakePosition(Rotation2d.fromDegrees(0.0));
+//                      intake.setRollerPercentage(0.75);
+//                    },
+//                    intake));
+//        controller
+//            .rightBumper()
+//            .whileTrue(
+//                new RunCommand(
+//                    () -> {
+//                      intake.setIntakePosition(Rotation2d.fromDegrees(-90.0));
+//                      intake.setRollerPercentage(0.0);
+//                    },
+//                    intake));
 
         // ---- SHOOTER COMMANDS ----
-        controller
-            .a()
-            .whileTrue(
-                Commands.startEnd(
-                    () -> shooter.runVelocity(flywheelSpeedInput.get()), shooter::stop, shooter));
-        controller.rightTrigger().onTrue(new RunCommand(() -> shooter.runVolts(6.0), shooter));
-        controller
-            .a()
-            .whileTrue(
-                Commands.startEnd(
-                    () -> shooter.runVelocity(flywheelSpeedInput.get()), shooter::stop, shooter));
+//        controller
+//            .a()
+//            .whileTrue(
+//                Commands.startEnd(
+//                    () -> shooter.runVelocity(flywheelSpeedInput.get()), shooter::stop, shooter));
+//        controller.rightTrigger().onTrue(new RunCommand(() -> shooter.runVolts(6.0), shooter));
+//        controller
+//            .a()
+//            .whileTrue(
+//                Commands.startEnd(
+//                    () -> shooter.runVelocity(flywheelSpeedInput.get()), shooter::stop, shooter));
 
         break;
       case DriveMotors:
@@ -239,30 +239,54 @@ public class RobotContainer {
                     drive::populateDriveCharacterizationData,
                     drive,
                     "DrivetrainDriveMotors"));
-        controller
-            .x()
-            .whileTrue(drivetrainDriveSysID.dynamic(Direction.kForward))
-            .onFalse(Commands.runOnce(drive::stopWithX, drive));
-        controller
-            .y()
-            .whileTrue(drivetrainDriveSysID.dynamic(Direction.kReverse))
-            .onFalse(Commands.runOnce(drive::stopWithX, drive));
-        controller
-            .a()
-            .whileTrue(drivetrainDriveSysID.quasistatic(Direction.kForward).withTimeout(2.0))
-            .onFalse(Commands.runOnce(drive::stopWithX, drive));
-        controller
-            .b()
-            .whileTrue(drivetrainDriveSysID.quasistatic(Direction.kReverse).withTimeout(2.0))
-            .onFalse(Commands.runOnce(drive::stopWithX, drive));
+//        controller
+//            .x()
+//            .whileTrue(drivetrainDriveSysID.dynamic(Direction.kForward))
+//            .onFalse(Commands.runOnce(drive::stopWithX, drive));
+//        controller
+//            .y()
+//            .whileTrue(drivetrainDriveSysID.dynamic(Direction.kReverse))
+//            .onFalse(Commands.runOnce(drive::stopWithX, drive));
+//        controller
+//            .a()
+//            .whileTrue(drivetrainDriveSysID.quasistatic(Direction.kForward).withTimeout(2.0))
+//            .onFalse(Commands.runOnce(drive::stopWithX, drive));
+//        controller
+//            .b()
+//            .whileTrue(drivetrainDriveSysID.quasistatic(Direction.kReverse).withTimeout(2.0))
+//            .onFalse(Commands.runOnce(drive::stopWithX, drive));
+//        controller
+//            .rightTrigger()
+//            .whileTrue(
+//                new RunCommand(() -> shooter.setTargetShooterAngleRad(new Rotation2d(-0.61)))
+//                    .andThen(
+//                        (new RunCommand(
+//                            () -> shooter.runVelocity(5000) /*THIS NUMBER NEEDS TO BE CALIBRATED*/,
+//                            intake))));
         controller
             .rightTrigger()
-            .whileTrue(
-                new RunCommand(() -> shooter.setTargetShooterAngleRad(new Rotation2d(-0.61)))
-                    .andThen(
-                        (new RunCommand(
-                            () -> shooter.runVelocity(5000) /*THIS NUMBER NEEDS TO BE CALIBRATED*/,
-                            intake))));
+            .onTrue(
+                Commands.run(
+                    () -> shooter.runVelocity(shooter.getVelocityRPM()+20.0)));
+        controller
+                .leftTrigger()
+                .onTrue(
+                        Commands.run(
+                                () -> shooter.runVelocity(shooter.getVelocityRPM()-20.0)));
+        controller
+                .rightBumper()
+                .onTrue(
+                        Commands.run(
+                                () -> shooter.BUCKET()
+                        )
+                );
+        controller
+                .rightBumper()
+                .onTrue(
+                        Commands.run(
+                                () -> shooter.AIRBALL()
+                        )
+                );
         break;
       case EverythingElse:
         break;
