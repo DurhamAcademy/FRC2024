@@ -13,8 +13,11 @@
 
 package frc.robot.subsystems.intake;
 
-import com.revrobotics.*;
+import com.revrobotics.AbsoluteEncoder;
+import com.revrobotics.CANSparkBase;
 import com.revrobotics.CANSparkLowLevel.MotorType;
+import com.revrobotics.CANSparkMax;
+import com.revrobotics.SparkAbsoluteEncoder;
 import edu.wpi.first.math.util.Units;
 import org.littletonrobotics.junction.Logger;
 
@@ -62,7 +65,7 @@ public class IntakeIOSparkMax implements IntakeIO {
     inputs.rollerTemperature = new double[] {roller.getMotorTemperature()};
   }
 
-@Override
+  @Override
   public void setArmVoltage(double volts) {
     Logger.recordOutput("ArmSetVoltage", volts);
     arm.setVoltage(volts);

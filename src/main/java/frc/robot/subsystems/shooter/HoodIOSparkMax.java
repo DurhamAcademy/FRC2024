@@ -9,7 +9,7 @@ import edu.wpi.first.math.geometry.Rotation2d;
 public class HoodIOSparkMax implements HoodIO {
   private static final double GEAR_RATIO = 1.5;
 
-  private final CANSparkMax leader = new CANSparkMax(0, CANSparkLowLevel.MotorType.kBrushless);
+  private final CANSparkMax leader = new CANSparkMax(35, CANSparkLowLevel.MotorType.kBrushless);
 
   private final SparkAbsoluteEncoder encoder =
       leader.getAbsoluteEncoder(SparkAbsoluteEncoder.Type.kDutyCycle);

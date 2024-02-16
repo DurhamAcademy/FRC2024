@@ -18,6 +18,7 @@ import org.littletonrobotics.junction.AutoLog;
 public interface ShooterIO {
   @AutoLog
   public static class ShooterIOInputs {
+    public double flywheelPositionRad = 0.0;
     public double flywheelVelocityRadPerSec = 0.0;
     public double flywheelAppliedVolts = 0.0;
     public double[] flywheelCurrentAmps = new double[] {};

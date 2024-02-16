@@ -13,6 +13,9 @@
 
 package frc.robot;
 
+import static edu.wpi.first.units.BaseUnits.Voltage;
+import static edu.wpi.first.units.Units.Seconds;
+
 import com.pathplanner.lib.auto.AutoBuilder;
 import com.pathplanner.lib.auto.NamedCommands;
 import edu.wpi.first.math.geometry.Pose2d;
@@ -20,10 +23,7 @@ import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.units.Units;
 import edu.wpi.first.wpilibj.GenericHID;
 import edu.wpi.first.wpilibj.XboxController;
-import edu.wpi.first.wpilibj2.command.Command;
-import edu.wpi.first.wpilibj2.command.Commands;
-import edu.wpi.first.wpilibj2.command.InstantCommand;
-import edu.wpi.first.wpilibj2.command.RunCommand;
+import edu.wpi.first.wpilibj2.command.*;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine.Config;
@@ -37,18 +37,11 @@ import frc.robot.subsystems.feeder.FeederIOSim;
 import frc.robot.subsystems.intake.Intake;
 import frc.robot.subsystems.intake.IntakeIO;
 import frc.robot.subsystems.intake.IntakeIOSim;
-import frc.robot.subsystems.intake.IntakeIOSparkMax;
-import frc.robot.subsystems.shooter.Shooter;
-import frc.robot.subsystems.shooter.ShooterIO;
-import frc.robot.subsystems.shooter.ShooterIOSim;
 import frc.robot.subsystems.shooter.*;
 import frc.robot.util.Mode;
 import frc.robot.util.ModeHelper;
 import org.littletonrobotics.junction.networktables.LoggedDashboardChooser;
 import org.littletonrobotics.junction.networktables.LoggedDashboardNumber;
-
-import static edu.wpi.first.units.BaseUnits.Voltage;
-import static edu.wpi.first.units.Units.Seconds;
 
 /**
  * This class is where the bulk of the robot should be declared. Since Command-based is a
@@ -82,6 +75,8 @@ public class RobotContainer {
   private final LoggedDashboardNumber flywheelSpeedInput =
       new LoggedDashboardNumber("Flywheel Speed", 1500.0);
 
+  public static SysIDMode sysIDMode = SysIDMode.EverythingElse;
+
   /** The container for the robot. Contains subsystems, OI devices, and commands. */
   public RobotContainer() {
     switch (Constants.currentMode) {
@@ -90,14 +85,13 @@ public class RobotContainer {
         drive =
             new Drive(
                 new GyroIOPigeon2(),
-                new ModuleIOSparkMax(0),
-                new ModuleIOSparkMax(1),
-                new ModuleIOSparkMax(2),
-                new ModuleIOSparkMax(3));
-        shooter = new Shooter(new ShooterIOTalonFX(), new HoodIO() {
-        });
+                new ModuleIOSim(/*0*/ ),
+                new ModuleIOSim(/*1*/ ),
+                new ModuleIOSim(/*2*/ ),
+                new ModuleIOSim(/*3*/ ));
+        shooter = new Shooter(new ShooterIOTalonFX(), new HoodIOSparkMax() {});
         feeder = new Feeder(new FeederIO() {});
-        intake = new Intake(new IntakeIOSparkMax());
+        intake = new Intake(new IntakeIO() {});
         // drive = new Drive(
         // new GyroIOPigeon2(),
         // new ModuleIOTalonFX(0),
@@ -116,8 +110,7 @@ public class RobotContainer {
                 new ModuleIOSim(),
                 new ModuleIOSim(),
                 new ModuleIOSim());
-        shooter = new Shooter(new ShooterIOSim(), new HoodIO() {
-        });
+        shooter = new Shooter(new ShooterIOSim(), new HoodIO() {});
         feeder = new Feeder(new FeederIOSim());
         intake = new Intake(new IntakeIOSim());
         break;
@@ -131,9 +124,7 @@ public class RobotContainer {
                 new ModuleIO() {},
                 new ModuleIO() {},
                 new ModuleIO() {});
-        shooter = new Shooter(new ShooterIO() {
-        }, new HoodIO() {
-        });
+        shooter = new Shooter(new ShooterIO() {}, new HoodIO() {});
         feeder = new Feeder(new FeederIO() {});
         intake = new Intake(new IntakeIO() {});
         break;
@@ -143,16 +134,14 @@ public class RobotContainer {
     NamedCommands.registerCommand(
         "Run Flywheel",
         Commands.startEnd(
-                        () -> shooter.shooterRunVelocity(flywheelSpeedInput.get()),
-                        shooter::stopShooter,
+                () -> shooter.shooterRunVelocity(flywheelSpeedInput.get()),
+                shooter::stopShooter,
                 shooter)
             .withTimeout(5.0));
     autoChooser = new LoggedDashboardChooser<>("Auto Choices", AutoBuilder.buildAutoChooser());
 
     configureButtonBindings();
   }
-
-  public static SysIDMode sysIDMode = SysIDMode.Disabled;
 
   public enum SysIDMode {
     Disabled,
@@ -252,18 +241,25 @@ public class RobotContainer {
             .a()
             .whileTrue(
                 Commands.startEnd(
-                        () -> shooter.shooterRunVelocity(flywheelSpeedInput.get()),
-                        shooter::stopShooter,
+                    () -> shooter.shooterRunVelocity(flywheelSpeedInput.get()),
+                    shooter::stopShooter,
                     shooter));
         controller
             .rightTrigger()
-                .onTrue(new RunCommand(() -> shooter.shooterRunVolts(6.0), shooter));
+            .whileTrue(
+                new StartEndCommand(
+                    () -> shooter.shooterRunVolts(12.0 * controller.getRightTriggerAxis()),
+                    () -> {
+                      shooter.stopShooter();
+                      shooter.shooterRunVolts(0.0);
+                    },
+                    shooter));
         controller
             .a()
             .whileTrue(
                 Commands.startEnd(
-                        () -> shooter.shooterRunVelocity(flywheelSpeedInput.get()),
-                        shooter::stopShooter,
+                    () -> shooter.shooterRunVelocity(flywheelSpeedInput.get()),
+                    shooter::stopShooter,
                     shooter));
 
         break;
@@ -305,24 +301,43 @@ public class RobotContainer {
                     .andThen(
                         (new RunCommand(
                             () ->
-                                    shooter.shooterRunVelocity(
+                                shooter.shooterRunVelocity(
                                     5000) /*THIS NUMBER NEEDS TO BE CALIBRATED*/,
                             intake))));
         break;
       case EverythingElse:
         var shooterSysId =
-                new SysIdRoutine(
-                        new Config(Voltage.per(Units.Second).of(.5), Voltage.of(8.0), Seconds.of(12.0)),
-                        new Mechanism(
-                                shooter::shooterRunVolts,
-                                (log) -> {
-                                  var motor = log.motor("Shooter");
-                                  motor.voltage(shooter.getCharacterizationAppliedVolts());
-                                  motor.angularVelocity(shooter.getCharacterizationVelocity());
-                                  motor.current(shooter.getCharacterizationCurrent());
-                                },
-                                shooter,
-                                "FlywheelMotors"));
+            new SysIdRoutine(
+                new Config(Voltage.per(Units.Second).of(.5), Voltage.of(8.0), Seconds.of(30)),
+                new Mechanism(
+                    shooter::shooterRunVolts,
+                    (log) -> {
+                      var motor = log.motor("Shooter");
+                      motor.voltage(shooter.getCharacterizationAppliedVolts());
+                      motor.angularVelocity(shooter.getCharacterizationVelocity());
+                      motor.current(shooter.getCharacterizationCurrent());
+                    },
+                    shooter,
+                    "FlywheelMotors"));
+        controller
+            .a()
+            .onTrue(
+                shooterSysId
+                    .dynamic(Direction.kForward)
+                    .withTimeout(5)
+                    .andThen(new WaitCommand(5))
+                    .andThen(
+                        shooterSysId
+                            .dynamic(Direction.kReverse)
+                            .withTimeout(5)
+                            .andThen(new WaitCommand(5))
+                            .andThen(shooterSysId.quasistatic(Direction.kForward).withTimeout(60))
+                            .andThen(new WaitCommand(5))
+                            .andThen(
+                                shooterSysId
+                                    .quasistatic(Direction.kReverse)
+                                    .withTimeout(60)
+                                    .andThen(new WaitCommand(5)))));
         break;
     }
   }
