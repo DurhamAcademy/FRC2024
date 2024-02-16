@@ -13,6 +13,8 @@
 
 package frc.robot.subsystems.shooter;
 
+import static edu.wpi.first.units.Units.*;
+
 import edu.wpi.first.math.controller.ArmFeedforward;
 import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.controller.ProfiledPIDController;
@@ -25,8 +27,6 @@ import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants;
 import org.littletonrobotics.junction.AutoLogOutput;
 import org.littletonrobotics.junction.Logger;
-
-import static edu.wpi.first.units.Units.*;
 
 public class Shooter extends SubsystemBase {
   private static final double HOOD_ENCODER_ANGLE_TO_REAL_ANGLE_RATIO = 1.5;
@@ -56,13 +56,13 @@ public class Shooter extends SubsystemBase {
       case REPLAY:
         hoodFF = new ArmFeedforward(0.1, 0.05, 0);
         shooterVelocityFB =
-                new PIDController(1.0, 0.0, 0.0 /*, new TrapezoidProfile.Constraints(0.5, 99)*/);
+            new PIDController(1.0, 0.0, 0.0 /*, new TrapezoidProfile.Constraints(0.5, 99)*/);
         hoodFB = new ProfiledPIDController(4.0, 0.0, 0.0, new TrapezoidProfile.Constraints(1, 2));
         break;
       case SIM:
         hoodFF = new ArmFeedforward(0.0, 0.0, 0.03);
         shooterVelocityFB =
-                new PIDController(0.5, 0.0, 0.0 /*, new TrapezoidProfile.Constraints(0.5, 99)*/);
+            new PIDController(0.5, 0.0, 0.0 /*, new TrapezoidProfile.Constraints(0.5, 99)*/);
         hoodFB = new ProfiledPIDController(4.0, 0.0, 0.0, new TrapezoidProfile.Constraints(1, 2));
         shooterVelocityFF = new SimpleMotorFeedforward(0, 0);
         break;
@@ -78,15 +78,15 @@ public class Shooter extends SubsystemBase {
     hoodIO.updateInputs(hoodInputs);
     if (characterizeMode) {
       shooterIO.setFlywheelVoltage(
-              shooterVelocityFB.calculate(shooterInputs.flywheelVelocityRadPerSec)
-                      + this.shooterVelocityFF.calculate(shooterInputs.flywheelVelocityRadPerSec));
+          shooterVelocityFB.calculate(shooterInputs.flywheelVelocityRadPerSec)
+              + this.shooterVelocityFF.calculate(shooterInputs.flywheelVelocityRadPerSec));
     }
     hoodIO.setVoltage(
-            hoodFB.calculate(hoodInputs.hoodPositionRad, hoodInputs.hoodVelocityRadPerSec)
-                    + hoodFF.calculate(hoodFB.getSetpoint().position, hoodFB.getSetpoint().velocity));
+        hoodFB.calculate(hoodInputs.hoodPositionRad, hoodInputs.hoodVelocityRadPerSec)
+            + hoodFF.calculate(hoodFB.getSetpoint().position, hoodFB.getSetpoint().velocity));
     targetHoodAngleRad =
-            hoodInputs.hoodPositionRad * HOOD_ENCODER_ANGLE_TO_REAL_ANGLE_RATIO
-                    + HOOD_ENCODER_ANGLE_TO_REAL_ANGLE_OFFSET;
+        hoodInputs.hoodPositionRad * HOOD_ENCODER_ANGLE_TO_REAL_ANGLE_RATIO
+            + HOOD_ENCODER_ANGLE_TO_REAL_ANGLE_OFFSET;
     Logger.processInputs("Shooter", shooterInputs);
     Logger.processInputs("Hood", hoodInputs);
   }
@@ -100,9 +100,7 @@ public class Shooter extends SubsystemBase {
     shooterIO.setFlywheelVoltage(voltage.in(Volts));
   }
 
-  /**
-   * Run open loop at the specified voltage.
-   */
+  /** Run open loop at the specified voltage. */
   public void shooterRunVolts(double volts) {
     shooterIO.setFlywheelVoltage(volts);
   }
