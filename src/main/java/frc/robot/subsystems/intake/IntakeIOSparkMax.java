@@ -18,6 +18,7 @@ import com.revrobotics.CANSparkBase;
 import com.revrobotics.CANSparkLowLevel.MotorType;
 import com.revrobotics.CANSparkMax;
 import com.revrobotics.SparkAbsoluteEncoder;
+import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.util.Units;
 import org.littletonrobotics.junction.Logger;
 
@@ -42,14 +43,13 @@ public class IntakeIOSparkMax implements IntakeIO {
     arm.setCANTimeout(250);
     roller.setCANTimeout(250);
 
-    arm.setInverted(false);
+    arm.setInverted(true);
     //    roller.follow(arm, false);
 
     //    arm.enableVoltageCompensation(12.0);
     //    roller.setSmartCurrentLimit(30);
 
-    encoder.setZeroOffset(/*0.0 */ .878);
-    encoder.setInverted(true);
+    encoder.setInverted(false);
 
     arm.burnFlash();
     roller.burnFlash();
@@ -57,7 +57,7 @@ public class IntakeIOSparkMax implements IntakeIO {
 
   @Override
   public void updateInputs(IntakeIOInputs inputs) {
-    inputs.armPositionRad = Units.rotationsToRadians(encoder.getPosition());
+    inputs.armPositionRad = MathUtil.angleModulus(Units.rotationsToRadians(encoder.getPosition()));
     inputs.armVelocityRadPerSec = Units.rotationsPerMinuteToRadiansPerSecond(encoder.getVelocity());
     inputs.armAppliedVolts = arm.getAppliedOutput() * arm.getBusVoltage();
     inputs.armCurrentAmps = new double[] {arm.getOutputCurrent()};
@@ -68,7 +68,7 @@ public class IntakeIOSparkMax implements IntakeIO {
   @Override
   public void setArmVoltage(double volts) {
     Logger.recordOutput("ArmSetVoltage", volts);
-    arm.setVoltage(volts);
+    arm.setVoltage(MathUtil.clamp(volts, -10, 10));
   }
 
   @Override

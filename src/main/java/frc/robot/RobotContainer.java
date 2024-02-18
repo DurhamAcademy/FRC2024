@@ -31,6 +31,7 @@ import frc.robot.subsystems.drive.*;
 import frc.robot.subsystems.feeder.Feeder;
 import frc.robot.subsystems.feeder.FeederIO;
 import frc.robot.subsystems.feeder.FeederIOSim;
+import frc.robot.subsystems.feeder.FeederIOTalonFX;
 import frc.robot.subsystems.intake.Intake;
 import frc.robot.subsystems.intake.IntakeIO;
 import frc.robot.subsystems.intake.IntakeIOSim;
@@ -86,12 +87,12 @@ public class RobotContainer {
         drive =
             new Drive(
                 new GyroIOPigeon2(),
-                new ModuleIOSim(/*0*/ ),
-                new ModuleIOSim(/*1*/ ),
-                new ModuleIOSim(/*2*/ ),
-                new ModuleIOSim(/*3*/ ));
+                    new ModuleIOSim(0),
+                    new ModuleIOSim(1),
+                    new ModuleIOSim(2),
+                    new ModuleIOSim(3));
         shooter = new Shooter(new ShooterIOTalonFX(), new HoodIOSparkMax() {});
-        feeder = new Feeder(new FeederIO() {});
+          feeder = new Feeder(new FeederIOTalonFX());
           intake = new Intake(new IntakeIOSparkMax() {
           });
         // drive = new Drive(
@@ -171,11 +172,16 @@ public class RobotContainer {
         intake.setDefaultCommand(
             new RunCommand(
                 () -> {
-                  intake.setIntakePosition(Rotation2d.fromDegrees(-130));
+                    intake.setIntakePosition(Rotation2d.fromDegrees(-90));
                   intake.setRollerPercentage(0.0);
                 },
-                intake));
-        feeder.setDefaultCommand(new RunCommand(feeder::stop, feeder));
+                    intake).beforeStarting(new InstantCommand(intake::resetArmFB, intake)));
+          feeder.setDefaultCommand(new RunCommand(() -> {
+              feeder.runVolts(10);
+          }, feeder));
+          shooter.setDefaultCommand(new RunCommand(() -> {
+              shooter.setTargetShooterAngleRad(new Rotation2d(0.55));
+          }, shooter));
 
         // ---- DRIVETRAIN COMMANDS ----
         controller.x().whileTrue(Commands.runOnce(drive::stopWithX, drive));
@@ -198,11 +204,11 @@ public class RobotContainer {
             .leftTrigger()
             .and(feeder::getSensorFeed)
             .whileTrue(
-                new RunCommand(() -> feeder.runVolts(6.0), feeder)
+                    new RunCommand(() -> feeder.runVolts(0.0), feeder)
                     .until(() -> !feeder.getSensorFeed()));
 
         // prepare the shooter for dumping into the amp
-        controller.a().onTrue(Commands.runOnce(() -> modeHelper.switchTo(Mode.AMP)));
+          controller.y().onTrue(Commands.runOnce(() -> modeHelper.switchTo(Mode.AMP)));
 
         /*
             .toggleOnTrue(
@@ -224,8 +230,8 @@ public class RobotContainer {
             .whileTrue(
                 new RunCommand(
                     () -> {
-                      intake.setIntakePosition(Rotation2d.fromDegrees(0.0));
-                      intake.setRollerPercentage(0.75);
+                        intake.setIntakePosition(Rotation2d.fromDegrees(-5));
+                        intake.setRollerPercentage(.66);
                     },
                     intake));
         controller
@@ -234,13 +240,13 @@ public class RobotContainer {
                 new RunCommand(
                     () -> {
                       intake.setIntakePosition(Rotation2d.fromDegrees(-90.0));
-                      intake.setRollerPercentage(0.0);
+                        intake.setRollerPercentage(0.5);
                     },
                     intake));
 
         // ---- SHOOTER COMMANDS ----
         controller
-            .a()
+                .b()
             .whileTrue(
                 Commands.startEnd(
                     () -> shooter.shooterRunVelocity(flywheelSpeedInput.get()),
@@ -257,7 +263,7 @@ public class RobotContainer {
                     },
                     shooter));
         controller
-            .a()
+                .x()
             .whileTrue(
                 Commands.startEnd(
                     () -> shooter.shooterRunVelocity(flywheelSpeedInput.get()),

@@ -5,6 +5,7 @@ import com.ctre.phoenix6.StatusSignal;
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
 import com.ctre.phoenix6.controls.VoltageOut;
 import com.ctre.phoenix6.hardware.TalonFX;
+import com.ctre.phoenix6.signals.InvertedValue;
 import com.ctre.phoenix6.signals.NeutralModeValue;
 import edu.wpi.first.math.util.Units;
 import frc.robot.subsystems.shooter.ShooterIO;
@@ -24,8 +25,9 @@ public class FeederIOTalonFX implements FeederIO {
 
     public FeederIOTalonFX() {
         var config = new TalonFXConfiguration();
-        config.CurrentLimits.StatorCurrentLimit = 30.0;
+        config.CurrentLimits.StatorCurrentLimit = 50.0;
         config.CurrentLimits.StatorCurrentLimitEnable = true;
+        config.MotorOutput.withInverted(InvertedValue.Clockwise_Positive);
         config.MotorOutput.NeutralMode = NeutralModeValue.Coast;
         feedMotor.getConfigurator().apply(config);
 
