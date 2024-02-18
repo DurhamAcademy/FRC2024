@@ -22,7 +22,7 @@ import com.ctre.phoenix6.signals.NeutralModeValue;
 import edu.wpi.first.math.util.Units;
 
 public class ShooterIOTalonFX implements ShooterIO {
-  private static final double GEAR_RATIO = 1.5;
+  private static final double GEAR_RATIO = 1.0;
 
   private final TalonFX leader = new TalonFX(40);
   private final TalonFX follower = new TalonFX(41);
@@ -31,7 +31,13 @@ public class ShooterIOTalonFX implements ShooterIO {
   private final StatusSignal<Double> leaderVelocity = leader.getVelocity();
   private final StatusSignal<Double> leaderAppliedVolts = leader.getMotorVoltage();
   private final StatusSignal<Double> leaderCurrent = leader.getStatorCurrent();
+  private final StatusSignal<Double> leaderDeviceTemp = leader.getDeviceTemp();
+  private final StatusSignal<Double> leaderAncillaryDeviceTemp = leader.getAncillaryDeviceTemp();
+  private final StatusSignal<Double> leaderProcessorTemp = leader.getProcessorTemp();
   private final StatusSignal<Double> followerCurrent = follower.getStatorCurrent();
+  private final StatusSignal<Double> followerDeviceTemp = follower.getDeviceTemp();
+  private final StatusSignal<Double> followerAncillaryDeviceTemp = follower.getAncillaryDeviceTemp();
+  private final StatusSignal<Double> followerProcessorTemp = follower.getProcessorTemp();
 
   public ShooterIOTalonFX() {
     var config = new TalonFXConfiguration();
@@ -44,6 +50,13 @@ public class ShooterIOTalonFX implements ShooterIO {
 
     BaseStatusSignal.setUpdateFrequencyForAll(
         50.0, leaderPosition, leaderVelocity, leaderAppliedVolts, leaderCurrent, followerCurrent);
+    BaseStatusSignal.setUpdateFrequencyForAll(20,
+            leaderDeviceTemp,
+            leaderAncillaryDeviceTemp,
+            leaderProcessorTemp,
+            followerDeviceTemp,
+            followerAncillaryDeviceTemp,
+            followerProcessorTemp);
     leader.optimizeBusUtilization();
     follower.optimizeBusUtilization();
   }
@@ -51,13 +64,21 @@ public class ShooterIOTalonFX implements ShooterIO {
   @Override
   public void updateInputs(ShooterIOInputs inputs) {
     BaseStatusSignal.refreshAll(
-        leaderPosition, leaderVelocity, leaderAppliedVolts, leaderCurrent, followerCurrent);
+            leaderPosition, leaderVelocity, leaderAppliedVolts, leaderCurrent, followerCurrent, leaderDeviceTemp,
+            leaderAncillaryDeviceTemp, leaderProcessorTemp, followerDeviceTemp, followerAncillaryDeviceTemp,
+            followerProcessorTemp);
     inputs.flywheelPositionRad = leaderPosition.getValueAsDouble();
     inputs.flywheelVelocityRadPerSec =
         Units.rotationsToRadians(leaderVelocity.getValueAsDouble()) / GEAR_RATIO;
     inputs.flywheelAppliedVolts = leaderAppliedVolts.getValueAsDouble();
     inputs.flywheelCurrentAmps =
         new double[] {leaderCurrent.getValueAsDouble(), followerCurrent.getValueAsDouble()};
+    inputs.flywheelTemperature
+            = new double[]{leaderDeviceTemp.getValueAsDouble(), followerDeviceTemp.getValueAsDouble()};
+    inputs.flywheelAncillaryTemperature
+            = new double[]{leaderAncillaryDeviceTemp.getValueAsDouble(), followerAncillaryDeviceTemp.getValueAsDouble()};
+    inputs.flywheelProcessorTemperature
+            = new double[]{leaderProcessorTemp.getValueAsDouble(), followerProcessorTemp.getValueAsDouble()};
   }
 
   @Override

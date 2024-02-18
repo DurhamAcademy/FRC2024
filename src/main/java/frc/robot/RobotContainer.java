@@ -13,9 +13,6 @@
 
 package frc.robot;
 
-import static edu.wpi.first.units.BaseUnits.Voltage;
-import static edu.wpi.first.units.Units.Seconds;
-
 import com.pathplanner.lib.auto.AutoBuilder;
 import com.pathplanner.lib.auto.NamedCommands;
 import edu.wpi.first.math.geometry.Pose2d;
@@ -37,11 +34,15 @@ import frc.robot.subsystems.feeder.FeederIOSim;
 import frc.robot.subsystems.intake.Intake;
 import frc.robot.subsystems.intake.IntakeIO;
 import frc.robot.subsystems.intake.IntakeIOSim;
+import frc.robot.subsystems.intake.IntakeIOSparkMax;
 import frc.robot.subsystems.shooter.*;
 import frc.robot.util.Mode;
 import frc.robot.util.ModeHelper;
 import org.littletonrobotics.junction.networktables.LoggedDashboardChooser;
 import org.littletonrobotics.junction.networktables.LoggedDashboardNumber;
+
+import static edu.wpi.first.units.BaseUnits.Voltage;
+import static edu.wpi.first.units.Units.Seconds;
 
 /**
  * This class is where the bulk of the robot should be declared. Since Command-based is a
@@ -75,7 +76,7 @@ public class RobotContainer {
   private final LoggedDashboardNumber flywheelSpeedInput =
       new LoggedDashboardNumber("Flywheel Speed", 1500.0);
 
-  public static SysIDMode sysIDMode = SysIDMode.EverythingElse;
+    public static SysIDMode sysIDMode = SysIDMode.Disabled;
 
   /** The container for the robot. Contains subsystems, OI devices, and commands. */
   public RobotContainer() {
@@ -91,7 +92,8 @@ public class RobotContainer {
                 new ModuleIOSim(/*3*/ ));
         shooter = new Shooter(new ShooterIOTalonFX(), new HoodIOSparkMax() {});
         feeder = new Feeder(new FeederIO() {});
-        intake = new Intake(new IntakeIO() {});
+          intake = new Intake(new IntakeIOSparkMax() {
+          });
         // drive = new Drive(
         // new GyroIOPigeon2(),
         // new ModuleIOTalonFX(0),
@@ -308,36 +310,31 @@ public class RobotContainer {
       case EverythingElse:
         var shooterSysId =
             new SysIdRoutine(
-                new Config(Voltage.per(Units.Second).of(.5), Voltage.of(8.0), Seconds.of(30)),
+                    new Config(Voltage.per(Units.Second).of(.1), Voltage.of(9.0), Seconds.of(120)),
                 new Mechanism(
                     shooter::shooterRunVolts,
                     (log) -> {
                       var motor = log.motor("Shooter");
                       motor.voltage(shooter.getCharacterizationAppliedVolts());
+                        motor.angularPosition(shooter.getCharacterizationPosition());
                       motor.angularVelocity(shooter.getCharacterizationVelocity());
                       motor.current(shooter.getCharacterizationCurrent());
                     },
                     shooter,
                     "FlywheelMotors"));
         controller
-            .a()
-            .onTrue(
-                shooterSysId
-                    .dynamic(Direction.kForward)
-                    .withTimeout(5)
-                    .andThen(new WaitCommand(5))
-                    .andThen(
-                        shooterSysId
-                            .dynamic(Direction.kReverse)
-                            .withTimeout(5)
-                            .andThen(new WaitCommand(5))
-                            .andThen(shooterSysId.quasistatic(Direction.kForward).withTimeout(60))
-                            .andThen(new WaitCommand(5))
-                            .andThen(
-                                shooterSysId
-                                    .quasistatic(Direction.kReverse)
-                                    .withTimeout(60)
-                                    .andThen(new WaitCommand(5)))));
+                .a()
+                .onTrue(
+                        shooterSysId.dynamic(Direction.kForward).withTimeout(5)
+                                .andThen(
+                                        new WaitCommand(5),
+                                        shooterSysId.dynamic(Direction.kReverse).withTimeout(5),
+                                        new WaitCommand(5),
+                                        shooterSysId.quasistatic(Direction.kForward).withTimeout(120),
+                                        new WaitCommand(5),
+                                        shooterSysId.quasistatic(Direction.kReverse).withTimeout(120)
+                                )
+                );
         break;
     }
   }

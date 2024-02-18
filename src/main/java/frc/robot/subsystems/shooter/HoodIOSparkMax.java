@@ -4,12 +4,12 @@ import com.revrobotics.CANSparkLowLevel;
 import com.revrobotics.CANSparkMax;
 import com.revrobotics.SparkAbsoluteEncoder;
 import edu.wpi.first.math.MathUtil;
-import edu.wpi.first.math.geometry.Rotation2d;
+import org.littletonrobotics.junction.Logger;
 
 public class HoodIOSparkMax implements HoodIO {
   private static final double GEAR_RATIO = 1.5;
 
-  private final CANSparkMax leader = new CANSparkMax(35, CANSparkLowLevel.MotorType.kBrushless);
+    private final CANSparkMax leader = new CANSparkMax(25, CANSparkLowLevel.MotorType.kBrushless);
 
   private final SparkAbsoluteEncoder encoder =
       leader.getAbsoluteEncoder(SparkAbsoluteEncoder.Type.kDutyCycle);
@@ -19,21 +19,26 @@ public class HoodIOSparkMax implements HoodIO {
     leader.setCANTimeout(250);
     leader.setInverted(false);
     leader.enableVoltageCompensation(12.0);
-    leader.setSmartCurrentLimit(30);
+      leader.setSmartCurrentLimit(50);
+
+
+      encoder.setInverted(true);
+
     leader.burnFlash();
   }
 
-  private Rotation2d getWristAngle() {
-    return Rotation2d.fromRadians(MathUtil.angleModulus(encoder.getPosition() * 6.28) / 1.5);
-  }
-
   public void updateInputs(HoodIOInputs inputs) {
-    inputs.hoodPositionRad = encoder.getPosition();
+      inputs.hoodPositionRad = MathUtil.angleModulus(encoder.getPosition() * Math.PI * 2) / GEAR_RATIO;
+      inputs.hoodAppliedVolts = leader.getBusVoltage() * leader.getAppliedOutput();
+      inputs.hoodCurrentAmps = new double[]{leader.getOutputCurrent()};
+      inputs.hoodVelocityRadPerSec = (encoder.getVelocity() * Math.PI * 2) / GEAR_RATIO;
+      inputs.hoodTemperature = new double[]{leader.getMotorTemperature()};
   }
 
   @Override
   public void setVoltage(double volts) {
-    leader.setVoltage(volts);
+      Logger.recordOutput("HoodVoltage", volts);
+      leader.setVoltage(MathUtil.clamp(volts, -5.0, 5.0));
   }
 
   @Override
