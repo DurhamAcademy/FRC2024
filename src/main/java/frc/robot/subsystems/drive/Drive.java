@@ -13,8 +13,6 @@
 
 package frc.robot.subsystems.drive;
 
-import static edu.wpi.first.units.Units.*;
-
 import com.pathplanner.lib.auto.AutoBuilder;
 import com.pathplanner.lib.pathfinding.Pathfinding;
 import com.pathplanner.lib.util.HolonomicPathFollowerConfig;
@@ -24,9 +22,15 @@ import edu.wpi.first.apriltag.AprilTagFieldLayout;
 import edu.wpi.first.apriltag.AprilTagFields;
 import edu.wpi.first.math.estimator.SwerveDrivePoseEstimator;
 import edu.wpi.first.math.geometry.*;
-import edu.wpi.first.math.kinematics.*;
+import edu.wpi.first.math.kinematics.ChassisSpeeds;
+import edu.wpi.first.math.kinematics.SwerveDriveKinematics;
+import edu.wpi.first.math.kinematics.SwerveModulePosition;
+import edu.wpi.first.math.kinematics.SwerveModuleState;
 import edu.wpi.first.math.util.Units;
-import edu.wpi.first.units.*;
+import edu.wpi.first.units.Angle;
+import edu.wpi.first.units.Measure;
+import edu.wpi.first.units.Velocity;
+import edu.wpi.first.units.Voltage;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.DriverStation.Alliance;
 import edu.wpi.first.wpilibj.sysid.SysIdRoutineLog;
@@ -40,6 +44,8 @@ import org.photonvision.PhotonPoseEstimator;
 
 import java.util.Optional;
 
+import static edu.wpi.first.units.Units.*;
+
 public class Drive extends SubsystemBase {
   private static final double MAX_LINEAR_SPEED = Units.feetToMeters(14.5);
   private static final double TRACK_WIDTH_X = Units.inchesToMeters(20.75);
@@ -52,6 +58,10 @@ public class Drive extends SubsystemBase {
   private final GyroIOInputsAutoLogged gyroInputs = new GyroIOInputsAutoLogged();
   private final Module[] modules = new Module[4]; // FL, FR, BL, BR
   private final SwerveModulePosition[] swerveModulePositions;
+  private final VisionIO visionIO;
+  private final VisionIO.VisionIOInputs visionInputs = new VisionIO.VisionIOInputs();
+
+  //  private final
 
   private SwerveDriveKinematics kinematics = new SwerveDriveKinematics(getModuleTranslations());
   private SwerveDrivePoseEstimator poseEstimator;
@@ -62,17 +72,30 @@ public class Drive extends SubsystemBase {
 
   private PhotonCamera cam = new PhotonCamera(""); // Update with camera name
   // Update robotToCam with cam mounting pos
-  Transform3d robotToCam = new Transform3d(new Translation3d(0.5, 0.0, 0.5), new Rotation3d(0,0,0)); // Cam mounted facing forward, half a meter forward of center, half a meter up from center.
-  private final PhotonPoseEstimator photonPoseEstimator = new PhotonPoseEstimator(aprilTagFieldLayout, PhotonPoseEstimator.PoseStrategy.CLOSEST_TO_REFERENCE_POSE, cam, robotToCam);
+  Transform3d robotToCam =
+          new Transform3d(
+                  new Translation3d(0.5, 0.0, 0.5),
+                  new Rotation3d(
+                          0, 0,
+                          0)); // Cam mounted facing forward, half a meter forward of center, half a meter up
+  // from center.
+  private final PhotonPoseEstimator photonPoseEstimator =
+          new PhotonPoseEstimator(
+                  aprilTagFieldLayout,
+                  PhotonPoseEstimator.PoseStrategy.CLOSEST_TO_REFERENCE_POSE,
+                  cam,
+                  robotToCam);
   SwerveDrivePoseEstimator noGyroPoseEstimation;
   Rotation2d noGyroRotation;
 
   public Drive(
       GyroIO gyroIO,
+      VisionIO visionIO,
       ModuleIO flModuleIO,
       ModuleIO frModuleIO,
       ModuleIO blModuleIO,
       ModuleIO brModuleIO) {
+    this.visionIO = visionIO;
     this.gyroIO = gyroIO;
     modules[0] = new Module(flModuleIO, 0);
     modules[1] = new Module(frModuleIO, 1);
@@ -125,7 +148,9 @@ public class Drive extends SubsystemBase {
 
   public void periodic() {
     gyroIO.updateInputs(gyroInputs);
+    visionIO.updateInputs(visionInputs);
     Logger.processInputs("Drive/Gyro", gyroInputs);
+    Logger.processInputs("Drive/Vision", visionInputs);
     for (var module : modules) {
       module.periodic();
     }
@@ -201,16 +226,12 @@ public class Drive extends SubsystemBase {
     estPose.ifPresent(
             estimatedRobotPose ->
                     poseEstimator.addVisionMeasurement(
-                            estimatedRobotPose.estimatedPose.toPose2d(),
-                            estimatedRobotPose.timestampSeconds
-
-                    ));
+                            estimatedRobotPose.estimatedPose.toPose2d(), estimatedRobotPose.timestampSeconds));
   }
-
-
 
   public Optional<EstimatedRobotPose> getEstimatedGlobalPose(Pose2d prevEstimatedRobotPose) {
     photonPoseEstimator.setReferencePose(prevEstimatedRobotPose);
+
     return photonPoseEstimator.update();
   }
 
