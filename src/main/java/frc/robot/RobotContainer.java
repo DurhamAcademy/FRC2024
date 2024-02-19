@@ -13,9 +13,6 @@
 
 package frc.robot;
 
-import static edu.wpi.first.units.BaseUnits.Voltage;
-import static edu.wpi.first.units.Units.Seconds;
-
 import com.pathplanner.lib.auto.AutoBuilder;
 import com.pathplanner.lib.auto.NamedCommands;
 import edu.wpi.first.math.geometry.Pose2d;
@@ -23,9 +20,7 @@ import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.units.Units;
 import edu.wpi.first.wpilibj.GenericHID;
 import edu.wpi.first.wpilibj.XboxController;
-import edu.wpi.first.wpilibj2.command.Command;
-import edu.wpi.first.wpilibj2.command.Commands;
-import edu.wpi.first.wpilibj2.command.RunCommand;
+import edu.wpi.first.wpilibj2.command.*;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine.Config;
@@ -36,16 +31,19 @@ import frc.robot.subsystems.drive.*;
 import frc.robot.subsystems.feeder.Feeder;
 import frc.robot.subsystems.feeder.FeederIO;
 import frc.robot.subsystems.feeder.FeederIOSim;
+import frc.robot.subsystems.feeder.FeederIOTalonFX;
 import frc.robot.subsystems.intake.Intake;
 import frc.robot.subsystems.intake.IntakeIO;
 import frc.robot.subsystems.intake.IntakeIOSim;
 import frc.robot.subsystems.intake.IntakeIOSparkMax;
-import frc.robot.subsystems.shooter.Shooter;
-import frc.robot.subsystems.shooter.ShooterIO;
-import frc.robot.subsystems.shooter.ShooterIOSim;
-import frc.robot.subsystems.shooter.ShooterIOSparkMax;
+import frc.robot.subsystems.shooter.*;
+import frc.robot.util.Mode;
+import frc.robot.util.ModeHelper;
 import org.littletonrobotics.junction.networktables.LoggedDashboardChooser;
 import org.littletonrobotics.junction.networktables.LoggedDashboardNumber;
+
+import static edu.wpi.first.units.BaseUnits.Voltage;
+import static edu.wpi.first.units.Units.Seconds;
 
 /**
  * This class is where the bulk of the robot should be declared. Since Command-based is a
@@ -60,6 +58,17 @@ public class RobotContainer {
   private final Feeder feeder;
   private final Intake intake;
 
+  private final ModeHelper modeHelper = new ModeHelper(this);
+
+  // TODO: populate switch statements here
+  public Command getEnterCommand(Mode m) {
+    return new InstantCommand();
+  }
+
+  public Command getExitCommand(Mode m) {
+    return new InstantCommand();
+  }
+
   // Controller
   private final CommandXboxController controller = new CommandXboxController(0);
 
@@ -67,6 +76,8 @@ public class RobotContainer {
   private final LoggedDashboardChooser<Command> autoChooser;
   private final LoggedDashboardNumber flywheelSpeedInput =
       new LoggedDashboardNumber("Flywheel Speed", 1500.0);
+
+    public static SysIDMode sysIDMode = SysIDMode.Disabled;
 
   /** The container for the robot. Contains subsystems, OI devices, and commands. */
   public RobotContainer() {
@@ -76,13 +87,14 @@ public class RobotContainer {
         drive =
             new Drive(
                 new GyroIOPigeon2(),
-                new ModuleIOSparkMax(0),
-                new ModuleIOSparkMax(1),
-                new ModuleIOSparkMax(2),
-                new ModuleIOSparkMax(3));
-        shooter = new Shooter(new ShooterIOSparkMax());
-        feeder = new Feeder(new FeederIO() {});
-        intake = new Intake(new IntakeIOSparkMax());
+                    new ModuleIOSim(0),
+                    new ModuleIOSim(1),
+                    new ModuleIOSim(2),
+                    new ModuleIOSim(3));
+        shooter = new Shooter(new ShooterIOTalonFX(), new HoodIOSparkMax() {});
+          feeder = new Feeder(new FeederIOTalonFX());
+          intake = new Intake(new IntakeIOSparkMax() {
+          });
         // drive = new Drive(
         // new GyroIOPigeon2(),
         // new ModuleIOTalonFX(0),
@@ -101,7 +113,7 @@ public class RobotContainer {
                 new ModuleIOSim(),
                 new ModuleIOSim(),
                 new ModuleIOSim());
-        shooter = new Shooter(new ShooterIOSim());
+        shooter = new Shooter(new ShooterIOSim(), new HoodIO() {});
         feeder = new Feeder(new FeederIOSim());
         intake = new Intake(new IntakeIOSim());
         break;
@@ -115,7 +127,7 @@ public class RobotContainer {
                 new ModuleIO() {},
                 new ModuleIO() {},
                 new ModuleIO() {});
-        shooter = new Shooter(new ShooterIO() {});
+        shooter = new Shooter(new ShooterIO() {}, new HoodIO() {});
         feeder = new Feeder(new FeederIO() {});
         intake = new Intake(new IntakeIO() {});
         break;
@@ -125,14 +137,14 @@ public class RobotContainer {
     NamedCommands.registerCommand(
         "Run Flywheel",
         Commands.startEnd(
-                () -> shooter.runVelocity(flywheelSpeedInput.get()), shooter::stop, shooter)
+                () -> shooter.shooterRunVelocity(flywheelSpeedInput.get()),
+                shooter::stopShooter,
+                shooter)
             .withTimeout(5.0));
     autoChooser = new LoggedDashboardChooser<>("Auto Choices", AutoBuilder.buildAutoChooser());
 
     configureButtonBindings();
   }
-
-  public static SysIDMode sysIDMode = SysIDMode.Disabled;
 
   public enum SysIDMode {
     Disabled,
@@ -159,15 +171,23 @@ public class RobotContainer {
                 () -> -controller.getRightX()));
         intake.setDefaultCommand(
             new RunCommand(
-                () -> intake.setIntakePosition(new Rotation2d(-15.0)),
-                intake)); // FIXME: NEED THE REAL ANGLE FOR THIS DEFAULT COMMAND STILL!
-        feeder.setDefaultCommand(new RunCommand(feeder::stop, feeder));
+                () -> {
+                    intake.setIntakePosition(Rotation2d.fromDegrees(-90));
+                  intake.setRollerPercentage(0.0);
+                },
+                    intake).beforeStarting(new InstantCommand(intake::resetArmFB, intake)));
+          feeder.setDefaultCommand(new RunCommand(() -> {
+              feeder.runVolts(10);
+          }, feeder));
+          shooter.setDefaultCommand(new RunCommand(() -> {
+              shooter.setTargetShooterAngleRad(new Rotation2d(0.55));
+          }, shooter));
 
         // ---- DRIVETRAIN COMMANDS ----
-        controller.x().onTrue(Commands.runOnce(drive::stopWithX, drive));
+        controller.x().whileTrue(Commands.runOnce(drive::stopWithX, drive));
         controller
             .b()
-            .onTrue(
+            .whileTrue(
                 Commands.runOnce(
                         () -> {
                           try {
@@ -183,30 +203,72 @@ public class RobotContainer {
         controller
             .leftTrigger()
             .and(feeder::getSensorFeed)
-            .onTrue(
-                new RunCommand(() -> feeder.runVolts(6.0), feeder)
+            .whileTrue(
+                    new RunCommand(() -> feeder.runVolts(0.0), feeder)
                     .until(() -> !feeder.getSensorFeed()));
 
+        // prepare the shooter for dumping into the amp
+          controller.y().onTrue(Commands.runOnce(() -> modeHelper.switchTo(Mode.AMP)));
+
+        /*
+            .toggleOnTrue(
+                Commands.sequence(
+                    Commands.run(
+                            () -> shooter.setTargetShooterAngleRad(Rotation2d.fromDegrees(-22.5)),
+                            shooter)
+                        .until(() -> false),
+                    Commands.run(() -> feeder.runVolts(6.0), feeder)
+                        .withTimeout(2.0)
+                        .until(() -> !feeder.getSensorFeed()),
+                    Commands.runOnce(feeder::stop, feeder),
+                    Commands.run(
+                        () -> shooter.setTargetShooterAngleRad(Rotation2d.fromDegrees(45.0)))));
+        */
         // ---- INTAKE COMMANDS ----
         controller
             .leftBumper() // not a()
-            .onTrue(new RunCommand(() -> intake.setIntakePosition(new Rotation2d(115.0)), intake));
+            .whileTrue(
+                new RunCommand(
+                    () -> {
+                        intake.setIntakePosition(Rotation2d.fromDegrees(-5));
+                        intake.setRollerPercentage(.66);
+                    },
+                    intake));
         controller
             .rightBumper()
-            .onTrue(new RunCommand(() -> intake.setRollerPercentage(0.75), intake));
+            .whileTrue(
+                new RunCommand(
+                    () -> {
+                      intake.setIntakePosition(Rotation2d.fromDegrees(-90.0));
+                        intake.setRollerPercentage(0.5);
+                    },
+                    intake));
 
         // ---- SHOOTER COMMANDS ----
         controller
-            .a()
+                .b()
             .whileTrue(
                 Commands.startEnd(
-                    () -> shooter.runVelocity(flywheelSpeedInput.get()), shooter::stop, shooter));
-        controller.rightTrigger().onTrue(new RunCommand(() -> shooter.runVolts(6.0), shooter));
+                    () -> shooter.shooterRunVelocity(flywheelSpeedInput.get()),
+                    shooter::stopShooter,
+                    shooter));
         controller
-            .a()
+            .rightTrigger()
+            .whileTrue(
+                new StartEndCommand(
+                    () -> shooter.shooterRunVolts(12.0 * controller.getRightTriggerAxis()),
+                    () -> {
+                      shooter.stopShooter();
+                      shooter.shooterRunVolts(0.0);
+                    },
+                    shooter));
+        controller
+                .x()
             .whileTrue(
                 Commands.startEnd(
-                    () -> shooter.runVelocity(flywheelSpeedInput.get()), shooter::stop, shooter));
+                    () -> shooter.shooterRunVelocity(flywheelSpeedInput.get()),
+                    shooter::stopShooter,
+                    shooter));
 
         break;
       case DriveMotors:
@@ -240,8 +302,45 @@ public class RobotContainer {
             .b()
             .whileTrue(drivetrainDriveSysID.quasistatic(Direction.kReverse).withTimeout(2.0))
             .onFalse(Commands.runOnce(drive::stopWithX, drive));
+        controller
+            .rightTrigger()
+            .whileTrue(
+                new RunCommand(() -> shooter.setTargetShooterAngleRad(new Rotation2d(-0.61)))
+                    .andThen(
+                        (new RunCommand(
+                            () ->
+                                shooter.shooterRunVelocity(
+                                    5000) /*THIS NUMBER NEEDS TO BE CALIBRATED*/,
+                            intake))));
         break;
       case EverythingElse:
+        var shooterSysId =
+            new SysIdRoutine(
+                    new Config(Voltage.per(Units.Second).of(.1), Voltage.of(9.0), Seconds.of(120)),
+                new Mechanism(
+                    shooter::shooterRunVolts,
+                    (log) -> {
+                      var motor = log.motor("Shooter");
+                      motor.voltage(shooter.getCharacterizationAppliedVolts());
+                        motor.angularPosition(shooter.getCharacterizationPosition());
+                      motor.angularVelocity(shooter.getCharacterizationVelocity());
+                      motor.current(shooter.getCharacterizationCurrent());
+                    },
+                    shooter,
+                    "FlywheelMotors"));
+        controller
+                .a()
+                .onTrue(
+                        shooterSysId.dynamic(Direction.kForward).withTimeout(5)
+                                .andThen(
+                                        new WaitCommand(5),
+                                        shooterSysId.dynamic(Direction.kReverse).withTimeout(5),
+                                        new WaitCommand(5),
+                                        shooterSysId.quasistatic(Direction.kForward).withTimeout(120),
+                                        new WaitCommand(5),
+                                        shooterSysId.quasistatic(Direction.kReverse).withTimeout(120)
+                                )
+                );
         break;
     }
   }

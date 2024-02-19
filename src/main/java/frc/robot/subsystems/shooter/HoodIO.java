@@ -15,24 +15,22 @@ package frc.robot.subsystems.shooter;
 
 import org.littletonrobotics.junction.AutoLog;
 
-public interface ShooterIO {
+public interface HoodIO {
+  /** Updates the set of loggable inputs. */
+  public default void updateInputs(HoodIOInputs inputs) {}
+
   @AutoLog
-  public static class ShooterIOInputs {
-    public double flywheelPositionRad = 0.0;
-    public double flywheelVelocityRadPerSec = 0.0;
-    public double flywheelAppliedVolts = 0.0;
-    public double[] flywheelCurrentAmps = new double[] {};
-    public double[] flywheelTemperature = new double[] {};
-    public double[] flywheelAncillaryTemperature = new double[]{};
-    public double[] flywheelProcessorTemperature = new double[]{};
+  public static class HoodIOInputs {
+    public double hoodPositionRad = 0.0;
+    public double hoodVelocityRadPerSec = 0.0;
+    public double hoodAppliedVolts = 0.0;
+    public double[] hoodCurrentAmps = new double[] {};
+    public double[] hoodTemperature = new double[] {};
   }
 
-  /** Updates the set of loggable inputs. */
-  public default void updateInputs(ShooterIOInputs inputs) {}
-
   /** Run open loop at the specified voltage. */
-  public default void setFlywheelVoltage(double volts) {}
+  public default void setVoltage(double volts) {}
 
   /** Stop in open loop. */
-  public default void flywheelStop() {}
+  public default void wristStop() {}
 }

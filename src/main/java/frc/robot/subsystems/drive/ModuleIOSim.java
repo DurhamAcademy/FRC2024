@@ -35,6 +35,12 @@ public class ModuleIOSim implements ModuleIO {
   private double driveAppliedVolts = 0.0;
   private double turnAppliedVolts = 0.0;
 
+  public ModuleIOSim() {
+  }
+
+  public ModuleIOSim(int ignored) {
+  }
+
   @Override
   public void updateInputs(ModuleIOInputs inputs) {
     driveSim.update(LOOP_PERIOD_SECS);

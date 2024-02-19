@@ -17,7 +17,7 @@ import edu.wpi.first.math.system.plant.DCMotor;
 import edu.wpi.first.wpilibj.simulation.SingleJointedArmSim;
 
 public class FeederIOSim implements FeederIO {
-  private SingleJointedArmSim sim =
+  private final SingleJointedArmSim sim =
       new SingleJointedArmSim(
           DCMotor.getNEO(1), 1.5, 0.025, 0.1, -Math.PI / 4, Math.PI / 2, true, 0);
   //  private ProfiledPIDController pid = new ProfiledPIDController(0.0, 0.0, 0.0);
@@ -31,8 +31,8 @@ public class FeederIOSim implements FeederIO {
     if (closedLoop) {
       //      appliedVolts = MathUtil.clamp(pid.calculate(sim.getAngleRads()) + ffVolts, -12.0,
       // 12.0);
-      sim.setInputVoltage(appliedVolts);
     }
+    sim.setInputVoltage(appliedVolts);
 
     sim.update(0.02);
 
@@ -45,12 +45,13 @@ public class FeederIOSim implements FeederIO {
   @Override
   public void setVoltage(double volts) {
     closedLoop = false;
-    appliedVolts = 0.0;
+    appliedVolts = volts;
     sim.setInputVoltage(volts);
   }
 
   @Override
   public void stop() {
+    sim.setState(sim.getAngleRads(), 0.0);
     setVoltage(0.0);
   }
 }
