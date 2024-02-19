@@ -92,7 +92,8 @@ public class RobotContainer {
                     new ModuleIOSim(2),
                     new ModuleIOSim(3));
         shooter = new Shooter(new ShooterIOTalonFX(), new HoodIOSparkMax() {});
-          feeder = new Feeder(new FeederIOTalonFX());
+          feeder = new Feeder(new FeederIOTalonFX() {
+          });
           intake = new Intake(new IntakeIOSparkMax() {
           });
         // drive = new Drive(
@@ -180,7 +181,8 @@ public class RobotContainer {
               feeder.runVolts(10);
           }, feeder));
           shooter.setDefaultCommand(new RunCommand(() -> {
-              shooter.setTargetShooterAngleRad(new Rotation2d(0.55));
+//              shooter.setTargetShooterAngleRad(new Rotation2d(.9));
+              shooter.setTargetShooterAngleRad(new Rotation2d(.4));
           }, shooter));
 
         // ---- DRIVETRAIN COMMANDS ----
