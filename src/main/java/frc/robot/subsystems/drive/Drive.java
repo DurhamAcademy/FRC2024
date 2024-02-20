@@ -13,6 +13,8 @@
 
 package frc.robot.subsystems.drive;
 
+import static edu.wpi.first.units.Units.*;
+
 import com.pathplanner.lib.auto.AutoBuilder;
 import com.pathplanner.lib.pathfinding.Pathfinding;
 import com.pathplanner.lib.util.HolonomicPathFollowerConfig;
@@ -36,15 +38,11 @@ import edu.wpi.first.wpilibj.DriverStation.Alliance;
 import edu.wpi.first.wpilibj.sysid.SysIdRoutineLog;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.util.LocalADStarAK;
+import java.util.Optional;
 import org.littletonrobotics.junction.AutoLogOutput;
 import org.littletonrobotics.junction.Logger;
 import org.photonvision.EstimatedRobotPose;
-import org.photonvision.PhotonCamera;
 import org.photonvision.PhotonPoseEstimator;
-
-import java.util.Optional;
-
-import static edu.wpi.first.units.Units.*;
 
 public class Drive extends SubsystemBase {
   private static final double MAX_LINEAR_SPEED = Units.feetToMeters(14.5);
@@ -70,21 +68,19 @@ public class Drive extends SubsystemBase {
 
   AprilTagFieldLayout aprilTagFieldLayout = AprilTagFields.k2024Crescendo.loadAprilTagLayoutField();
 
-  private PhotonCamera cam = new PhotonCamera(""); // Update with camera name
-  // Update robotToCam with cam mounting pos
+  // Update robotToCam with cameraSystem mounting pos
   Transform3d robotToCam =
-          new Transform3d(
-                  new Translation3d(0.5, 0.0, 0.5),
-                  new Rotation3d(
-                          0, 0,
-                          0)); // Cam mounted facing forward, half a meter forward of center, half a meter up
+      new Transform3d(
+          new Translation3d(0.5, 0.0, 0.5),
+          new Rotation3d(
+              0, 0,
+              0)); // Cam mounted facing forward, half a meter forward of center, half a meter up
   // from center.
   private final PhotonPoseEstimator photonPoseEstimator =
-          new PhotonPoseEstimator(
-                  aprilTagFieldLayout,
-                  PhotonPoseEstimator.PoseStrategy.CLOSEST_TO_REFERENCE_POSE,
-                  cam,
-                  robotToCam);
+      new PhotonPoseEstimator(
+          aprilTagFieldLayout,
+          PhotonPoseEstimator.PoseStrategy.CLOSEST_TO_REFERENCE_POSE,
+          robotToCam);
   SwerveDrivePoseEstimator noGyroPoseEstimation;
   Rotation2d noGyroRotation;
 
@@ -212,7 +208,7 @@ public class Drive extends SubsystemBase {
   /*public void updateVisionPosition(double leftDist, double rightDist, Rotation2d rotation) {
     // Rotation2d rotation; // need to set to something
     poseEstimator.update(rotation, swerveModulePositions);
-    var res = cam.getLatestResult();
+    var res = cameraSystem.getLatestResult();
     if (res.hasTargets()) {
       var imageCaptureTime = res.getTimestampSeconds();
       var camToTargetTrans = res.getBestTarget().getBestCameraToTarget();
@@ -224,15 +220,15 @@ public class Drive extends SubsystemBase {
   public void addVisionMeasurement() {
     Optional<EstimatedRobotPose> estPose = getEstimatedGlobalPose(pose);
     estPose.ifPresent(
-            estimatedRobotPose ->
-                    poseEstimator.addVisionMeasurement(
-                            estimatedRobotPose.estimatedPose.toPose2d(), estimatedRobotPose.timestampSeconds));
+        estimatedRobotPose ->
+            poseEstimator.addVisionMeasurement(
+                estimatedRobotPose.estimatedPose.toPose2d(), estimatedRobotPose.timestampSeconds));
   }
 
   public Optional<EstimatedRobotPose> getEstimatedGlobalPose(Pose2d prevEstimatedRobotPose) {
     photonPoseEstimator.setReferencePose(prevEstimatedRobotPose);
 
-    return photonPoseEstimator.update();
+    return photonPoseEstimator.update(visionInputs.cameraResult);
   }
 
   private void updateSwerveModulePositions() {

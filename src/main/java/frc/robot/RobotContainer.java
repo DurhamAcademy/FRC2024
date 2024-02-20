@@ -13,6 +13,9 @@
 
 package frc.robot;
 
+import static edu.wpi.first.units.BaseUnits.Voltage;
+import static edu.wpi.first.units.Units.Seconds;
+
 import com.pathplanner.lib.auto.AutoBuilder;
 import com.pathplanner.lib.auto.NamedCommands;
 import edu.wpi.first.math.geometry.Pose2d;
@@ -41,9 +44,6 @@ import frc.robot.subsystems.shooter.ShooterIOSparkMax;
 import org.littletonrobotics.junction.networktables.LoggedDashboardChooser;
 import org.littletonrobotics.junction.networktables.LoggedDashboardNumber;
 
-import static edu.wpi.first.units.BaseUnits.Voltage;
-import static edu.wpi.first.units.Units.Seconds;
-
 /**
  * This class is where the bulk of the robot should be declared. Since Command-based is a
  * "declarative" paradigm, very little robot logic should actually be handled in the {@link Robot}
@@ -52,7 +52,7 @@ import static edu.wpi.first.units.Units.Seconds;
  */
 public class RobotContainer {
   // Subsystems
-  private final Drive drive;
+  private Drive drive;
   private final Shooter shooter;
   private final Feeder feeder;
   private Intake intake; // final?
@@ -73,7 +73,7 @@ public class RobotContainer {
         drive =
             new Drive(
                 new GyroIOPigeon2(),
-                    new VisionIOReal("ShootSideCamera"),
+                new VisionIOReal("ShootSideCamera"),
                 new ModuleIOSparkMax(0),
                 new ModuleIOSparkMax(1),
                 new ModuleIOSparkMax(2),
@@ -94,8 +94,8 @@ public class RobotContainer {
         drive =
             new Drive(
                 new GyroIO() {},
-                    new VisionIO() {
-                    },
+                new VisionIOSim(
+                    "ShootSideCamera", () -> (drive == null) ? (drive.getPose()) : new Pose2d()),
                 new ModuleIOSim(),
                 new ModuleIOSim(),
                 new ModuleIOSim(),
@@ -109,8 +109,7 @@ public class RobotContainer {
         drive =
             new Drive(
                 new GyroIO() {},
-                    new VisionIO() {
-                    },
+                new VisionIO() {},
                 new ModuleIO() {},
                 new ModuleIO() {},
                 new ModuleIO() {},
