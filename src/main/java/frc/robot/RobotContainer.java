@@ -18,6 +18,7 @@ import static edu.wpi.first.units.Units.Seconds;
 
 import com.pathplanner.lib.auto.AutoBuilder;
 import com.pathplanner.lib.auto.NamedCommands;
+import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.units.Units;
@@ -32,6 +33,9 @@ import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine.Config;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine.Direction;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine.Mechanism;
 import frc.robot.commands.DriveCommands;
+import frc.robot.subsystems.climb.Climb;
+import frc.robot.subsystems.climb.ClimbIO;
+import frc.robot.subsystems.climb.ClimbIOSparkMax;
 import frc.robot.subsystems.drive.*;
 import frc.robot.subsystems.feeder.Feeder;
 import frc.robot.subsystems.feeder.FeederIO;
@@ -39,11 +43,9 @@ import frc.robot.subsystems.feeder.FeederIOSim;
 import frc.robot.subsystems.intake.Intake;
 import frc.robot.subsystems.intake.IntakeIO;
 import frc.robot.subsystems.intake.IntakeIOSim;
-import frc.robot.subsystems.intake.IntakeIOSparkMax;
 import frc.robot.subsystems.shooter.Shooter;
 import frc.robot.subsystems.shooter.ShooterIO;
 import frc.robot.subsystems.shooter.ShooterIOSim;
-import frc.robot.subsystems.shooter.ShooterIOSparkMax;
 import org.littletonrobotics.junction.networktables.LoggedDashboardChooser;
 import org.littletonrobotics.junction.networktables.LoggedDashboardNumber;
 
@@ -59,9 +61,11 @@ public class RobotContainer {
   private final Shooter shooter;
   private final Feeder feeder;
   private final Intake intake;
+  private Climb climb;
 
   // Controller
   private final CommandXboxController controller = new CommandXboxController(0);
+  private final CommandXboxController operatorController = new CommandXboxController(1);
 
   // Dashboard inputs
   private final LoggedDashboardChooser<Command> autoChooser;
@@ -76,13 +80,14 @@ public class RobotContainer {
         drive =
             new Drive(
                 new GyroIOPigeon2(),
-                new ModuleIOSparkMax(0),
-                new ModuleIOSparkMax(1),
-                new ModuleIOSparkMax(2),
-                new ModuleIOSparkMax(3));
-        shooter = new Shooter(new ShooterIOSparkMax());
+                new ModuleIOSparkMax(0) {},
+                new ModuleIOSparkMax(1) {},
+                new ModuleIOSparkMax(2) {},
+                new ModuleIOSparkMax(3) {});
+        shooter = new Shooter(new ShooterIO() {});
         feeder = new Feeder(new FeederIO() {});
-        intake = new Intake(new IntakeIOSparkMax());
+        intake = new Intake(new IntakeIO() {});
+        climb = new Climb(new ClimbIOSparkMax());
         // drive = new Drive(
         // new GyroIOPigeon2(),
         // new ModuleIOTalonFX(0),
@@ -104,6 +109,7 @@ public class RobotContainer {
         shooter = new Shooter(new ShooterIOSim());
         feeder = new Feeder(new FeederIOSim());
         intake = new Intake(new IntakeIOSim());
+        climb = new Climb(new ClimbIO() {});
         break;
 
       default:
@@ -118,6 +124,7 @@ public class RobotContainer {
         shooter = new Shooter(new ShooterIO() {});
         feeder = new Feeder(new FeederIO() {});
         intake = new Intake(new IntakeIO() {});
+        climb = new Climb(new ClimbIO() {});
         break;
     }
 
@@ -165,6 +172,15 @@ public class RobotContainer {
                 },
                 intake));
         feeder.setDefaultCommand(new RunCommand(feeder::stop, feeder));
+        // CLIMB DEFAULT COMMAND
+        climb.setDefaultCommand(
+            Commands.run(
+                () -> {
+                  climb.runLeftVolts(
+                      MathUtil.applyDeadband(operatorController.getLeftY(), 0.075) * 12);
+                  climb.runRightVolts(operatorController.getRightY() * 12);
+                },
+                climb));
 
         // ---- DRIVETRAIN COMMANDS ----
         controller.x().whileTrue(Commands.runOnce(drive::stopWithX, drive));
@@ -263,6 +279,7 @@ public class RobotContainer {
                         (new RunCommand(
                             () -> shooter.runVelocity(5000) /*THIS NUMBER NEEDS TO BE CALIBRATED*/,
                             intake))));
+
         break;
       case EverythingElse:
         break;
