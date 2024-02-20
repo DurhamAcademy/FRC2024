@@ -1,7 +1,6 @@
 package frc.robot.subsystems.drive;
 
-import edu.wpi.first.apriltag.AprilTagFieldLayout;
-import edu.wpi.first.apriltag.AprilTagFields;
+import org.littletonrobotics.junction.Logger;
 import org.photonvision.PhotonCamera;
 import org.photonvision.simulation.SimCameraProperties;
 
@@ -18,11 +17,10 @@ public class VisionIOReal implements VisionIO {
   cameraSystem.addVisionTargets(visionTarget);*/
 
   public VisionIOReal(String cameraName) {
-    AprilTagFieldLayout aprilTagFieldLayout =
-        AprilTagFields.k2024Crescendo.loadAprilTagLayoutField();
 
     // Update with camera name
     cam = new PhotonCamera(cameraName);
+
     //    // A 640 x 480 camera with a 0 degree diagonal FOV.
     //    cameraProp.setCalibration(1280, 720, Rotation2d.fromDegrees(0)); // rotation not updated
     //    // Approximate detection noise with average and standard deviation error in pixels.
@@ -51,5 +49,8 @@ public class VisionIOReal implements VisionIO {
     inputs.latencyMillis = cam.getLatestResult().getLatencyMillis();
     inputs.driverMode = cam.getDriverMode();
     inputs.timestampSeconds = cam.getLatestResult().getTimestampSeconds();
+    Logger.recordOutput("best", inputs.cameraResult.getBestTarget());
+    System.out.println(inputs.cameraResult.getBestTarget());
+    System.out.println("inputs.cameraResult.getBestTarget()");
   }
 }

@@ -13,8 +13,6 @@
 
 package frc.robot.subsystems.drive;
 
-import static edu.wpi.first.units.Units.*;
-
 import com.pathplanner.lib.auto.AutoBuilder;
 import com.pathplanner.lib.pathfinding.Pathfinding;
 import com.pathplanner.lib.util.HolonomicPathFollowerConfig;
@@ -38,11 +36,14 @@ import edu.wpi.first.wpilibj.DriverStation.Alliance;
 import edu.wpi.first.wpilibj.sysid.SysIdRoutineLog;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.util.LocalADStarAK;
-import java.util.Optional;
 import org.littletonrobotics.junction.AutoLogOutput;
 import org.littletonrobotics.junction.Logger;
 import org.photonvision.EstimatedRobotPose;
 import org.photonvision.PhotonPoseEstimator;
+
+import java.util.Optional;
+
+import static edu.wpi.first.units.Units.*;
 
 public class Drive extends SubsystemBase {
   private static final double MAX_LINEAR_SPEED = Units.feetToMeters(14.5);
@@ -145,6 +146,8 @@ public class Drive extends SubsystemBase {
   public void periodic() {
     gyroIO.updateInputs(gyroInputs);
     visionIO.updateInputs(visionInputs);
+
+    System.out.println("helloooo");
     Logger.processInputs("Drive/Gyro", gyroInputs);
     Logger.processInputs("Drive/Vision", visionInputs);
     for (var module : modules) {
