@@ -22,6 +22,7 @@ public interface ShooterIO {
     public double flywheelVelocityRadPerSec = 0.0;
     public double flywheelAppliedVolts = 0.0;
     public double[] flywheelCurrentAmps = new double[] {};
+    public double[] flywheelTemperature = new double[] {};
   }
 
   /** Updates the set of loggable inputs. */

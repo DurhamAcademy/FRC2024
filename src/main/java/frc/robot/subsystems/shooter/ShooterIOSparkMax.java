@@ -56,6 +56,8 @@ public class ShooterIOSparkMax implements ShooterIO {
     inputs.flywheelAppliedVolts = leader.getAppliedOutput() * leader.getBusVoltage();
     inputs.flywheelCurrentAmps =
         new double[] {leader.getOutputCurrent(), follower.getOutputCurrent()};
+    inputs.flywheelTemperature =
+        new double[] {leader.getMotorTemperature(), follower.getMotorTemperature()};
   }
 
   @Override

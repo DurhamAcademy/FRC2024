@@ -203,7 +203,8 @@ public class Drive extends SubsystemBase {
       }
 
       // Apply the twist (change since last loop cycle) to the current pose
-      noGyroRotation = pose.exp(twist).getRotation();
+      noGyroRotation =
+          pose.rotateBy(noGyroRotation.minus(pose.getRotation())).exp(twist).getRotation();
       pose = noGyroPoseEstimation.update(noGyroRotation, swerveModulePositions);
     }
   }
@@ -362,9 +363,10 @@ public class Drive extends SubsystemBase {
     if (gyroInputs.connected)
       this.poseEstimator.resetPosition(gyroInputs.yawPosition, swerveModulePositions, pose);
     else this.noGyroPoseEstimation.resetPosition(noGyroRotation, swerveModulePositions, pose);
-    throw new GyroConnectionException(
-        "Pose estimator was written to without gyroscope data (idk what"
-            + " will happen after this because now if the gyroscope comes back online pose may act weird");
+    //    throw new GyroConnectionException(
+    //        "Pose estimator was written to without gyroscope data (idk what"
+    //            + " will happen after this because now if the gyroscope comes back online pose may
+    // act weird");
   }
 
   /**
