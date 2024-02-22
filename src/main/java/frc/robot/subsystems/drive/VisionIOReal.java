@@ -49,8 +49,12 @@ public class VisionIOReal implements VisionIO {
     inputs.latencyMillis = cam.getLatestResult().getLatencyMillis();
     inputs.driverMode = cam.getDriverMode();
     inputs.timestampSeconds = cam.getLatestResult().getTimestampSeconds();
-    Logger.recordOutput("best", inputs.cameraResult.getBestTarget());
-    System.out.println(inputs.cameraResult.getBestTarget());
-    System.out.println("inputs.cameraResult.getBestTarget()");
+    //    Logger.recordOutput("out", );
+    Logger.recordOutput(
+            "best",
+            (inputs.cameraResult.hasTargets())
+                    ? inputs.cameraResult.getBestTarget().getFiducialId()
+                    : -1);
+    // null);
   }
 }

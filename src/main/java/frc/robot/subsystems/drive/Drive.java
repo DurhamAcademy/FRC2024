@@ -80,7 +80,7 @@ public class Drive extends SubsystemBase {
   private final PhotonPoseEstimator photonPoseEstimator =
       new PhotonPoseEstimator(
           aprilTagFieldLayout,
-          PhotonPoseEstimator.PoseStrategy.CLOSEST_TO_REFERENCE_POSE,
+              PhotonPoseEstimator.PoseStrategy.MULTI_TAG_PNP_ON_COPROCESSOR,
           robotToCam);
   SwerveDrivePoseEstimator noGyroPoseEstimation;
   Rotation2d noGyroRotation;
@@ -94,6 +94,7 @@ public class Drive extends SubsystemBase {
       ModuleIO brModuleIO) {
     this.visionIO = visionIO;
     this.gyroIO = gyroIO;
+
     modules[0] = new Module(flModuleIO, 0);
     modules[1] = new Module(frModuleIO, 1);
     modules[2] = new Module(blModuleIO, 2);
@@ -147,7 +148,9 @@ public class Drive extends SubsystemBase {
     gyroIO.updateInputs(gyroInputs);
     visionIO.updateInputs(visionInputs);
 
-    System.out.println("helloooo");
+    System.out.println("gyroIO: :) =" + gyroIO);
+    System.out.println("");
+
     Logger.processInputs("Drive/Gyro", gyroInputs);
     Logger.processInputs("Drive/Vision", visionInputs);
     for (var module : modules) {
@@ -174,8 +177,6 @@ public class Drive extends SubsystemBase {
     for (int i = 0; i < 4; i++) {
       wheelDeltas[i] = modules[i].getPositionDelta();
     }
-
-    addVisionMeasurement();
 
     // The twist represents the motion of the robot since the last
     // loop cycle in x, y, and theta based only on the modules,
@@ -207,6 +208,16 @@ public class Drive extends SubsystemBase {
           pose.rotateBy(noGyroRotation.minus(pose.getRotation())).exp(twist).getRotation();
       pose = noGyroPoseEstimation.update(noGyroRotation, swerveModulePositions);
     }
+
+    Logger.recordOutput("pose", pose);
+
+    Optional<EstimatedRobotPose> estPose = photonPoseEstimator.update(visionInputs.cameraResult);
+    estPose.ifPresent(
+            estimatedRobotPose -> {
+              Logger.recordOutput("estRoPose", estimatedRobotPose.estimatedPose);
+              poseEstimator.addVisionMeasurement(
+                      estimatedRobotPose.estimatedPose.toPose2d(), estimatedRobotPose.timestampSeconds);
+            });
   }
 
   /*public void updateVisionPosition(double leftDist, double rightDist, Rotation2d rotation) {
@@ -221,19 +232,6 @@ public class Drive extends SubsystemBase {
           camPose.transformBy(Constants.kCameraToRobot).toPose2d(), imageCaptureTime);
     }
   }*/
-  public void addVisionMeasurement() {
-    Optional<EstimatedRobotPose> estPose = getEstimatedGlobalPose(pose);
-    estPose.ifPresent(
-        estimatedRobotPose ->
-            poseEstimator.addVisionMeasurement(
-                estimatedRobotPose.estimatedPose.toPose2d(), estimatedRobotPose.timestampSeconds));
-  }
-
-  public Optional<EstimatedRobotPose> getEstimatedGlobalPose(Pose2d prevEstimatedRobotPose) {
-    photonPoseEstimator.setReferencePose(prevEstimatedRobotPose);
-
-    return photonPoseEstimator.update(visionInputs.cameraResult);
-  }
 
   private void updateSwerveModulePositions() {
     // populate the list
@@ -347,7 +345,7 @@ public class Drive extends SubsystemBase {
   }
 
   /** Returns the current odometry pose. */
-  @AutoLogOutput(key = "Odometry/Robot")
+  //  @AutoLogOutput(key = "Odometry/Robot")
   public Pose2d getPose() {
     return pose;
   }
