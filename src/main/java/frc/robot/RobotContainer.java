@@ -91,7 +91,7 @@ public class RobotContainer {
                     new ModuleIOSim(1),
                     new ModuleIOSim(2),
                     new ModuleIOSim(3));
-        shooter = new Shooter(new ShooterIOTalonFX(), new HoodIOSparkMax() {});
+        shooter = new Shooter(new ShooterIOTalonFX(),new HoodIOSparkMax() {}); // new HoodIOSparkMax() {}
           feeder = new Feeder(new FeederIOTalonFX());
           intake = new Intake(new IntakeIOSparkMax() {
           });
@@ -113,7 +113,8 @@ public class RobotContainer {
                 new ModuleIOSim(),
                 new ModuleIOSim(),
                 new ModuleIOSim());
-        shooter = new Shooter(new ShooterIOSim(), new HoodIO() {});
+        shooter = new Shooter(new ShooterIOSim(), new HoodIO() {
+        });
         feeder = new Feeder(new FeederIOSim());
         intake = new Intake(new IntakeIOSim());
         break;
