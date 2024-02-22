@@ -13,6 +13,7 @@
 
 package frc.robot.subsystems.climb;
 
+import com.revrobotics.CANSparkBase;
 import com.revrobotics.CANSparkLowLevel.MotorType;
 import com.revrobotics.CANSparkMax;
 import com.revrobotics.RelativeEncoder;
@@ -27,8 +28,8 @@ public class ClimbIOSparkMax implements ClimbIO {
   private static final double LEFT_GEAR_RATIO = 16.0;
   private static final double RIGHT_GEAR_RATIO = 16.0;
 
-  private final CANSparkMax left = new CANSparkMax(0, MotorType.kBrushless);
-  private final CANSparkMax right = new CANSparkMax(1, MotorType.kBrushless);
+  private final CANSparkMax left = new CANSparkMax(20, MotorType.kBrushless);
+  private final CANSparkMax right = new CANSparkMax(13, MotorType.kBrushless);
   private final RelativeEncoder leftEncoder = left.getEncoder();
   private final RelativeEncoder rightEncoder = right.getEncoder();
 
@@ -44,6 +45,9 @@ public class ClimbIOSparkMax implements ClimbIO {
 
     right.enableVoltageCompensation(12.0); // wait for electrical to do climb wiring
     right.setSmartCurrentLimit(30); // wait for electrical to find the right breaker for the climb
+
+    left.setIdleMode(CANSparkBase.IdleMode.kBrake);
+    right.setIdleMode(CANSparkBase.IdleMode.kBrake);
 
     left.burnFlash();
     right.burnFlash();
