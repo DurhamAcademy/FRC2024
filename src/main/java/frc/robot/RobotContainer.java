@@ -80,10 +80,10 @@ public class RobotContainer {
         drive =
             new Drive(
                 new GyroIOPigeon2(),
-                new ModuleIOSparkMax(0) {},
-                new ModuleIOSparkMax(1) {},
-                new ModuleIOSparkMax(2) {},
-                new ModuleIOSparkMax(3) {});
+                new ModuleIOSparkMax(0),
+                new ModuleIOSparkMax(1),
+                new ModuleIOSparkMax(2),
+                new ModuleIOSparkMax(3));
         shooter = new Shooter(new ShooterIO() {});
         feeder = new Feeder(new FeederIO() {});
         intake = new Intake(new IntakeIO() {});
