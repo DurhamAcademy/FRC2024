@@ -8,6 +8,8 @@ import frc.robot.subsystems.shooter.HoodIO;
 import frc.robot.subsystems.shooter.Shooter;
 import org.littletonrobotics.junction.networktables.LoggedDashboardChooser;
 
+import java.util.function.BooleanSupplier;
+
 public class DashBoard {
   public DashBoard(
       LoggedDashboardChooser autoChooser,
@@ -28,6 +30,12 @@ public class DashBoard {
 
     main.addDouble("Shooter Position", () -> hood.hoodPositionRad);
     //    main.addCamera()
+    main.addBoolean("Shooter Position Status", new BooleanSupplier() {
+      @Override
+      public boolean getAsBoolean() {
+        return hood.hoodPositionRad == hood.hoodVelocityRadPerSec;
+      }
+    });
   }
 
   ShuffleboardTab main = Shuffleboard.getTab("Main");
