@@ -43,6 +43,7 @@ import frc.robot.subsystems.feeder.FeederIOSim;
 import frc.robot.subsystems.intake.Intake;
 import frc.robot.subsystems.intake.IntakeIO;
 import frc.robot.subsystems.intake.IntakeIOSim;
+import frc.robot.subsystems.shooter.HoodIO;
 import frc.robot.subsystems.shooter.Shooter;
 import frc.robot.subsystems.shooter.ShooterIO;
 import frc.robot.subsystems.shooter.ShooterIOSim;
@@ -62,6 +63,7 @@ public class RobotContainer {
   private final Feeder feeder;
   private final Intake intake;
   private Climb climb;
+  private final HoodIO.HoodIOInputs hood;
 
   // Controller
   private final CommandXboxController controller = new CommandXboxController(0);
@@ -88,6 +90,7 @@ public class RobotContainer {
         feeder = new Feeder(new FeederIO() {});
         intake = new Intake(new IntakeIO() {});
         climb = new Climb(new ClimbIOSparkMax());
+        hood = new HoodIO.HoodIOInputs();
         // drive = new Drive(
         // new GyroIOPigeon2(),
         // new ModuleIOTalonFX(0),
@@ -110,6 +113,7 @@ public class RobotContainer {
         feeder = new Feeder(new FeederIOSim());
         intake = new Intake(new IntakeIOSim());
         climb = new Climb(new ClimbIO() {});
+        hood = new HoodIO.HoodIOInputs();
         break;
 
       default:
@@ -125,6 +129,7 @@ public class RobotContainer {
         feeder = new Feeder(new FeederIO() {});
         intake = new Intake(new IntakeIO() {});
         climb = new Climb(new ClimbIO() {});
+        hood = new HoodIO.HoodIOInputs();
         break;
     }
 
@@ -137,6 +142,7 @@ public class RobotContainer {
     autoChooser = new LoggedDashboardChooser<>("Auto Choices", AutoBuilder.buildAutoChooser());
 
     configureButtonBindings();
+    DashBoard dashBoard = new DashBoard(autoChooser, drive, shooter, feeder, intake, hood);
   }
 
   public static SysIDMode sysIDMode = SysIDMode.Disabled;
