@@ -57,6 +57,8 @@ public class RobotContainer {
   private final Shooter shooter;
   private final Feeder feeder;
   private final Intake intake;
+  private final HoodIO.HoodIOInputs hood;
+  private final DashBoard dashBoard;
 
   private final ModeHelper modeHelper = new ModeHelper(this);
 
@@ -96,6 +98,7 @@ public class RobotContainer {
           });
           intake = new Intake(new IntakeIOSparkMax() {
           });
+          hood = new HoodIO.HoodIOInputs();
         // drive = new Drive(
         // new GyroIOPigeon2(),
         // new ModuleIOTalonFX(0),
@@ -117,6 +120,7 @@ public class RobotContainer {
         shooter = new Shooter(new ShooterIOSim(), new HoodIO() {});
         feeder = new Feeder(new FeederIOSim());
         intake = new Intake(new IntakeIOSim());
+        hood = new HoodIO.HoodIOInputs();
         break;
 
       default:
@@ -131,6 +135,7 @@ public class RobotContainer {
         shooter = new Shooter(new ShooterIO() {}, new HoodIO() {});
         feeder = new Feeder(new FeederIO() {});
         intake = new Intake(new IntakeIO() {});
+        hood = new HoodIO.HoodIOInputs();
         break;
     }
 
@@ -143,7 +148,7 @@ public class RobotContainer {
                 shooter)
             .withTimeout(5.0));
     autoChooser = new LoggedDashboardChooser<>("Auto Choices", AutoBuilder.buildAutoChooser());
-
+    dashBoard = new DashBoard(autoChooser, drive, shooter, feeder, intake, hood);
     configureButtonBindings();
   }
 

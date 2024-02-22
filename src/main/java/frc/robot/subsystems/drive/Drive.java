@@ -273,10 +273,12 @@ public class Drive extends SubsystemBase {
     averageDriveMotor.angularPosition(drivePositionAverage.divide(4.0));
   }
 
+  // can reuse the existing array in the method below to reduce the amount of gc needed
+  SwerveModuleState[] states = new SwerveModuleState[4];
+
   /** Returns the module states (turn angles and drive velocities) for all of the modules. */
   @AutoLogOutput(key = "SwerveStates/Measured")
-  private SwerveModuleState[] getModuleStates() {
-    SwerveModuleState[] states = new SwerveModuleState[4];
+  public SwerveModuleState[] getModuleStates() {
     for (int i = 0; i < 4; i++) {
       states[i] = modules[i].getState();
     }
@@ -374,4 +376,11 @@ public class Drive extends SubsystemBase {
       new Translation2d(-TRACK_WIDTH_X / 2.0, -TRACK_WIDTH_Y / 2.0)
     };
   }
+
+  public Rotation2d getAngle(){
+    return modules[0].getAngle();
+  }
+
+
+
 }
