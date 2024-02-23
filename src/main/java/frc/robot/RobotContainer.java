@@ -15,6 +15,7 @@ package frc.robot;
 
 import com.pathplanner.lib.auto.AutoBuilder;
 import com.pathplanner.lib.auto.NamedCommands;
+import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.units.Units;
@@ -27,6 +28,9 @@ import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine.Config;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine.Direction;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine.Mechanism;
 import frc.robot.commands.DriveCommands;
+import frc.robot.subsystems.climb.Climb;
+import frc.robot.subsystems.climb.ClimbIO;
+import frc.robot.subsystems.climb.ClimbIOSparkMax;
 import frc.robot.subsystems.drive.*;
 import frc.robot.subsystems.feeder.Feeder;
 import frc.robot.subsystems.feeder.FeederIO;
@@ -35,6 +39,9 @@ import frc.robot.subsystems.feeder.FeederIOTalonFX;
 import frc.robot.subsystems.intake.Intake;
 import frc.robot.subsystems.intake.IntakeIO;
 import frc.robot.subsystems.intake.IntakeIOSim;
+import frc.robot.subsystems.shooter.Shooter;
+import frc.robot.subsystems.shooter.ShooterIO;
+import frc.robot.subsystems.shooter.ShooterIOSim;
 import frc.robot.subsystems.intake.IntakeIOSparkMax;
 import frc.robot.subsystems.shooter.*;
 import frc.robot.util.Mode;
@@ -57,6 +64,7 @@ public class RobotContainer {
   private final Shooter shooter;
   private final Feeder feeder;
   private final Intake intake;
+  private Climb climb;
 
   private final ModeHelper modeHelper = new ModeHelper(this);
 
@@ -70,7 +78,8 @@ public class RobotContainer {
   }
 
   // Controller
-  private final CommandXboxController controller = new CommandXboxController(0);
+  private final CommandXboxController driverController = new CommandXboxController(0);
+  private final CommandXboxController operatorController = new CommandXboxController(1);
 
   // Dashboard inputs
   private final LoggedDashboardChooser<Command> autoChooser;
@@ -91,11 +100,10 @@ public class RobotContainer {
                     new ModuleIOSparkMax(1),
                     new ModuleIOSparkMax(2),
                     new ModuleIOSparkMax(3));
-        shooter = new Shooter(new ShooterIOTalonFX(), new HoodIOSparkMax() {});
-          feeder = new Feeder(new FeederIOTalonFX() {
-          });
-          intake = new Intake(new IntakeIOSparkMax() {
-          });
+        shooter = new Shooter(new ShooterIOTalonFX(), new HoodIOSparkMax());
+          feeder = new Feeder(new FeederIOTalonFX());
+          intake = new Intake(new IntakeIOSparkMax());
+        climb = new Climb(new ClimbIOSparkMax());
         // drive = new Drive(
         // new GyroIOPigeon2(),
         // new ModuleIOTalonFX(0),
@@ -117,6 +125,7 @@ public class RobotContainer {
         shooter = new Shooter(new ShooterIOSim(), new HoodIO() {});
         feeder = new Feeder(new FeederIOSim());
         intake = new Intake(new IntakeIOSim());
+        climb = new Climb(new ClimbIO() {});
         break;
 
       default:
@@ -131,6 +140,7 @@ public class RobotContainer {
         shooter = new Shooter(new ShooterIO() {}, new HoodIO() {});
         feeder = new Feeder(new FeederIO() {});
         intake = new Intake(new IntakeIO() {});
+        climb = new Climb(new ClimbIO() {});
         break;
     }
 
@@ -167,9 +177,9 @@ public class RobotContainer {
         drive.setDefaultCommand(
             DriveCommands.joystickDrive(
                 drive,
-                () -> -controller.getLeftY(),
-                () -> -controller.getLeftX(),
-                () -> -controller.getRightX()));
+                    () -> -driverController.getLeftY(),
+                    () -> -driverController.getLeftX(),
+                    () -> -driverController.getRightX()));
         intake.setDefaultCommand(
             new RunCommand(
                 () -> {
@@ -184,10 +194,18 @@ public class RobotContainer {
 //              shooter.setTargetShooterAngleRad(new Rotation2d(.9));
               shooter.setTargetShooterAngleRad(new Rotation2d(.4));
           }, shooter));
+        climb.setDefaultCommand(
+            Commands.run(
+                () -> {
+                  climb.runLeftVolts(
+                      MathUtil.applyDeadband(operatorController.getLeftY(), 0.075) * 12);
+                  climb.runRightVolts(operatorController.getRightY() * 12);
+                },
+                climb));
 
         // ---- DRIVETRAIN COMMANDS ----
-        controller.x().whileTrue(Commands.runOnce(drive::stopWithX, drive));
-        controller
+        driverController.x().whileTrue(Commands.runOnce(drive::stopWithX, drive));
+        driverController
             .b()
             .whileTrue(
                 Commands.runOnce(
@@ -202,7 +220,7 @@ public class RobotContainer {
                     .ignoringDisable(true));
 
         // ---- FEEDER COMMANDS ----
-        controller
+        driverController
             .leftTrigger()
             .and(feeder::getSensorFeed)
             .whileTrue(
@@ -227,7 +245,7 @@ public class RobotContainer {
                         () -> shooter.setTargetShooterAngleRad(Rotation2d.fromDegrees(45.0)))));
         */
         // ---- INTAKE COMMANDS ----
-        controller
+        driverController
             .leftBumper() // not a()
             .whileTrue(
                 new RunCommand(
@@ -236,7 +254,7 @@ public class RobotContainer {
                         intake.setRollerPercentage(.66);
                     },
                     intake));
-        controller
+        driverController
             .rightBumper()
             .whileTrue(
                 new RunCommand(
@@ -247,14 +265,22 @@ public class RobotContainer {
                     intake));
 
         // ---- SHOOTER COMMANDS ----
-        controller
+        driverController
+            .rightTrigger()
+            .whileTrue(
+                Commands.run(
+                    () -> shooter.runVolts(controller.getRightTriggerAxis() * 12.0), shooter));
+        driverController
+            .leftTrigger()
+            .and(controller.rightTrigger().negate())
+        driverController
                 .b()
             .whileTrue(
                 Commands.startEnd(
                     () -> shooter.shooterRunVelocity(flywheelSpeedInput.get()),
                     shooter::stopShooter,
                     shooter));
-        controller
+        driverController
             .rightTrigger()
             .whileTrue(
                 new StartEndCommand(
@@ -264,7 +290,7 @@ public class RobotContainer {
                       shooter.shooterRunVolts(0.0);
                     },
                     shooter));
-        controller
+        driverController
                 .x()
             .whileTrue(
                 Commands.startEnd(
@@ -277,9 +303,9 @@ public class RobotContainer {
         drive.setDefaultCommand(
             DriveCommands.joystickDrive(
                 drive,
-                () -> -controller.getLeftY(),
-                () -> -controller.getLeftX(),
-                () -> -controller.getRightX()));
+                    () -> -driverController.getLeftY(),
+                    () -> -driverController.getLeftX(),
+                    () -> -driverController.getRightX()));
         var drivetrainDriveSysID =
             new SysIdRoutine(
                 new Config(Voltage.per(Units.Second).of(.5), Voltage.of(8.0), Seconds.of(12.0)),
@@ -288,23 +314,23 @@ public class RobotContainer {
                     drive::populateDriveCharacterizationData,
                     drive,
                     "DrivetrainDriveMotors"));
-        controller
+        driverController
             .x()
             .whileTrue(drivetrainDriveSysID.dynamic(Direction.kForward))
             .onFalse(Commands.runOnce(drive::stopWithX, drive));
-        controller
+        driverController
             .y()
             .whileTrue(drivetrainDriveSysID.dynamic(Direction.kReverse))
             .onFalse(Commands.runOnce(drive::stopWithX, drive));
-        controller
+        driverController
             .a()
             .whileTrue(drivetrainDriveSysID.quasistatic(Direction.kForward).withTimeout(2.0))
             .onFalse(Commands.runOnce(drive::stopWithX, drive));
-        controller
+        driverController
             .b()
             .whileTrue(drivetrainDriveSysID.quasistatic(Direction.kReverse).withTimeout(2.0))
             .onFalse(Commands.runOnce(drive::stopWithX, drive));
-        controller
+        driverController
             .rightTrigger()
             .whileTrue(
                 new RunCommand(() -> shooter.setTargetShooterAngleRad(new Rotation2d(-0.61)))
