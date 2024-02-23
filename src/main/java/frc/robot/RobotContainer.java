@@ -78,7 +78,7 @@ public class RobotContainer {
                 new ModuleIOSparkMax(3));
         shooter = new Shooter(new ShooterIOTalonFX());
         feeder = new Feeder(new FeederIO() {});
-        intake = new Intake(new IntakeIOSim());
+        intake = new Intake(new IntakeIOSparkMax());
         // drive = new Drive(
         // new GyroIOPigeon2(),
         // new ModuleIOTalonFX(0),
