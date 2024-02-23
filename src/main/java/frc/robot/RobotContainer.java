@@ -206,7 +206,7 @@ public class RobotContainer {
             .leftTrigger()
             .and(feeder::getSensorFeed)
             .whileTrue(
-                    new RunCommand(() -> feeder.runVolts(0.0), feeder)
+                    new RunCommand(() -> feeder.runVolts(10.0), feeder)
                     .until(() -> !feeder.getSensorFeed()));
 
         // prepare the shooter for dumping into the amp
@@ -311,8 +311,7 @@ public class RobotContainer {
                     .andThen(
                         (new RunCommand(
                             () ->
-                                shooter.shooterRunVelocity(
-                                    5000) /*THIS NUMBER NEEDS TO BE CALIBRATED*/,
+                                shooter.shooterRunVelocity(5000), //THIS NUMBER NEEDS TO BE CALIBRATED
                             intake))));
         break;
       case EverythingElse:
