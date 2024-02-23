@@ -13,6 +13,9 @@
 
 package frc.robot;
 
+import static edu.wpi.first.units.BaseUnits.Voltage;
+import static edu.wpi.first.units.Units.Seconds;
+
 import com.pathplanner.lib.auto.AutoBuilder;
 import com.pathplanner.lib.auto.NamedCommands;
 import edu.wpi.first.math.MathUtil;
@@ -40,14 +43,13 @@ import frc.robot.subsystems.feeder.FeederIOSim;
 import frc.robot.subsystems.intake.Intake;
 import frc.robot.subsystems.intake.IntakeIO;
 import frc.robot.subsystems.intake.IntakeIOSim;
+import frc.robot.subsystems.intake.IntakeIOSparkMax;
 import frc.robot.subsystems.shooter.Shooter;
 import frc.robot.subsystems.shooter.ShooterIO;
 import frc.robot.subsystems.shooter.ShooterIOSim;
+import frc.robot.subsystems.shooter.ShooterIOTalonFX;
 import org.littletonrobotics.junction.networktables.LoggedDashboardChooser;
 import org.littletonrobotics.junction.networktables.LoggedDashboardNumber;
-
-import static edu.wpi.first.units.BaseUnits.Voltage;
-import static edu.wpi.first.units.Units.Seconds;
 
 /**
  * This class is where the bulk of the robot should be declared. Since Command-based is a
@@ -161,9 +163,9 @@ public class RobotContainer {
         drive.setDefaultCommand(
             DriveCommands.joystickDrive(
                 drive,
-                    () -> -driverController.getLeftY(),
-                    () -> -driverController.getLeftX(),
-                    () -> -driverController.getRightX()));
+                () -> -driverController.getLeftY(),
+                () -> -driverController.getLeftX(),
+                () -> -driverController.getRightX()));
         intake.setDefaultCommand(
             new RunCommand(
                 () -> {
@@ -171,7 +173,7 @@ public class RobotContainer {
                   intake.setRollerPercentage(0.0);
                 },
                 intake));
-        feeder.setDefaultCommand(new RunCommand(feeder::stop, feeder));
+        feeder.setDefaultCommand(new RunCommand(() -> feeder.runVolts(6.0), feeder));
         shooter.setDefaultCommand(new RunCommand(shooter::stop, shooter));
         // CLIMB DEFAULT COMMAND
         climb.setDefaultCommand(
@@ -232,30 +234,31 @@ public class RobotContainer {
             .rightTrigger()
             .whileTrue(
                 Commands.run(
-                    () -> shooter.runVolts(controller.getRightTriggerAxis() * 12.0), shooter));
-        driverController
-            .leftTrigger()
-            .and(controller.rightTrigger().negate())
+                    () -> shooter.runVolts(driverController.getRightTriggerAxis() * 12.0),
+                    shooter));
+        driverController.leftTrigger().and(driverController.rightTrigger().negate());
         driverController
             .a()
             .whileTrue(
                 Commands.startEnd(
                     () -> shooter.runVelocity(flywheelSpeedInput.get()), shooter::stop, shooter));
-        driverController.rightTrigger().onTrue(new RunCommand(() -> shooter.runVolts(6.0), shooter));
+        driverController
+            .rightTrigger()
+            .onTrue(new RunCommand(() -> shooter.runVolts(6.0), shooter));
         driverController
             .a()
             .whileTrue(
                 new RunCommand(
-                    () -> shooter.runVolts(controller.getLeftTriggerAxis() * 12.0), shooter));
+                    () -> shooter.runVolts(driverController.getLeftTriggerAxis() * 12.0), shooter));
 
         break;
       case DriveMotors:
         drive.setDefaultCommand(
             DriveCommands.joystickDrive(
                 drive,
-                    () -> -driverController.getLeftY(),
-                    () -> -driverController.getLeftX(),
-                    () -> -driverController.getRightX()));
+                () -> -driverController.getLeftY(),
+                () -> -driverController.getLeftX(),
+                () -> -driverController.getRightX()));
         var drivetrainDriveSysID =
             new SysIdRoutine(
                 new Config(Voltage.per(Units.Second).of(.5), Voltage.of(8.0), Seconds.of(12.0)),
