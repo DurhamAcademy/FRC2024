@@ -84,7 +84,7 @@ public class RobotContainer {
                 new ModuleIOSparkMax(1),
                 new ModuleIOSparkMax(2),
                 new ModuleIOSparkMax(3));
-        shooter = new Shooter(new ShooterIOSparkMax());
+        shooter = new Shooter(new ShooterIOTalonFX());
         feeder = new Feeder(new FeederIO() {});
         intake = new Intake(new IntakeIOSparkMax());
         climb = new Climb(new ClimbIOSparkMax());
@@ -172,6 +172,7 @@ public class RobotContainer {
                 },
                 intake));
         feeder.setDefaultCommand(new RunCommand(feeder::stop, feeder));
+        shooter.setDefaultCommand(new RunCommand(shooter::stop, shooter));
         // CLIMB DEFAULT COMMAND
         climb.setDefaultCommand(
             Commands.run(
@@ -228,6 +229,14 @@ public class RobotContainer {
 
         // ---- SHOOTER COMMANDS ----
         driverController
+            .rightTrigger()
+            .whileTrue(
+                Commands.run(
+                    () -> shooter.runVolts(controller.getRightTriggerAxis() * 12.0), shooter));
+        driverController
+            .leftTrigger()
+            .and(controller.rightTrigger().negate())
+        driverController
             .a()
             .whileTrue(
                 Commands.startEnd(
@@ -236,8 +245,8 @@ public class RobotContainer {
         driverController
             .a()
             .whileTrue(
-                Commands.startEnd(
-                    () -> shooter.runVelocity(flywheelSpeedInput.get()), shooter::stop, shooter));
+                new RunCommand(
+                    () -> shooter.runVolts(controller.getLeftTriggerAxis() * 12.0), shooter));
 
         break;
       case DriveMotors:
@@ -279,7 +288,6 @@ public class RobotContainer {
                         (new RunCommand(
                             () -> shooter.runVelocity(5000) /*THIS NUMBER NEEDS TO BE CALIBRATED*/,
                             intake))));
-
         break;
       case EverythingElse:
         break;
