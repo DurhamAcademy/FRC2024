@@ -246,9 +246,7 @@ public class RobotContainer {
                 .whileTrue(
                         new StartEndCommand(
                                 () -> shooter.runVolts(12.0 * driverController.getRightTriggerAxis()),
-                                () -> {
-                                    shooter.runVolts(0.0);
-                                },
+                                () -> shooter.runVolts(0.0),
                                 shooter));
         driverController
             .a()
