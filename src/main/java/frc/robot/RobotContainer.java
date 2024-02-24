@@ -293,6 +293,33 @@ public class RobotContainer {
                             intake))));
         break;
       case EverythingElse:
+          var shooterSysId =
+                  new SysIdRoutine(
+                          new Config(Voltage.per(Units.Second).of(.1), Voltage.of(9.0), Seconds.of(120)),
+                          new Mechanism(
+                                  shooter::runVoltage,
+                                  (log) -> {
+                                      var motor = log.motor("Shooter");
+                                      motor.voltage(shooter.getCharacterizationVoltage());
+                                      motor.angularPosition(shooter.getCharacterizationPosition());
+                                      motor.angularVelocity(shooter.getCharacterizationVelocity());
+                                      motor.current(shooter.getCharacterizationCurrent());
+                                  },
+                                  shooter,
+                                  "FlywheelMotors"));
+          driverController
+                  .a()
+                  .onTrue(
+                          shooterSysId.dynamic(Direction.kForward).withTimeout(5)
+                                  .andThen(
+                                          new WaitCommand(5),
+                                          shooterSysId.dynamic(Direction.kReverse).withTimeout(5),
+                                          new WaitCommand(5),
+                                          shooterSysId.quasistatic(Direction.kForward).withTimeout(120),
+                                          new WaitCommand(5),
+                                          shooterSysId.quasistatic(Direction.kReverse).withTimeout(120)
+                                  )
+                  );
         break;
     }
   }
