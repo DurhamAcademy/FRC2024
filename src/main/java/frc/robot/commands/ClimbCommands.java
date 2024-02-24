@@ -44,7 +44,7 @@ public class ClimbCommands {
         return new RunCommand(() -> climb.runLeftVolts(direction ? 10 : -10));
     }
 
-    private static RunCommand runRight(Climb climb) {
+    private static RunCommand runRight(Climb climb, boolean direction) {
         return new RunCommand(() -> climb.runRightVolts(direction ? 10 : -10));
     }
 }
