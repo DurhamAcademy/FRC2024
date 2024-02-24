@@ -25,8 +25,8 @@ public class IntakeIOSparkMax implements IntakeIO {
   private static final double ARM_GEAR_RATIO = 100.0;
   private static final double ROLLER_GEAR_RATIO = 3.0;
 
-  private final CANSparkMax arm = new CANSparkMax(0, MotorType.kBrushless);
-  private final CANSparkMax roller = new CANSparkMax(1, MotorType.kBrushless);
+  private final CANSparkMax arm = new CANSparkMax(9, MotorType.kBrushless);
+  private final CANSparkMax roller = new CANSparkMax(31, MotorType.kBrushless);
   private final AbsoluteEncoder encoder =
       arm.getAbsoluteEncoder(SparkAbsoluteEncoder.Type.kDutyCycle);
   private final SparkPIDController pid = arm.getPIDController();

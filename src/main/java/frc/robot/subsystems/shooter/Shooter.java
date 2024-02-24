@@ -61,9 +61,9 @@ public class Shooter extends SubsystemBase {
   public void periodic() {
     io.updateInputs(inputs);
 
-    io.setFlywheelVoltage(
-        pid.calculate(inputs.flywheelVelocityRadPerSec)
-            + ffModel.calculate(pid.getSetpoint().position, pid.getSetpoint().velocity));
+    //    io.setFlywheelVoltage(
+    //        pid.calculate(inputs.flywheelVelocityRadPerSec)
+    //            + ffModel.calculate(pid.getSetpoint().position, pid.getSetpoint().velocity));
     targetShooterAngleRad = pid.getSetpoint().position * ENCODER_ANGLE_FIX;
     Logger.processInputs("Shooter", inputs);
   }
