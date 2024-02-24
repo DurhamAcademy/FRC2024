@@ -148,9 +148,6 @@ public class Drive extends SubsystemBase {
     gyroIO.updateInputs(gyroInputs);
     visionIO.updateInputs(visionInputs);
 
-    System.out.println("gyroIO: :) =" + gyroIO);
-    System.out.println("");
-
     Logger.processInputs("Drive/Gyro", gyroInputs);
     Logger.processInputs("Drive/Vision", visionInputs);
     for (var module : modules) {
