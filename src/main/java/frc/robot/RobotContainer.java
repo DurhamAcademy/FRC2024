@@ -13,9 +13,6 @@
 
 package frc.robot;
 
-import static edu.wpi.first.units.BaseUnits.Voltage;
-import static edu.wpi.first.units.Units.Seconds;
-
 import com.pathplanner.lib.auto.AutoBuilder;
 import com.pathplanner.lib.auto.NamedCommands;
 import edu.wpi.first.math.MathUtil;
@@ -27,6 +24,7 @@ import edu.wpi.first.wpilibj.XboxController;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.RunCommand;
+import edu.wpi.first.wpilibj2.command.WaitCommand;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine.Config;
@@ -50,6 +48,9 @@ import frc.robot.subsystems.shooter.ShooterIOSim;
 import frc.robot.subsystems.shooter.ShooterIOTalonFX;
 import org.littletonrobotics.junction.networktables.LoggedDashboardChooser;
 import org.littletonrobotics.junction.networktables.LoggedDashboardNumber;
+
+import static edu.wpi.first.units.BaseUnits.Voltage;
+import static edu.wpi.first.units.Units.Seconds;
 
 /**
  * This class is where the bulk of the robot should be declared. Since Command-based is a
@@ -290,13 +291,40 @@ public class RobotContainer {
         driverController
             .rightTrigger()
             .whileTrue(
-                new RunCommand(() -> shooter.setTargetShooterAngleRad(new Rotation2d(-0.61)))
+                    new RunCommand(() -> shooter.setTargetShooterAngle(new Rotation2d(-0.61)))
                     .andThen(
                         (new RunCommand(
                             () -> shooter.runVelocity(5000) /*THIS NUMBER NEEDS TO BE CALIBRATED*/,
                             intake))));
         break;
       case EverythingElse:
+          var shooterSysId =
+                  new SysIdRoutine(
+                          new Config(Voltage.per(Units.Second).of(.1), Voltage.of(9.0), Seconds.of(120)),
+                          new Mechanism(
+                                  shooter::runVoltage,
+                                  (log) -> {
+                                      var motor = log.motor("Shooter");
+                                      motor.voltage(shooter.getCharacterizationVoltage());
+                                      motor.angularPosition(shooter.getCharacterizationPosition());
+                                      motor.angularVelocity(shooter.getCharacterizationVelocity());
+                                      motor.current(shooter.getCharacterizationCurrent());
+                                  },
+                                  shooter,
+                                  "FlywheelMotors"));
+          driverController
+                  .a()
+                  .onTrue(
+                          shooterSysId.dynamic(Direction.kForward).withTimeout(5)
+                                  .andThen(
+                                          new WaitCommand(5),
+                                          shooterSysId.dynamic(Direction.kReverse).withTimeout(5),
+                                          new WaitCommand(5),
+                                          shooterSysId.quasistatic(Direction.kForward).withTimeout(120),
+                                          new WaitCommand(5),
+                                          shooterSysId.quasistatic(Direction.kReverse).withTimeout(120)
+                                  )
+                  );
         break;
     }
   }
