@@ -1,9 +1,7 @@
 package frc.robot.commands;
 
 import edu.wpi.first.math.filter.Debouncer;
-import edu.wpi.first.wpilibj2.command.Command;
-import edu.wpi.first.wpilibj2.command.InstantCommand;
-import edu.wpi.first.wpilibj2.command.RunCommand;
+import edu.wpi.first.wpilibj2.command.*;
 import frc.robot.subsystems.climb.Climb;
 
 import java.util.function.BooleanSupplier;
@@ -15,20 +13,40 @@ public class ClimbCommands {
     public static Command zero(Climb climb, double currentThreshhold) {
         var debouncers = new Object() {
             public Debouncer leftDebounce = new Debouncer(1.0, kFalling);
-            public boolean cannotMoveA = false;
-            public boolean cannotMoveB = false;
+            public boolean cannotMoveAL = false;
+            public boolean cannotMoveAR = false;
+            public boolean cannotMoveBL = false;
+            public boolean cannotMoveBR = false;
             public Debouncer rightDebounce = new Debouncer(1.0, kFalling);
-        };
-        return new InstantCommand(() -> {
-            debouncers.leftDebounce = new Debouncer(0.2, kFalling);
-            debouncers.rightDebounce = new Debouncer(0.2, kFalling);
-        }).andThen(
-                runLeft(climb, true)
-                        .onlyWhile(getDebounce(debouncers.leftDebounce, climb.getLeftVelocityRadPerSec(), () -> debouncers.cannotMoveA = true))
-                        .withTimeout(1),
-                runLeft(climb, false).onlyIf(() -> !debouncers.cannotMoveA)
-                        .onlyWhile(getDebounce(debouncers.leftDebounce, climb.getLeftVelocityRadPerSec(), () -> debouncers.cannotMoveB = true))
 
+            public void reset() {
+                leftDebounce = new Debouncer(1.0, kFalling);
+                cannotMoveAL = false;
+                cannotMoveAR = false;
+                cannotMoveBL = false;
+                cannotMoveBR = false;
+                rightDebounce = new Debouncer(1.0, kFalling);
+            }
+        };
+        return new InstantCommand(debouncers::reset).andThen(
+                new ParallelCommandGroup(
+                        new SequentialCommandGroup(
+                                runLeft(climb, true)
+                                        .onlyWhile(getDebounce(debouncers.leftDebounce, climb.getLeftVelocityRadPerSec(), () -> debouncers.cannotMoveAL = true))
+                                        .withTimeout(1),
+                                runLeft(climb, false).onlyIf(() -> !debouncers.cannotMoveAL)
+                                        .onlyWhile(getDebounce(debouncers.leftDebounce, climb.getLeftVelocityRadPerSec(), () -> debouncers.cannotMoveBL = true))
+                                        .withTimeout(5)
+                        ),
+                        new SequentialCommandGroup(
+                                runRight(climb, true)
+                                        .onlyWhile(getDebounce(debouncers.leftDebounce, climb.getRightVelocityRadPerSec(), () -> debouncers.cannotMoveAR = true))
+                                        .withTimeout(1),
+                                runRight(climb, false).onlyIf(() -> !debouncers.cannotMoveAR)
+                                        .onlyWhile(getDebounce(debouncers.leftDebounce, climb.getRightVelocityRadPerSec(), () -> debouncers.cannotMoveBR = true))
+                                        .withTimeout(5)
+                        )
+                )
         );
     }
 
