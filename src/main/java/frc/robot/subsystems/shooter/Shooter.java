@@ -18,13 +18,13 @@ import edu.wpi.first.math.controller.SimpleMotorFeedforward;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.trajectory.TrapezoidProfile;
 import edu.wpi.first.math.util.Units;
-import edu.wpi.first.units.Angle;
-import edu.wpi.first.units.Measure;
-import edu.wpi.first.units.Velocity;
+import edu.wpi.first.units.*;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants;
 import org.littletonrobotics.junction.AutoLogOutput;
 import org.littletonrobotics.junction.Logger;
+
+import static edu.wpi.first.units.Units.*;
 
 public class Shooter extends SubsystemBase {
   private final ShooterIO io;
@@ -76,6 +76,13 @@ public class Shooter extends SubsystemBase {
     io.setFlywheelVoltage(volts);
   }
 
+  /**
+   * Run open loop at the specified voltage.
+   */
+  public void runVoltage(Measure<Voltage> voltage) {
+    runVolts(voltage.in(Volts));
+  }
+
   /** Run closed loop at the specified velocity. */
   public void runVelocity(double velocityRPM) {
     var velocityRadPerSec = Units.rotationsPerMinuteToRadiansPerSecond(velocityRPM);
@@ -101,14 +108,33 @@ public class Shooter extends SubsystemBase {
    * Returns the current velocity in radians per second.
    */
   public Measure<Velocity<Angle>> getCharacterizationVelocity() {
-    return edu.wpi.first.units.Units.RadiansPerSecond.of(inputs.flywheelVelocityRadPerSec);
+    return RadiansPerSecond.of(inputs.flywheelVelocityRadPerSec);
   }
 
   /**
    * Returns the current velocity in radians per second.
    */
   public Measure<Angle> getCharacterizationPosition() {
-    return edu.wpi.first.units.Units.Radians.of(inputs.flywheelPositionRad);
+    return Radians.of(inputs.flywheelPositionRad);
+  }
+
+
+  /**
+   * Returns the current velocity in radians per second.
+   */
+  public Measure<Voltage> getCharacterizationVoltage() {
+    return Volts.of(inputs.flywheelAppliedVolts);
+  }
+
+  /**
+   * Returns the current velocity in radians per second.
+   */
+  public Measure<Current> getCharacterizationCurrent() {
+    var sum = 0.0;
+    for (double flywheelCurrentAmp : inputs.flywheelCurrentAmps) sum += flywheelCurrentAmp;
+
+    sum = (inputs.flywheelCurrentAmps.length > 0) ? sum / inputs.flywheelCurrentAmps.length : 0.0;
+    return Amps.of(sum);
   }
 
   public void setTargetShooterAngle(Rotation2d anglediff) {
