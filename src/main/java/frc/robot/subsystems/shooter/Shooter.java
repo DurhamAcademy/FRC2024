@@ -18,6 +18,9 @@ import edu.wpi.first.math.controller.SimpleMotorFeedforward;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.trajectory.TrapezoidProfile;
 import edu.wpi.first.math.util.Units;
+import edu.wpi.first.units.Angle;
+import edu.wpi.first.units.Measure;
+import edu.wpi.first.units.Velocity;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants;
 import org.littletonrobotics.junction.AutoLogOutput;
@@ -94,12 +97,21 @@ public class Shooter extends SubsystemBase {
     return Units.radiansPerSecondToRotationsPerMinute(inputs.flywheelVelocityRadPerSec);
   }
 
-  /** Returns the current velocity in radians per second. */
-  public double getCharacterizationVelocity() {
-    return inputs.flywheelVelocityRadPerSec;
+  /**
+   * Returns the current velocity in radians per second.
+   */
+  public Measure<Velocity<Angle>> getCharacterizationVelocity() {
+    return edu.wpi.first.units.Units.RadiansPerSecond.of(inputs.flywheelVelocityRadPerSec);
   }
 
-  public void setTargetShooterAngleRad(Rotation2d anglediff) {
+  /**
+   * Returns the current velocity in radians per second.
+   */
+  public Measure<Angle> getCharacterizationPosition() {
+    return edu.wpi.first.units.Units.Radians.of(inputs.flywheelPositionRad);
+  }
+
+  public void setTargetShooterAngle(Rotation2d anglediff) {
     targetShooterAngleRad = anglediff.getRadians() * TURN_SHOOTER_RATIO;
   }
 }
