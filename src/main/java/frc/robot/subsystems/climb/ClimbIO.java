@@ -1,6 +1,5 @@
 package frc.robot.subsystems.climb;
 
-import edu.wpi.first.math.geometry.Rotation2d;
 import org.littletonrobotics.junction.AutoLog;
 
 public interface ClimbIO {
@@ -25,14 +24,12 @@ public interface ClimbIO {
     public double leftVelocityRadPerSec = 0.0;
     public double leftAppliedVolts = 0.0;
     public double[] leftCurrentAmps = new double[] {};
-    public Rotation2d leftPosition;
     public double[] leftTemperature = new double[] {};
 
     public double rightPositionRad = 0.0;
     public double rightVelocityRadPerSec = 0.0;
     public double rightAppliedVolts = 0.0;
     public double[] rightCurrentAmps = new double[] {};
-    public Rotation2d rightPosition;
     public double[] rightTemperature = new double[] {};
   }
 }
