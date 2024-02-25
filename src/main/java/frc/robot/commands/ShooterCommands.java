@@ -22,7 +22,7 @@ public class ShooterCommands {
 
     /**
      * @param drive
-     * @return (hopefully) the angle in which the shooter has to be at to make the shot to speaker 
+     * @return (hopefully) the angle in which the shooter has to be at to make the shot to speaker
      */
     private double doTrig(Drive drive){ //the parameter is the robot, idk how to declare it
         Pose3d drivePose = new Pose3d(drive.getPose().getX(), drive.getPose().getY(), offset, shooterAngle);
