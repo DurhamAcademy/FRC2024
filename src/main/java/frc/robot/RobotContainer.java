@@ -214,8 +214,9 @@ public class RobotContainer {
         // ---- INTAKE COMMANDS ----
         driverController
                 .leftTrigger() // not a()
-                .whileTrue(IntakeCommands.intake(intake));
-        driverController.rightBumper().whileTrue(IntakeCommands.idle(intake));
+                .whileTrue(IntakeCommands.intakeCommand(intake).alongWith(IntakeCommands.feedToBeamBreak(feeder)))
+                .onFalse(IntakeCommands.feedToBeamBreak(feeder).withTimeout(5));
+        driverController.rightBumper().whileTrue(IntakeCommands.idleCommand(intake));
 
         // ---- SHOOTER COMMANDS ----
         driverController
