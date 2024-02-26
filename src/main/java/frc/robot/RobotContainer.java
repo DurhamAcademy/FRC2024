@@ -22,7 +22,6 @@ import edu.wpi.first.units.Units;
 import edu.wpi.first.wpilibj.GenericHID;
 import edu.wpi.first.wpilibj.XboxController;
 import edu.wpi.first.wpilibj2.command.*;
-import edu.wpi.first.wpilibj2.command.WaitCommand;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine.Config;
@@ -41,10 +40,6 @@ import frc.robot.subsystems.feeder.FeederIOTalonFX;
 import frc.robot.subsystems.intake.Intake;
 import frc.robot.subsystems.intake.IntakeIO;
 import frc.robot.subsystems.intake.IntakeIOSim;
-import frc.robot.subsystems.intake.IntakeIOSparkMax;
-import frc.robot.subsystems.shooter.Shooter;
-import frc.robot.subsystems.shooter.ShooterIO;
-import frc.robot.subsystems.shooter.ShooterIOSim;
 import frc.robot.subsystems.intake.IntakeIOSparkMax;
 import frc.robot.subsystems.shooter.*;
 import frc.robot.util.Mode;
@@ -191,7 +186,7 @@ public class RobotContainer {
                 },
                 intake));
         feeder.setDefaultCommand(new RunCommand(() -> feeder.runVolts(6.0), feeder));
-        shooter.setDefaultCommand(new RunCommand(shooter::stop, shooter));
+        shooter.setDefaultCommand(new RunCommand(() -> shooter.shooterRunVolts(0.0), shooter));
         // CLIMB DEFAULT COMMAND
         climb.setDefaultCommand(
             Commands.run(
@@ -231,7 +226,7 @@ public class RobotContainer {
             .rightTrigger()
             .whileTrue(
                 Commands.run(
-                    () -> shooter.runVolts(driverController.getRightTriggerAxis() * 12.0),
+                        () -> shooter.shooterRunVolts(driverController.getRightTriggerAxis() * 12.0),
                     shooter));
         driverController.leftTrigger().and(driverController.rightTrigger().negate());
         driverController
@@ -245,7 +240,7 @@ public class RobotContainer {
             .rightTrigger()
             .whileTrue(
                 new StartEndCommand(
-                    () -> shooter.shooterRunVolts(12.0 * controller.getRightTriggerAxis()),
+                        () -> shooter.shooterRunVolts(12.0 * driverController.getRightTriggerAxis()),
                     () -> {
                       shooter.stopShooter();
                       shooter.shooterRunVolts(0.0);

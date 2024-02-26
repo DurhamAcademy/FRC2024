@@ -135,18 +135,6 @@ public class Shooter extends SubsystemBase {
         shooterIO.setFlywheelVoltage(volts);
     }
 
-    public Measure<Angle> getCharacterizationPosition() {
-        return Radians.of(this.shooterInputs.flywheelPositionRad);
-    }
-
-    public Measure<Velocity<Angle>> getCharacterizationVelocity() {
-        return RadiansPerSecond.of(this.shooterInputs.flywheelVelocityRadPerSec);
-    }
-
-    public Measure<Current> getCharacterizationCurrent() {
-        return Amps.of(this.shooterInputs.flywheelCurrentAmps[0]);
-    }
-
     public Measure<Voltage> getCharacterizationAppliedVolts() {
         return Volts.of(this.shooterInputs.flywheelAppliedVolts);
     }
@@ -160,7 +148,7 @@ public class Shooter extends SubsystemBase {
    * Run open loop at the specified voltage.
    */
   public void runVoltage(Measure<Voltage> voltage) {
-    runVolts(voltage.in(Volts));
+      shooterRunVolts(voltage.in(Volts));
   }
 
   /** Run closed loop at the specified velocity.
@@ -195,25 +183,25 @@ public class Shooter extends SubsystemBase {
 
   /** Returns the current velocity in radians per second. */
   public Measure<Velocity<Angle>> getCharacterizationVelocity() {
-    return RadiansPerSecond.of(inputs.flywheelVelocityRadPerSec);
+      return RadiansPerSecond.of(shooterInputs.flywheelVelocityRadPerSec);
   }
 
   /** Returns the current velocity in radians per second. */
   public Measure<Angle> getCharacterizationPosition() {
-    return Radians.of(inputs.flywheelPositionRad);
+      return Radians.of(shooterInputs.flywheelPositionRad);
   }
 
   /** Returns the current velocity in radians per second. */
   public Measure<Voltage> getCharacterizationVoltage() {
-    return Volts.of(inputs.flywheelAppliedVolts);
+      return Volts.of(shooterInputs.flywheelAppliedVolts);
     }
 
     /** Returns the current velocity in radians per second. */
   public Measure<Current> getCharacterizationCurrent() {
     var sum = 0.0;
-    for (double flywheelCurrentAmp : inputs.flywheelCurrentAmps) sum += flywheelCurrentAmp;
+      for (double flywheelCurrentAmp : shooterInputs.flywheelCurrentAmps) sum += flywheelCurrentAmp;
 
-    sum = (inputs.flywheelCurrentAmps.length > 0) ? sum / inputs.flywheelCurrentAmps.length : 0.0;
+      sum = (shooterInputs.flywheelCurrentAmps.length > 0) ? sum / shooterInputs.flywheelCurrentAmps.length : 0.0;
     return Amps.of(sum);
   }
 
