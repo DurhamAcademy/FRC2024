@@ -104,31 +104,22 @@ public class Shooter extends SubsystemBase {
     return Units.radiansPerSecondToRotationsPerMinute(inputs.flywheelVelocityRadPerSec);
   }
 
-  /**
-   * Returns the current velocity in radians per second.
-   */
+  /** Returns the current velocity in radians per second. */
   public Measure<Velocity<Angle>> getCharacterizationVelocity() {
     return RadiansPerSecond.of(inputs.flywheelVelocityRadPerSec);
   }
 
-  /**
-   * Returns the current velocity in radians per second.
-   */
+  /** Returns the current velocity in radians per second. */
   public Measure<Angle> getCharacterizationPosition() {
     return Radians.of(inputs.flywheelPositionRad);
   }
 
-
-  /**
-   * Returns the current velocity in radians per second.
-   */
+  /** Returns the current velocity in radians per second. */
   public Measure<Voltage> getCharacterizationVoltage() {
     return Volts.of(inputs.flywheelAppliedVolts);
   }
 
-  /**
-   * Returns the current velocity in radians per second.
-   */
+  /** Returns the current velocity in radians per second. */
   public Measure<Current> getCharacterizationCurrent() {
     var sum = 0.0;
     for (double flywheelCurrentAmp : inputs.flywheelCurrentAmps) sum += flywheelCurrentAmp;

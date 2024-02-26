@@ -31,6 +31,7 @@ import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine.Config;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine.Direction;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine.Mechanism;
 import frc.robot.commands.DriveCommands;
+import frc.robot.commands.IntakeCommands;
 import frc.robot.subsystems.climb.Climb;
 import frc.robot.subsystems.climb.ClimbIO;
 import frc.robot.subsystems.climb.ClimbIOSparkMax;
@@ -212,23 +213,9 @@ public class RobotContainer {
 
         // ---- INTAKE COMMANDS ----
         driverController
-            .leftBumper() // not a()
-            .whileTrue(
-                new RunCommand(
-                    () -> {
-                      intake.setIntakePosition(Rotation2d.fromDegrees(0.0));
-                      intake.setRollerPercentage(0.75);
-                    },
-                    intake));
-        driverController
-            .rightBumper()
-            .whileTrue(
-                new RunCommand(
-                    () -> {
-                      intake.setIntakePosition(Rotation2d.fromDegrees(-90.0));
-                      intake.setRollerPercentage(0.0);
-                    },
-                    intake));
+                .leftTrigger() // not a()
+                .whileTrue(IntakeCommands.intake(intake));
+        driverController.rightBumper().whileTrue(IntakeCommands.idle(intake));
 
         // ---- SHOOTER COMMANDS ----
         driverController
@@ -294,33 +281,33 @@ public class RobotContainer {
                             intake))));
         break;
       case EverythingElse:
-          var shooterSysId =
-                  new SysIdRoutine(
-                          new Config(Voltage.per(Units.Second).of(.1), Voltage.of(9.0), Seconds.of(120)),
-                          new Mechanism(
-                                  shooter::runVoltage,
-                                  (log) -> {
-                                      var motor = log.motor("Shooter");
-                                      motor.voltage(shooter.getCharacterizationVoltage());
-                                      motor.angularPosition(shooter.getCharacterizationPosition());
-                                      motor.angularVelocity(shooter.getCharacterizationVelocity());
-                                      motor.current(shooter.getCharacterizationCurrent());
-                                  },
-                                  shooter,
-                                  "FlywheelMotors"));
-          driverController
-                  .a()
-                  .onTrue(
-                          shooterSysId.dynamic(Direction.kForward).withTimeout(5)
-                                  .andThen(
-                                          new WaitCommand(5),
-                                          shooterSysId.dynamic(Direction.kReverse).withTimeout(5),
-                                          new WaitCommand(5),
-                                          shooterSysId.quasistatic(Direction.kForward).withTimeout(120),
-                                          new WaitCommand(5),
-                                          shooterSysId.quasistatic(Direction.kReverse).withTimeout(120)
-                                  )
-                  );
+        var shooterSysId =
+                new SysIdRoutine(
+                        new Config(Voltage.per(Units.Second).of(.1), Voltage.of(9.0), Seconds.of(120)),
+                        new Mechanism(
+                                shooter::runVoltage,
+                                (log) -> {
+                                  var motor = log.motor("Shooter");
+                                  motor.voltage(shooter.getCharacterizationVoltage());
+                                  motor.angularPosition(shooter.getCharacterizationPosition());
+                                  motor.angularVelocity(shooter.getCharacterizationVelocity());
+                                  motor.current(shooter.getCharacterizationCurrent());
+                                },
+                                shooter,
+                                "FlywheelMotors"));
+        driverController
+                .a()
+                .onTrue(
+                        shooterSysId
+                                .dynamic(Direction.kForward)
+                                .withTimeout(5)
+                                .andThen(
+                                        new WaitCommand(5),
+                                        shooterSysId.dynamic(Direction.kReverse).withTimeout(5),
+                                        new WaitCommand(5),
+                                        shooterSysId.quasistatic(Direction.kForward).withTimeout(120),
+                                        new WaitCommand(5),
+                                        shooterSysId.quasistatic(Direction.kReverse).withTimeout(120)));
         break;
     }
   }
