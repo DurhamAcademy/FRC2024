@@ -15,7 +15,6 @@ package frc.robot.subsystems.feeder;
 
 import edu.wpi.first.math.system.plant.DCMotor;
 import edu.wpi.first.wpilibj.simulation.FlywheelSim;
-import edu.wpi.first.wpilibj.simulation.SingleJointedArmSim;
 
 public class FeederIOSim implements FeederIO {
   private final FlywheelSim sim =

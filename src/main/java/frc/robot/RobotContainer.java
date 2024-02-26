@@ -228,7 +228,7 @@ public class RobotContainer {
                     .until(() -> !feeder.getSensorFeed()));
 
         // prepare the shooter for dumping into the amp
-          controller.y().onTrue(Commands.runOnce(() -> modeHelper.switchTo(Mode.AMP)));
+          driverController.y().onTrue(Commands.runOnce(() -> modeHelper.switchTo(Mode.AMP)));
 
         /*
             .toggleOnTrue(
@@ -269,10 +269,10 @@ public class RobotContainer {
             .rightTrigger()
             .whileTrue(
                 Commands.run(
-                    () -> shooter.runVolts(controller.getRightTriggerAxis() * 12.0), shooter));
+                    () -> shooter.shooterRunVolts(driverController.getRightTriggerAxis() * 12.0), shooter));
         driverController
             .leftTrigger()
-            .and(controller.rightTrigger().negate())
+            .and(driverController.rightTrigger().negate());
         driverController
                 .b()
             .whileTrue(
@@ -284,7 +284,7 @@ public class RobotContainer {
             .rightTrigger()
             .whileTrue(
                 new StartEndCommand(
-                    () -> shooter.shooterRunVolts(12.0 * controller.getRightTriggerAxis()),
+                    () -> shooter.shooterRunVolts(12.0 * driverController.getRightTriggerAxis()),
                     () -> {
                       shooter.stopShooter();
                       shooter.shooterRunVolts(0.0);
@@ -355,7 +355,7 @@ public class RobotContainer {
                     },
                     shooter,
                     "FlywheelMotors"));
-        controller
+        driverController
                 .a()
                 .onTrue(
                         shooterSysId.dynamic(Direction.kForward).withTimeout(5)
