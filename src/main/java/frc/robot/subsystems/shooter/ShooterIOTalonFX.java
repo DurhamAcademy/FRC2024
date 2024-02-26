@@ -22,7 +22,7 @@ import com.ctre.phoenix6.signals.NeutralModeValue;
 import edu.wpi.first.math.util.Units;
 
 public class ShooterIOTalonFX implements ShooterIO {
-  private static final double GEAR_RATIO = 1.0;
+  private static final double GEAR_RATIO = 1.5;
 
   private final TalonFX leader = new TalonFX(40);
   private final TalonFX follower = new TalonFX(41);
@@ -69,7 +69,7 @@ public class ShooterIOTalonFX implements ShooterIO {
             followerProcessorTemp);
     inputs.flywheelPositionRad = leaderPosition.getValueAsDouble();
     inputs.flywheelVelocityRadPerSec =
-        Units.rotationsToRadians(leaderVelocity.getValueAsDouble()) / GEAR_RATIO;
+        Units.rotationsToRadians(leaderVelocity.getValueAsDouble()) * GEAR_RATIO;
     inputs.flywheelAppliedVolts = leaderAppliedVolts.getValueAsDouble();
     inputs.flywheelCurrentAmps =
         new double[] {leaderCurrent.getValueAsDouble(), followerCurrent.getValueAsDouble()};

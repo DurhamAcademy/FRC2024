@@ -14,12 +14,13 @@
 package frc.robot.subsystems.feeder;
 
 import edu.wpi.first.math.system.plant.DCMotor;
+import edu.wpi.first.wpilibj.simulation.FlywheelSim;
 import edu.wpi.first.wpilibj.simulation.SingleJointedArmSim;
 
 public class FeederIOSim implements FeederIO {
-  private final SingleJointedArmSim sim =
-      new SingleJointedArmSim(
-          DCMotor.getNEO(1), 1.5, 0.025, 0.1, -Math.PI / 4, Math.PI / 2, true, 0);
+  private final FlywheelSim sim =
+          new FlywheelSim(
+              DCMotor.getNEO(1), 1.5, 0.025);
   //  private ProfiledPIDController pid = new ProfiledPIDController(0.0, 0.0, 0.0);
   //  private SimpleMotorFeedforward ffModel = new SimpleMotorFeedforward(0.0, 0.0);
 
@@ -36,8 +37,8 @@ public class FeederIOSim implements FeederIO {
 
     sim.update(0.02);
 
-    inputs.positionRad = sim.getAngleRads();
-    inputs.velocityRadPerSec = sim.getVelocityRadPerSec();
+    inputs.positionRad = sim.getAngularVelocityRadPerSec();
+    inputs.velocityRadPerSec = sim.getAngularVelocityRadPerSec();
     inputs.appliedVolts = appliedVolts;
     inputs.currentAmps = new double[] {sim.getCurrentDrawAmps()};
   }
@@ -51,7 +52,7 @@ public class FeederIOSim implements FeederIO {
 
   @Override
   public void stop() {
-    sim.setState(sim.getAngleRads(), 0.0);
+    sim.setState(sim.getAngularVelocityRadPerSec());
     setVoltage(0.0);
   }
 }
