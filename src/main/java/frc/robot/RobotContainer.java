@@ -202,19 +202,12 @@ public class RobotContainer {
                         },
                         drive)
                     .ignoringDisable(true));
-
-        // ---- FEEDER COMMANDS ----
-        driverController
-            .leftTrigger()
-            .and(feeder::getSensorFeed)
-            .whileTrue(
-                new RunCommand(() -> feeder.runVolts(6.0), feeder)
-                    .until(() -> !feeder.getSensorFeed()));
-
         // ---- INTAKE COMMANDS ----
         driverController
-                .leftTrigger() // not a()
-                .whileTrue(IntakeCommands.intakeCommand(intake).alongWith(IntakeCommands.feedToBeamBreak(feeder)))
+                .leftTrigger()
+                .whileTrue(
+                        IntakeCommands.intakeCommand(intake)
+                                .alongWith(IntakeCommands.feedToBeamBreak(feeder)))
                 .onFalse(IntakeCommands.feedToBeamBreak(feeder).withTimeout(5));
         driverController.rightBumper().whileTrue(IntakeCommands.idleCommand(intake));
 

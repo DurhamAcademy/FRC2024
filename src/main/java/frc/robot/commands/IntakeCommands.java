@@ -26,8 +26,11 @@ public class IntakeCommands {
     }
 
     public static Command feedToBeamBreak(Feeder feeder) {
-        return new RunCommand(() -> {
-            feeder.runVolts(8);
-        }, feeder).until(feeder::getSensorFeed);
+        return new RunCommand(
+                () -> {
+                    feeder.runVolts(8);
+                },
+                feeder)
+                .until(feeder::getSensorFeed);
     }
 }
