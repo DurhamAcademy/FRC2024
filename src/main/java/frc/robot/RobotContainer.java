@@ -28,6 +28,7 @@ import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine.Config;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine.Direction;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine.Mechanism;
 import frc.robot.commands.DriveCommands;
+import frc.robot.commands.FeederCommands;
 import frc.robot.commands.IntakeCommands;
 import frc.robot.subsystems.climb.Climb;
 import frc.robot.subsystems.climb.ClimbIO;
@@ -84,7 +85,7 @@ public class RobotContainer {
   private final LoggedDashboardNumber flywheelSpeedInput =
       new LoggedDashboardNumber("Flywheel Speed", 1500.0);
 
-    public static SysIDMode sysIDMode = SysIDMode.Disabled;
+  public static SysIDMode sysIDMode = SysIDMode.EverythingElse;
 
   /** The container for the robot. Contains subsystems, OI devices, and commands. */
   public RobotContainer() {
@@ -185,8 +186,11 @@ public class RobotContainer {
                   intake.setRollerPercentage(0.0);
                 },
                 intake));
-        feeder.setDefaultCommand(new RunCommand(() -> feeder.runVolts(6.0), feeder).onlyWhile(() -> !feeder.getBeamBroken()));
-        shooter.setDefaultCommand(new RunCommand(() -> shooter.shooterRunVolts(0.0), shooter));
+        feeder.setDefaultCommand(new RunCommand(() -> feeder.runVolts(0.0), feeder));
+        shooter.setDefaultCommand(new RunCommand(() -> {
+          shooter.shooterRunVolts(0.0);
+          shooter.setTargetShooterAngle(Rotation2d.fromRadians(.5));
+        }, shooter));
         // CLIMB DEFAULT COMMAND
         climb.setDefaultCommand(
             Commands.run(
@@ -222,38 +226,15 @@ public class RobotContainer {
         driverController.rightBumper().whileTrue(IntakeCommands.idleCommand(intake));
 
         // ---- SHOOTER COMMANDS ----
-        driverController
-            .rightTrigger()
+        operatorController
+                .y()
             .whileTrue(
                 Commands.run(
-                        () -> shooter.shooterRunVolts(driverController.getRightTriggerAxis() * 12.0),
-                    shooter));
-        driverController.leftTrigger().and(driverController.rightTrigger().negate());
-        driverController
-                .b()
-            .whileTrue(
-                Commands.startEnd(
-                    () -> shooter.shooterRunVelocity(flywheelSpeedInput.get()),
-                    shooter::stopShooter,
-                    shooter));
-        driverController
-            .rightTrigger()
-            .whileTrue(
-                new StartEndCommand(
-                        () -> shooter.shooterRunVolts(12.0 * driverController.getRightTriggerAxis()),
-                    () -> {
-                      shooter.stopShooter();
-                      shooter.shooterRunVolts(0.0);
-                    },
-                    shooter));
-        driverController
-                .x()
-            .whileTrue(
-                Commands.startEnd(
-                    () -> shooter.shooterRunVelocity(flywheelSpeedInput.get()),
-                    shooter::stopShooter,
-                    shooter));
-
+                        () -> {
+                          shooter.shooterRunVelocity(3000);
+                          shooter.setTargetShooterAngle(Rotation2d.fromRadians(0.0));
+                        },
+                        shooter).andThen(new WaitUntilCommand(() -> (Math.abs(3000 - shooter.getShooterVelocityRPM()) < 50.0)).andThen(FeederCommands.feedToShooter(feeder))));
         break;
       case DriveMotors:
         drive.setDefaultCommand(
@@ -299,7 +280,7 @@ public class RobotContainer {
       case EverythingElse:
         var shooterSysId =
                 new SysIdRoutine(
-                        new Config(Voltage.per(Units.Second).of(.1), Voltage.of(9.0), Seconds.of(120)),
+                        new Config(Voltage.per(Units.Second).of(.25), Voltage.of(9.0), Seconds.of(36)),
                         new Mechanism(
                                 shooter::shooterRunVolts,
                                 (log) -> {
@@ -309,21 +290,25 @@ public class RobotContainer {
                                   motor.angularVelocity(shooter.getCharacterizationVelocity());
                                   motor.current(shooter.getCharacterizationCurrent());
                                 },
-                                shooter,
+                                climb,
                                 "FlywheelMotors"));
         driverController
                 .a()
                 .onTrue(
                         shooterSysId
                                 .dynamic(Direction.kForward)
-                                .withTimeout(5)
+                                .withTimeout(3)
                                 .andThen(
                                         new WaitCommand(5),
-                                        shooterSysId.dynamic(Direction.kReverse).withTimeout(5),
+                                        shooterSysId.dynamic(Direction.kReverse).withTimeout(3),
                                         new WaitCommand(5),
-                                        shooterSysId.quasistatic(Direction.kForward).withTimeout(120),
+                                        shooterSysId.quasistatic(Direction.kForward).withTimeout(36),
                                         new WaitCommand(5),
-                                        shooterSysId.quasistatic(Direction.kReverse).withTimeout(120)));
+                                        shooterSysId.quasistatic(Direction.kReverse).withTimeout(36))
+                                .alongWith(new RunCommand(() -> {
+                                  shooter.setTargetShooterAngle(Rotation2d.fromRadians(0.0));
+                                  shooter.setCharacterizeMode(true);
+                                })));
         break;
     }
   }

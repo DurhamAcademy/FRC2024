@@ -22,7 +22,7 @@ import com.ctre.phoenix6.signals.NeutralModeValue;
 import edu.wpi.first.math.util.Units;
 
 public class ShooterIOTalonFX implements ShooterIO {
-  private static final double GEAR_RATIO = 1.0;
+  private static final double GEAR_RATIO = 1.5;
 
   private final TalonFX leader = new TalonFX(40);
   private final TalonFX follower = new TalonFX(41);
@@ -41,7 +41,7 @@ public class ShooterIOTalonFX implements ShooterIO {
 
   public ShooterIOTalonFX() {
     var config = new TalonFXConfiguration();
-    config.CurrentLimits.StatorCurrentLimit = 50.0;
+    config.CurrentLimits.StatorCurrentLimit = 80.0;
     config.CurrentLimits.StatorCurrentLimitEnable = true;
     config.MotorOutput.NeutralMode = NeutralModeValue.Coast;
     leader.getConfigurator().apply(config);
@@ -67,9 +67,9 @@ public class ShooterIOTalonFX implements ShooterIO {
             leaderPosition, leaderVelocity, leaderAppliedVolts, leaderCurrent, followerCurrent, leaderDeviceTemp,
             leaderAncillaryDeviceTemp, leaderProcessorTemp, followerDeviceTemp, followerAncillaryDeviceTemp,
             followerProcessorTemp);
-    inputs.flywheelPositionRad = leaderPosition.getValueAsDouble();
+    inputs.flywheelPositionRad = leaderPosition.getValueAsDouble() * GEAR_RATIO;
     inputs.flywheelVelocityRadPerSec =
-        Units.rotationsToRadians(leaderVelocity.getValueAsDouble()) / GEAR_RATIO;
+            Units.rotationsToRadians(leaderVelocity.getValueAsDouble()) * GEAR_RATIO;
     inputs.flywheelAppliedVolts = leaderAppliedVolts.getValueAsDouble();
     inputs.flywheelCurrentAmps =
         new double[] {leaderCurrent.getValueAsDouble(), followerCurrent.getValueAsDouble()};
