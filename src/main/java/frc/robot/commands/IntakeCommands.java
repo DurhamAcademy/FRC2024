@@ -31,6 +31,6 @@ public class IntakeCommands {
                     feeder.runVolts(8);
                 },
                 feeder)
-                .until(feeder::getSensorFeed);
+                .until(feeder::getBeamBroken);
     }
 }

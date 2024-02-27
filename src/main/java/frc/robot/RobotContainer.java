@@ -185,7 +185,7 @@ public class RobotContainer {
                   intake.setRollerPercentage(0.0);
                 },
                 intake));
-        feeder.setDefaultCommand(new RunCommand(() -> feeder.runVolts(6.0), feeder));
+        feeder.setDefaultCommand(new RunCommand(() -> feeder.runVolts(6.0), feeder).onlyWhile(() -> !feeder.getBeamBroken()));
         shooter.setDefaultCommand(new RunCommand(() -> shooter.shooterRunVolts(0.0), shooter));
         // CLIMB DEFAULT COMMAND
         climb.setDefaultCommand(

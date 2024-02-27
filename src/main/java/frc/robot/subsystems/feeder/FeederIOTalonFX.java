@@ -7,14 +7,17 @@ import com.ctre.phoenix6.controls.VoltageOut;
 import com.ctre.phoenix6.hardware.TalonFX;
 import com.ctre.phoenix6.signals.InvertedValue;
 import com.ctre.phoenix6.signals.NeutralModeValue;
-import edu.wpi.first.math.util.Units;
-import frc.robot.subsystems.shooter.ShooterIO;
+import edu.wpi.first.wpilibj.DigitalInput;
+
+import static edu.wpi.first.math.util.Units.rotationsToRadians;
 
 public class FeederIOTalonFX implements FeederIO {
-    @Override
-    public void updateInputs(FeederIOInputs inputs) {
-        FeederIO.super.updateInputs(inputs);
-    }
+
+    private static final int conveyorSensorNum = 9;
+    private DigitalInput conveyorSensor;
+
+
+
 
     private final TalonFX feedMotor = new TalonFX(43);
     private final StatusSignal<Double> feedMotorPosition = feedMotor.getPosition();
@@ -24,6 +27,7 @@ public class FeederIOTalonFX implements FeederIO {
     private final StatusSignal<Double> feedMotorTemperature = feedMotor.getDeviceTemp();
 
     public FeederIOTalonFX() {
+        conveyorSensor = new DigitalInput(conveyorSensorNum);
         var config = new TalonFXConfiguration();
         config.CurrentLimits.StatorCurrentLimit = 50.0;
         config.CurrentLimits.StatorCurrentLimitEnable = true;
@@ -37,23 +41,25 @@ public class FeederIOTalonFX implements FeederIO {
                 feedMotorVelocity,
                 feedMotorAppliedVolts,
                 feedMotorCurrent,
-                feedMotorCurrent);
+                feedMotorTemperature);
         feedMotor.optimizeBusUtilization();
     }
 
-    public void updateInputs(ShooterIO.ShooterIOInputs inputs) {
+    public void updateInputs(FeederIO.FeederIOInputs inputs) {
         BaseStatusSignal.refreshAll(
                 feedMotorPosition,
                 feedMotorVelocity,
                 feedMotorAppliedVolts,
                 feedMotorCurrent,
                 feedMotorTemperature);
-        inputs.flywheelPositionRad = Units.rotationsToRadians(feedMotorPosition.getValueAsDouble());
-        inputs.flywheelVelocityRadPerSec =
-                Units.rotationsToRadians(feedMotorVelocity.getValueAsDouble());
-        inputs.flywheelAppliedVolts = feedMotorAppliedVolts.getValueAsDouble();
-        inputs.flywheelCurrentAmps = new double[] {feedMotorCurrent.getValueAsDouble()};
-        inputs.flywheelTemperature = new double[] {feedMotorTemperature.getValueAsDouble()};
+        inputs.positionRad = rotationsToRadians(feedMotorPosition.getValueAsDouble());
+        inputs.velocityRadPerSec =
+                rotationsToRadians(feedMotorVelocity.getValueAsDouble());
+        inputs.appliedVolts = feedMotorAppliedVolts.getValueAsDouble();
+        inputs.currentAmps = new double[]{feedMotorCurrent.getValueAsDouble()};
+        inputs.temperature = new double[]{feedMotorTemperature.getValueAsDouble()};
+
+        inputs.beamUnobstructed = conveyorSensor.get();
     }
 
     @Override

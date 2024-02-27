@@ -4,7 +4,6 @@ import edu.wpi.first.math.controller.ProfiledPIDController;
 import edu.wpi.first.math.controller.SimpleMotorFeedforward;
 import edu.wpi.first.math.trajectory.TrapezoidProfile;
 import edu.wpi.first.math.util.Units;
-import edu.wpi.first.wpilibj.DigitalInput;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants;
 import org.littletonrobotics.junction.AutoLogOutput;
@@ -17,16 +16,11 @@ public class Feeder extends SubsystemBase {
   private final ProfiledPIDController pidController;
   double offset = 0.0;
 
-  private DigitalInput conveyorSensor;
-
-  private static final int conveyorSensorNum = 0;
-
-  public boolean getSensorFeed() {
-    return conveyorSensor.get();
+  public boolean getBeamBroken() {
+    return !inputs.beamUnobstructed;
   }
 
   public Feeder(FeederIO io) {
-    conveyorSensor = new DigitalInput(conveyorSensorNum);
     this.io = io;
 
     // Switch constants based on mode (the physics simulator is treated as a
