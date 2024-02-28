@@ -57,9 +57,9 @@ public class Feeder extends SubsystemBase {
   @Override
   public void periodic() {
     io.updateInputs(inputs);
-    io.setVoltage(
-        pidController.calculate(inputs.positionRad)
-            + ffModel.calculate(pidController.getSetpoint().velocity));
+//    io.setVoltage(
+//        pidController.calculate(inputs.positionRad)
+//            + ffModel.calculate(pidController.getSetpoint().velocity));
     Logger.processInputs("Flywheel", inputs);
   }
 
