@@ -78,12 +78,12 @@ public class Drive extends SubsystemBase {
               new Translation3d(
                       inchesToMeters(-10.18),
                       inchesToMeters(-7.074),
-                      inchesToMeters(8.53)
+                      inchesToMeters(8.53) - 0.035
               ),
           new Rotation3d(
                   0,
-                  degreesToRadians(55),
-                  degreesToRadians(177)
+                  degreesToRadians(55 - 90),
+                  degreesToRadians(3)
           )
       ); // Cam mounted facing forward, half a meter forward of center, half a meter up
   // from center.
