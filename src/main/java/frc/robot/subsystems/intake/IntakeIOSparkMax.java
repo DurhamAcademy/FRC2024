@@ -44,10 +44,12 @@ public class IntakeIOSparkMax implements IntakeIO {
     roller.setCANTimeout(250);
 
     arm.setInverted(true);
-    //    roller.follow(arm, false);
+    arm.enableVoltageCompensation(12.0);
+    arm.setSmartCurrentLimit(30);
 
-    //    arm.enableVoltageCompensation(12.0);
-    //    roller.setSmartCurrentLimit(30);
+    roller.setInverted(false);
+    roller.enableVoltageCompensation(12.0);
+    roller.setSmartCurrentLimit(30);
 
     encoder.setInverted(false);
 
