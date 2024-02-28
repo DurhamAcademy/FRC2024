@@ -29,7 +29,8 @@ import java.util.function.DoubleSupplier;
 
 public class DriveCommands {
 
-  private static final double DEADBAND = 0.1;
+    private static final double DEADBAND = 0.1;
+  private static final double DEADBANDX = 1.0;
 
   private DriveCommands() {}
 
@@ -68,6 +69,7 @@ public class DriveCommands {
                   linearVelocity.getY() * drive.getMaxLinearSpeedMetersPerSec(),
                   omega * drive.getMaxAngularSpeedRadPerSec(),
                   drive.getRotation()));
+
         },
         drive);
   }

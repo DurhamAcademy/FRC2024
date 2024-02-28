@@ -1,13 +1,16 @@
 package frc.robot.subsystems.feeder;
 
-import static com.revrobotics.CANSparkLowLevel.MotorType.kBrushless;
-
 import com.revrobotics.CANSparkMax;
 import edu.wpi.first.math.util.Units;
+import edu.wpi.first.wpilibj.DigitalInput;
+
+import static com.revrobotics.CANSparkLowLevel.MotorType.kBrushless;
 
 public class FeederIOSparkMax implements FeederIO {
   private static final double GEAR_RATIO = 1.0;
   CANSparkMax feeder = new CANSparkMax(0, kBrushless);
+  private static final int conveyorSensorNum = 9;
+  private DigitalInput conveyorSensor;
 
   public FeederIOSparkMax() {
     feeder.restoreFactoryDefaults();
@@ -20,6 +23,9 @@ public class FeederIOSparkMax implements FeederIO {
     feeder.setSmartCurrentLimit(30);
 
     feeder.burnFlash();
+
+    DigitalInput
+            conveyorSensor = new DigitalInput(conveyorSensorNum);
   }
 
   @Override
@@ -30,6 +36,8 @@ public class FeederIOSparkMax implements FeederIO {
     inputs.appliedVolts = feeder.getAppliedOutput() * feeder.getBusVoltage();
     inputs.currentAmps = new double[] {feeder.getOutputCurrent()};
     inputs.temperature = new double[] {feeder.getMotorTemperature()};
+
+    inputs.beamUnobstructed = conveyorSensor.get();
   }
 
   @Override

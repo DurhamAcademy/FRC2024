@@ -40,9 +40,4 @@ public class HoodIOSparkMax implements HoodIO {
       Logger.recordOutput("HoodVoltage", volts);
       leader.setVoltage(MathUtil.clamp(volts, -5.0, 5.0));
   }
-
-  @Override
-  public void wristStop() {
-    leader.stopMotor();
-  }
 }
