@@ -113,11 +113,7 @@ public class Drive extends SubsystemBase {
     AutoBuilder.configureHolonomic(
         this::getPose,
         pose1 -> {
-          try {
             setPose(pose1);
-          } catch (GyroConnectionException e) {
-            throw new RuntimeException(e);
-          }
         },
         () -> kinematics.toChassisSpeeds(getModuleStates()),
         this::runVelocity,
@@ -152,6 +148,8 @@ public class Drive extends SubsystemBase {
     noGyroPoseEstimation = null;
     noGyroRotation = null;
   }
+
+
 
   public void periodic() {
     gyroIO.updateInputs(gyroInputs);
@@ -363,7 +361,7 @@ public class Drive extends SubsystemBase {
   }
 
   /** Resets the current odometry pose. */
-  public void setPose(Pose2d pose) throws GyroConnectionException {
+  public void setPose(Pose2d pose) {
     this.pose = pose;
     if (gyroInputs.connected)
       this.poseEstimator.resetPosition(gyroInputs.yawPosition, swerveModulePositions, pose);

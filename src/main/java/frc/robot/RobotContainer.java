@@ -29,6 +29,7 @@ import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine.Direction;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine.Mechanism;
 import frc.robot.commands.DriveCommands;
 import frc.robot.commands.IntakeCommands;
+import frc.robot.commands.ShooterCommands;
 import frc.robot.subsystems.climb.Climb;
 import frc.robot.subsystems.climb.ClimbIO;
 import frc.robot.subsystems.climb.ClimbIOSparkMax;
@@ -101,7 +102,7 @@ public class RobotContainer {
                     new ModuleIOSparkMax(1),
                     new ModuleIOSparkMax(2),
                     new ModuleIOSparkMax(3));
-        shooter = new Shooter(new ShooterIOTalonFX(), new HoodIOSparkMax());
+        shooter = new Shooter(new ShooterIOTalonFX(),new HoodIOSparkMax()); // new HoodIOSparkMax() {}
           feeder = new Feeder(new FeederIOTalonFX());
           intake = new Intake(new IntakeIOSparkMax());
         climb = new Climb(new ClimbIOSparkMax());
@@ -125,7 +126,8 @@ public class RobotContainer {
                 new ModuleIOSim(),
                 new ModuleIOSim(),
                 new ModuleIOSim());
-        shooter = new Shooter(new ShooterIOSim(), new HoodIO() {});
+        shooter = new Shooter(new ShooterIOSim(), new HoodIO() {
+        });
         feeder = new Feeder(new FeederIOSim());
         intake = new Intake(new IntakeIOSim());
         climb = new Climb(new ClimbIO() {});
@@ -215,12 +217,7 @@ public class RobotContainer {
         operatorController
                 .y()
             .whileTrue(
-                Commands.run(
-                        () -> {
-                          shooter.shooterRunVelocity(3000);
-                          shooter.setTargetShooterAngle(Rotation2d.fromRadians(0.0));
-                        },
-                        shooter).alongWith(Commands.waitUntil(shooter::allAtSetpoint).andThen(feedToShooter(feeder).withInterruptBehavior(kCancelIncoming))));
+                    ShooterCommands.autoAim(shooter, drive).alongWith(Commands.waitUntil(shooter::allAtSetpoint).andThen(feedToShooter(feeder).withInterruptBehavior(kCancelIncoming))));
 
         break;
       case DriveMotors:

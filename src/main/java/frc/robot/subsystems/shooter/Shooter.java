@@ -21,6 +21,9 @@ import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.trajectory.TrapezoidProfile;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.units.*;
+import edu.wpi.first.wpilibj.smartdashboard.Mechanism2d;
+import edu.wpi.first.wpilibj.smartdashboard.MechanismLigament2d;
+import edu.wpi.first.wpilibj.smartdashboard.MechanismRoot2d;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants;
 import org.littletonrobotics.junction.AutoLogOutput;
@@ -41,6 +44,9 @@ public class Shooter extends SubsystemBase {
     private ProfiledPIDController hoodFB;
     private SimpleMotorFeedforward shooterVelocityFF;
     private boolean characterizeMode = false;
+    Mechanism2d mech1 = new Mechanism2d(3,3);
+    MechanismRoot2d root = mech1.getRoot("shooter", 0 ,0);
+    MechanismLigament2d sState = root.append(new MechanismLigament2d("shooter", 0.14, -90.0));
 
     /**
      * Creates a new Shooter.
@@ -48,6 +54,8 @@ public class Shooter extends SubsystemBase {
     public Shooter(ShooterIO io, HoodIO hoodIO) {
         this.shooterIO = io;
         this.hoodIO = hoodIO;
+        sState.setLength(0.14); //im not sure if this should be here
+
         // Switch constants based on mode (the physics simulator is treated as a
         // separate robot with different tuning)
         switch (Constants.currentMode) {
@@ -76,6 +84,7 @@ public class Shooter extends SubsystemBase {
             default:
                 break;
         }
+
     }
 
     @Override
@@ -102,8 +111,10 @@ public class Shooter extends SubsystemBase {
 //        targetHoodAngleRad =
 //                hoodInputs.hoodPositionRad * HOOD_ENCODER_ANGLE_TO_REAL_ANGLE_RATIO
 //                        + HOOD_ENCODER_ANGLE_TO_REAL_ANGLE_OFFSET;
+        sState.setAngle(hoodInputs.hoodPositionRad);
         Logger.processInputs("Shooter", shooterInputs);
         Logger.processInputs("Hood", hoodInputs);
+        Logger.recordOutput("shooter", mech1);
     }
 
     @AutoLogOutput
