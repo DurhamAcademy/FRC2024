@@ -13,19 +13,19 @@
 
 package frc.robot.subsystems.shooter;
 
+import com.revrobotics.CANSparkFlex;
 import com.revrobotics.CANSparkLowLevel.MotorType;
-import com.revrobotics.CANSparkMax;
 import com.revrobotics.RelativeEncoder;
 import edu.wpi.first.math.util.Units;
 
-public class ShooterIOSparkMax implements ShooterIO {
+public class ShooterIOSparkFlex implements ShooterIO {
   private static final double GEAR_RATIO = 1.5;
 
-  private final CANSparkMax leader = new CANSparkMax(0, MotorType.kBrushless);
-  private final CANSparkMax follower = new CANSparkMax(1, MotorType.kBrushless);
+  private final CANSparkFlex leader = new CANSparkFlex(0, MotorType.kBrushless);
+  private final CANSparkFlex follower = new CANSparkFlex(1, MotorType.kBrushless);
   private final RelativeEncoder encoder = leader.getEncoder();
 
-  public ShooterIOSparkMax() {
+  public ShooterIOSparkFlex() {
     leader.restoreFactoryDefaults();
     follower.restoreFactoryDefaults();
 

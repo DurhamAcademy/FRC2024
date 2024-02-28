@@ -2,13 +2,15 @@ package frc.robot.subsystems.feeder;
 
 import edu.wpi.first.math.controller.ProfiledPIDController;
 import edu.wpi.first.math.controller.SimpleMotorFeedforward;
+import edu.wpi.first.math.filter.Debouncer;
 import edu.wpi.first.math.trajectory.TrapezoidProfile;
 import edu.wpi.first.math.util.Units;
-import edu.wpi.first.wpilibj.DigitalInput;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants;
 import org.littletonrobotics.junction.AutoLogOutput;
 import org.littletonrobotics.junction.Logger;
+
+import static edu.wpi.first.math.filter.Debouncer.DebounceType.kBoth;
 
 public class Feeder extends SubsystemBase {
   private final FeederIO io;
@@ -17,16 +19,13 @@ public class Feeder extends SubsystemBase {
   private final ProfiledPIDController pidController;
   double offset = 0.0;
 
-  private DigitalInput conveyorSensor;
+  Debouncer debouncer = new Debouncer(.05, kBoth);
 
-  private static final int conveyorSensorNum = 0;
-
-  public boolean getSensorFeed() {
-    return conveyorSensor.get();
+  public boolean getBeamBroken() {
+    return !debouncer.calculate(inputs.beamUnobstructed);
   }
 
   public Feeder(FeederIO io) {
-    conveyorSensor = new DigitalInput(conveyorSensorNum);
     this.io = io;
 
     // Switch constants based on mode (the physics simulator is treated as a
@@ -63,9 +62,9 @@ public class Feeder extends SubsystemBase {
   @Override
   public void periodic() {
     io.updateInputs(inputs);
-    io.setVoltage(
-        pidController.calculate(inputs.positionRad)
-            + ffModel.calculate(pidController.getSetpoint().velocity));
+//    io.setVoltage(
+//        pidController.calculate(inputs.positionRad)
+//            + ffModel.calculate(pidController.getSetpoint().velocity));
     Logger.processInputs("Flywheel", inputs);
   }
 

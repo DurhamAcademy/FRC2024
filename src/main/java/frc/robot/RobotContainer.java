@@ -13,9 +13,6 @@
 
 package frc.robot;
 
-import static edu.wpi.first.units.BaseUnits.Voltage;
-import static edu.wpi.first.units.Units.Seconds;
-
 import com.pathplanner.lib.auto.AutoBuilder;
 import com.pathplanner.lib.auto.NamedCommands;
 import edu.wpi.first.math.MathUtil;
@@ -24,15 +21,15 @@ import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.units.Units;
 import edu.wpi.first.wpilibj.GenericHID;
 import edu.wpi.first.wpilibj.XboxController;
-import edu.wpi.first.wpilibj2.command.Command;
-import edu.wpi.first.wpilibj2.command.Commands;
-import edu.wpi.first.wpilibj2.command.RunCommand;
+import edu.wpi.first.wpilibj2.command.*;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine.Config;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine.Direction;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine.Mechanism;
 import frc.robot.commands.DriveCommands;
+import frc.robot.commands.FeederCommands;
+import frc.robot.commands.IntakeCommands;
 import frc.robot.subsystems.climb.Climb;
 import frc.robot.subsystems.climb.ClimbIO;
 import frc.robot.subsystems.climb.ClimbIOSparkMax;
@@ -40,16 +37,19 @@ import frc.robot.subsystems.drive.*;
 import frc.robot.subsystems.feeder.Feeder;
 import frc.robot.subsystems.feeder.FeederIO;
 import frc.robot.subsystems.feeder.FeederIOSim;
+import frc.robot.subsystems.feeder.FeederIOTalonFX;
 import frc.robot.subsystems.intake.Intake;
 import frc.robot.subsystems.intake.IntakeIO;
 import frc.robot.subsystems.intake.IntakeIOSim;
 import frc.robot.subsystems.intake.IntakeIOSparkMax;
-import frc.robot.subsystems.shooter.Shooter;
-import frc.robot.subsystems.shooter.ShooterIO;
-import frc.robot.subsystems.shooter.ShooterIOSim;
-import frc.robot.subsystems.shooter.ShooterIOTalonFX;
+import frc.robot.subsystems.shooter.*;
+import frc.robot.util.Mode;
+import frc.robot.util.ModeHelper;
 import org.littletonrobotics.junction.networktables.LoggedDashboardChooser;
 import org.littletonrobotics.junction.networktables.LoggedDashboardNumber;
+
+import static edu.wpi.first.units.BaseUnits.Voltage;
+import static edu.wpi.first.units.Units.Seconds;
 
 /**
  * This class is where the bulk of the robot should be declared. Since Command-based is a
@@ -65,6 +65,17 @@ public class RobotContainer {
   private final Intake intake;
   private Climb climb;
 
+  private final ModeHelper modeHelper = new ModeHelper(this);
+
+  // TODO: populate switch statements here
+  public Command getEnterCommand(Mode m) {
+    return new InstantCommand();
+  }
+
+  public Command getExitCommand(Mode m) {
+    return new InstantCommand();
+  }
+
   // Controller
   private final CommandXboxController driverController = new CommandXboxController(0);
   private final CommandXboxController operatorController = new CommandXboxController(1);
@@ -73,6 +84,8 @@ public class RobotContainer {
   private final LoggedDashboardChooser<Command> autoChooser;
   private final LoggedDashboardNumber flywheelSpeedInput =
       new LoggedDashboardNumber("Flywheel Speed", 1500.0);
+
+  public static SysIDMode sysIDMode = SysIDMode.Shooter;
 
   /** The container for the robot. Contains subsystems, OI devices, and commands. */
   public RobotContainer() {
@@ -83,13 +96,13 @@ public class RobotContainer {
             new Drive(
                 new GyroIOPigeon2(),
                 new VisionIOReal("ShootSideCamera"),
-                new ModuleIOSparkMax(0),
-                new ModuleIOSparkMax(1),
-                new ModuleIOSparkMax(2),
-                new ModuleIOSparkMax(3));
-        shooter = new Shooter(new ShooterIOTalonFX());
-        feeder = new Feeder(new FeederIO() {});
-        intake = new Intake(new IntakeIOSparkMax());
+                    new ModuleIOSparkMax(0),
+                    new ModuleIOSparkMax(1),
+                    new ModuleIOSparkMax(2),
+                    new ModuleIOSparkMax(3));
+        shooter = new Shooter(new ShooterIOTalonFX(), new HoodIOSparkMax());
+          feeder = new Feeder(new FeederIOTalonFX());
+          intake = new Intake(new IntakeIOSparkMax());
         climb = new Climb(new ClimbIOSparkMax());
         // drive = new Drive(
         // new GyroIOPigeon2(),
@@ -111,7 +124,7 @@ public class RobotContainer {
                 new ModuleIOSim(),
                 new ModuleIOSim(),
                 new ModuleIOSim());
-        shooter = new Shooter(new ShooterIOSim());
+        shooter = new Shooter(new ShooterIOSim(), new HoodIO() {});
         feeder = new Feeder(new FeederIOSim());
         intake = new Intake(new IntakeIOSim());
         climb = new Climb(new ClimbIO() {});
@@ -127,7 +140,7 @@ public class RobotContainer {
                 new ModuleIO() {},
                 new ModuleIO() {},
                 new ModuleIO() {});
-        shooter = new Shooter(new ShooterIO() {});
+        shooter = new Shooter(new ShooterIO() {}, new HoodIO() {});
         feeder = new Feeder(new FeederIO() {});
         intake = new Intake(new IntakeIO() {});
         climb = new Climb(new ClimbIO() {});
@@ -138,20 +151,13 @@ public class RobotContainer {
     NamedCommands.registerCommand(
         "Run Flywheel",
         Commands.startEnd(
-                () -> shooter.runVelocity(flywheelSpeedInput.get()), shooter::stop, shooter)
+                () -> shooter.shooterRunVelocity(flywheelSpeedInput.get()),
+                shooter::stopShooter,
+                shooter)
             .withTimeout(5.0));
     autoChooser = new LoggedDashboardChooser<>("Auto Choices", AutoBuilder.buildAutoChooser());
 
     configureButtonBindings();
-  }
-
-  public static SysIDMode sysIDMode = SysIDMode.Disabled;
-
-  public enum SysIDMode {
-    Disabled,
-    DriveMotors,
-    TurnMotors,
-    EverythingElse
   }
 
   /**
@@ -173,12 +179,15 @@ public class RobotContainer {
         intake.setDefaultCommand(
             new RunCommand(
                 () -> {
-                  intake.setIntakePosition(Rotation2d.fromDegrees(-130));
+                    intake.setIntakePosition(Rotation2d.fromDegrees(-90));
                   intake.setRollerPercentage(0.0);
                 },
                 intake));
-        feeder.setDefaultCommand(new RunCommand(() -> feeder.runVolts(6.0), feeder));
-        shooter.setDefaultCommand(new RunCommand(shooter::stop, shooter));
+        feeder.setDefaultCommand(new RunCommand(() -> feeder.runVolts(0.0), feeder));
+        shooter.setDefaultCommand(new RunCommand(() -> {
+          shooter.shooterRunVolts(0.0);
+          shooter.setTargetShooterAngle(Rotation2d.fromRadians(.5));
+        }, shooter));
         // CLIMB DEFAULT COMMAND
         climb.setDefaultCommand(
             Commands.run(
@@ -204,57 +213,25 @@ public class RobotContainer {
                         },
                         drive)
                     .ignoringDisable(true));
-
-        // ---- FEEDER COMMANDS ----
-        driverController
-            .leftTrigger()
-            .and(feeder::getSensorFeed)
-            .whileTrue(
-                new RunCommand(() -> feeder.runVolts(6.0), feeder)
-                    .until(() -> !feeder.getSensorFeed()));
-
         // ---- INTAKE COMMANDS ----
         driverController
-            .leftBumper() // not a()
-            .whileTrue(
-                new RunCommand(
-                    () -> {
-                      intake.setIntakePosition(Rotation2d.fromDegrees(0.0));
-                      intake.setRollerPercentage(0.75);
-                    },
-                    intake));
-        driverController
-            .rightBumper()
-            .whileTrue(
-                new RunCommand(
-                    () -> {
-                      intake.setIntakePosition(Rotation2d.fromDegrees(-90.0));
-                      intake.setRollerPercentage(0.0);
-                    },
-                    intake));
+                .leftTrigger()
+                .whileTrue(
+                        IntakeCommands.intakeCommand(intake)
+                                .alongWith(IntakeCommands.feedToBeamBreak(feeder)))
+                .onFalse(IntakeCommands.feedToBeamBreak(feeder).withTimeout(5));
+        driverController.rightBumper().whileTrue(IntakeCommands.idleCommand(intake));
 
         // ---- SHOOTER COMMANDS ----
-        driverController
-            .rightTrigger()
+        operatorController
+                .y()
             .whileTrue(
                 Commands.run(
-                    () -> shooter.runVolts(driverController.getRightTriggerAxis() * 12.0),
-                    shooter));
-        driverController.leftTrigger().and(driverController.rightTrigger().negate());
-        driverController
-            .a()
-            .whileTrue(
-                Commands.startEnd(
-                    () -> shooter.runVelocity(flywheelSpeedInput.get()), shooter::stop, shooter));
-        driverController
-            .rightTrigger()
-            .onTrue(new RunCommand(() -> shooter.runVolts(6.0), shooter));
-        driverController
-            .a()
-            .whileTrue(
-                new RunCommand(
-                    () -> shooter.runVolts(driverController.getLeftTriggerAxis() * 12.0), shooter));
-
+                        () -> {
+                          shooter.shooterRunVelocity(3000);
+                          shooter.setTargetShooterAngle(Rotation2d.fromRadians(0.0));
+                        },
+                        shooter).andThen(new WaitUntilCommand(() -> (Math.abs(3000 - shooter.getShooterVelocityRPM()) < 50.0)).andThen(FeederCommands.feedToShooter(feeder))));
         break;
       case DriveMotors:
         drive.setDefaultCommand(
@@ -290,15 +267,54 @@ public class RobotContainer {
         driverController
             .rightTrigger()
             .whileTrue(
-                new RunCommand(() -> shooter.setTargetShooterAngleRad(new Rotation2d(-0.61)))
+                    new RunCommand(() -> shooter.setTargetShooterAngle(new Rotation2d(-0.61)))
                     .andThen(
                         (new RunCommand(
-                            () -> shooter.runVelocity(5000) /*THIS NUMBER NEEDS TO BE CALIBRATED*/,
+                            () ->
+                                shooter.shooterRunVelocity(5000), //THIS NUMBER NEEDS TO BE CALIBRATED
                             intake))));
         break;
-      case EverythingElse:
+      case Shooter:
+        var shooterSysId =
+                new SysIdRoutine(
+                        new Config(Voltage.per(Units.Second).of(.25), Voltage.of(9.0), Seconds.of(36)),
+                        new Mechanism(
+                                shooter::shooterRunVolts,
+                                (log) -> {
+                                  var motor = log.motor("Shooter");
+                                  motor.voltage(shooter.getCharacterizationAppliedVolts());
+                                  motor.angularPosition(shooter.getCharacterizationPosition());
+                                  motor.angularVelocity(shooter.getCharacterizationVelocity());
+                                  motor.current(shooter.getCharacterizationCurrent());
+                                },
+                                climb,
+                                "FlywheelMotors"));
+        driverController
+                .a()
+                .onTrue(
+                        shooterSysId
+                                .dynamic(Direction.kForward)
+                                .withTimeout(3)
+                                .andThen(
+                                        new WaitCommand(5),
+                                        shooterSysId.dynamic(Direction.kReverse).withTimeout(3),
+                                        new WaitCommand(5),
+                                        shooterSysId.quasistatic(Direction.kForward).withTimeout(36),
+                                        new WaitCommand(5),
+                                        shooterSysId.quasistatic(Direction.kReverse).withTimeout(36))
+                                .alongWith(new RunCommand(() -> {
+                                  shooter.setTargetShooterAngle(Rotation2d.fromRadians(0.0));
+                                  shooter.setCharacterizeMode(true);
+                                })));
         break;
     }
+  }
+
+  public enum SysIDMode {
+    Disabled,
+    DriveMotors,
+    TurnMotors,
+    Shooter
   }
 
   /**
