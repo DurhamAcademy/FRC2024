@@ -69,7 +69,7 @@ public class ShooterIOTalonFX implements ShooterIO {
             followerProcessorTemp);
     inputs.flywheelPositionRad = leaderPosition.getValueAsDouble() * GEAR_RATIO;
     inputs.flywheelVelocityRadPerSec =
-            Units.rotationsToRadians(leaderVelocity.getValueAsDouble()) * GEAR_RATIO;
+        Units.rotationsToRadians(leaderVelocity.getValueAsDouble()) * GEAR_RATIO;
     inputs.flywheelAppliedVolts = leaderAppliedVolts.getValueAsDouble();
     inputs.flywheelCurrentAmps =
         new double[] {leaderCurrent.getValueAsDouble(), followerCurrent.getValueAsDouble()};

@@ -63,7 +63,7 @@ public class RobotContainer {
   private final Shooter shooter;
   private final Feeder feeder;
   private final Intake intake;
-  private Climb climb;
+  private final Climb climb;
 
   private final ModeHelper modeHelper = new ModeHelper(this);
 
@@ -213,6 +213,31 @@ public class RobotContainer {
                         },
                         drive)
                     .ignoringDisable(true));
+        // ---- FEEDER COMMANDS ----
+        driverController
+            .leftTrigger()
+            .and(feeder::getSensorFeed)
+            .whileTrue(
+                    new RunCommand(() -> feeder.runVolts(10.0), feeder)
+                    .until(() -> !feeder.getSensorFeed()));
+
+        // prepare the shooter for dumping into the amp
+          driverController.y().onTrue(Commands.runOnce(() -> modeHelper.switchTo(Mode.AMP)));
+
+        /*
+            .toggleOnTrue(
+                Commands.sequence(
+                    Commands.run(
+                            () -> shooter.setTargetShooterAngleRad(Rotation2d.fromDegrees(-22.5)),
+                            shooter)
+                        .until(() -> false),
+                    Commands.run(() -> feeder.runVolts(6.0), feeder)
+                        .withTimeout(2.0)
+                        .until(() -> !feeder.getSensorFeed()),
+                    Commands.runOnce(feeder::stop, feeder),
+                    Commands.run(
+                        () -> shooter.setTargetShooterAngleRad(Rotation2d.fromDegrees(45.0)))));
+        */
         // ---- INTAKE COMMANDS ----
         driverController
                 .leftTrigger()
@@ -231,7 +256,7 @@ public class RobotContainer {
                           shooter.shooterRunVelocity(3000);
                           shooter.setTargetShooterAngle(Rotation2d.fromRadians(0.0));
                         },
-                        shooter).andThen(new WaitUntilCommand(() -> (Math.abs(3000 - shooter.getShooterVelocityRPM()) < 50.0)).andThen(FeederCommands.feedToShooter(feeder))));
+                        shooter).andThen(new WaitUntilCommand(shooter::flywheelAtSetpoint).andThen(FeederCommands.feedToShooter(feeder))));
         break;
       case DriveMotors:
         drive.setDefaultCommand(
