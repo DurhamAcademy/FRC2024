@@ -123,7 +123,7 @@ public class Shooter extends SubsystemBase {
     }
 
     public boolean armAtSetpoint() {
-        this.hoodFB.atGoal();
+        return this.hoodFB.atGoal();
     }
 
     @AutoLogOutput

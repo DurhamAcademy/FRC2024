@@ -113,11 +113,7 @@ public class Drive extends SubsystemBase {
     AutoBuilder.configureHolonomic(
         this::getPose,
         pose1 -> {
-          try {
             setPose(pose1);
-          } catch (GyroConnectionException e) {
-            throw new RuntimeException(e);
-          }
         },
         () -> kinematics.toChassisSpeeds(getModuleStates()),
         this::runVelocity,

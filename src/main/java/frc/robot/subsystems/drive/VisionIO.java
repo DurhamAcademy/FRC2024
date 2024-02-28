@@ -68,8 +68,8 @@ public interface VisionIO {
     @Override
     public void fromLog(LogTable table) {
       //            driverMode = table.getBoolean("DriverMode", driverMode);
-      latencyMillis = table.getDouble("LatencyMillis", latencyMillis);
-      timestampSeconds = table.getDouble("TimestampSeconds", timestampSeconds);
+      latencyMillis = table.get("LatencyMillis", latencyMillis);
+      timestampSeconds = table.get("TimestampSeconds", timestampSeconds);
 
       cameraResult = aPacketSerde.unpack(new Packet(table.get("CameraResultData").getRaw()));
 
