@@ -63,7 +63,7 @@ public class RobotContainer {
   private final Shooter shooter;
   private final Feeder feeder;
   private final Intake intake;
-  private Climb climb;
+  private final Climb climb;
 
   private final ModeHelper modeHelper = new ModeHelper(this);
 
