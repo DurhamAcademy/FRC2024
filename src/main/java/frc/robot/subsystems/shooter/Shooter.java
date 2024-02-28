@@ -30,8 +30,6 @@ import org.littletonrobotics.junction.Logger;
 import static edu.wpi.first.units.Units.*;
 
 public class Shooter extends SubsystemBase {
-    private static final double HOOD_ENCODER_ANGLE_TO_REAL_ANGLE_RATIO = 1.0;
-    private static final double HOOD_ENCODER_ANGLE_TO_REAL_ANGLE_OFFSET = 0.0;
     // the ratio for turning the shooter
 //    private static final double TURN_SHOOTER_RATIO = 5.4;
     private static double targetHoodAngleRad = 0.0;
@@ -41,10 +39,11 @@ public class Shooter extends SubsystemBase {
     private final HoodIOInputsAutoLogged hoodInputs = new HoodIOInputsAutoLogged();
     private final ArmFeedforward hoodFF;
     private PIDController shooterVelocityFB;
-    private ProfiledPIDController shooterPositionFB;
-    private SimpleMotorFeedforward shooterVelocityFF;
+    double setpointRadPS = 0;
     private ProfiledPIDController hoodFB;
-    private boolean characterizeMode;
+    //    private ProfiledPIDController shooterPositionFB;
+    private SimpleMotorFeedforward shooterVelocityFF;
+    private boolean characterizeMode = false;
 
     /**
      * Creates a new Shooter.
@@ -57,15 +56,15 @@ public class Shooter extends SubsystemBase {
         switch (Constants.currentMode) {
             case REAL:
                 hoodFB = new ProfiledPIDController(2.0, 0.0, 0.0, new TrapezoidProfile.Constraints(1, 2));
-                if (shooterIO instanceof ShooterIOTalonFX) {
+//                if (shooterIO instanceof ShooterIOTalonFX) {
                     shooterVelocityFB =
-                            new PIDController(0.0050812, 0.0, 0.0 /*, new TrapezoidProfile.Constraints(0.5, 99)*/);
+                            new PIDController(0.0010812, 0.0, 0.0 /*, new TrapezoidProfile.Constraints(0.5, 99)*/);
                     shooterVelocityFB.setTolerance(25);
-                    shooterPositionFB =
-                            new ProfiledPIDController(20.817, 0.0, 1.7743, new TrapezoidProfile.Constraints(RadiansPerSecond.of(90), RadiansPerSecond.per(Second).of(27.8736842105)));
-                    shooterPositionFB.setTolerance(0.26, 5);
-                    shooterVelocityFF = new SimpleMotorFeedforward(0.10548, 0.11959, 0.066251);
-                }
+//                    shooterPositionFB =
+//                            new ProfiledPIDController(20.817, 0.0, 1.7743, new TrapezoidProfile.Constraints(RadiansPerSecond.of(90), RadiansPerSecond.per(Second).of(27.8736842105)));
+//                    shooterPositionFB.setTolerance(0.26, 5);
+                shooterVelocityFF = new SimpleMotorFeedforward(.998, .0706 * .5, .16);
+//                }
                 // FIXME: characterize real robot
 
                 hoodFF = new ArmFeedforward(0.0, 0.0, 0);
@@ -77,9 +76,9 @@ public class Shooter extends SubsystemBase {
                 shooterVelocityFB =
                         new PIDController(0.0050812, 0.0, 0.0 /*, new TrapezoidProfile.Constraints(0.5, 99)*/);
                 shooterVelocityFB.setTolerance(25);
-                shooterPositionFB =
-                        new ProfiledPIDController(20.817, 0.0, 1.7743, new TrapezoidProfile.Constraints(RadiansPerSecond.of(90), RadiansPerSecond.per(Second).of(27.8736842105)));
-                shooterPositionFB.setTolerance(0.26, 5);
+//                shooterPositionFB =
+//                        new ProfiledPIDController(20.817, 0.0, 1.7743, new TrapezoidProfile.Constraints(RadiansPerSecond.of(90), RadiansPerSecond.per(Second).of(27.8736842105)));
+//                shooterPositionFB.setTolerance(0.26, 5);
                 shooterVelocityFF = new SimpleMotorFeedforward(0.10548, 0.11959, 0.066251);
                 break;
             case SIM:
@@ -99,11 +98,12 @@ public class Shooter extends SubsystemBase {
     public void periodic() {
         shooterIO.updateInputs(shooterInputs);
         hoodIO.updateInputs(hoodInputs);
-        if (characterizeMode) {
+        if (!characterizeMode) {
             shooterIO.setFlywheelVoltage(
-                    shooterVelocityFB.calculate(shooterInputs.flywheelVelocityRadPerSec)
-                            + this.shooterVelocityFF.calculate(shooterInputs.flywheelVelocityRadPerSec));
+                    shooterVelocityFB.calculate(shooterInputs.flywheelVelocityRadPerSec, setpointRadPS)
+                            + this.shooterVelocityFF.calculate(shooterVelocityFB.getSetpoint()));
         }
+        Logger.recordOutput("shooterSpeed", setpointRadPS);
         Logger.recordOutput("targetHoodAngle", targetHoodAngleRad);
         Logger.recordOutput("hoodInputs.hoodPositionRad", hoodInputs.hoodPositionRad);
         Logger.recordOutput("pidStuff", "" + hoodFB.getD() + " " + hoodFB.getI() + " " + hoodFB.getP());
@@ -156,7 +156,7 @@ public class Shooter extends SubsystemBase {
     public void shooterRunVelocity(double velocityRPM) {
         var velocityRadPerSec = Units.rotationsPerMinuteToRadiansPerSecond(velocityRPM);
 
-        shooterVelocityFB.setSetpoint(velocityRadPerSec);
+        setpointRadPS = velocityRadPerSec;
 
         // Log flywheel setpoint
         Logger.recordOutput("Shooter/SetpointRPM", velocityRPM);

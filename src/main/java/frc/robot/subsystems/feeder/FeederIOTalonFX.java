@@ -3,7 +3,6 @@ package frc.robot.subsystems.feeder;
 import com.ctre.phoenix6.BaseStatusSignal;
 import com.ctre.phoenix6.StatusSignal;
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
-import com.ctre.phoenix6.controls.VoltageOut;
 import com.ctre.phoenix6.hardware.TalonFX;
 import com.ctre.phoenix6.signals.InvertedValue;
 import com.ctre.phoenix6.signals.NeutralModeValue;
@@ -29,7 +28,7 @@ public class FeederIOTalonFX implements FeederIO {
     public FeederIOTalonFX() {
         conveyorSensor = new DigitalInput(conveyorSensorNum);
         var config = new TalonFXConfiguration();
-        config.CurrentLimits.StatorCurrentLimit = 50.0;
+        config.CurrentLimits.StatorCurrentLimit = 30.0;
         config.CurrentLimits.StatorCurrentLimitEnable = true;
         config.MotorOutput.withInverted(InvertedValue.Clockwise_Positive);
         config.MotorOutput.NeutralMode = NeutralModeValue.Coast;
@@ -64,7 +63,7 @@ public class FeederIOTalonFX implements FeederIO {
 
     @Override
     public void setVoltage(double volts) {
-        feedMotor.setControl(new VoltageOut(volts));
+        feedMotor.setVoltage(volts);
     }
 
     @Override

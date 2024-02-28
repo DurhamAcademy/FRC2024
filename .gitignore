@@ -178,3 +178,4 @@ src/main/java/frc/robot/BuildConstants.java
 networktables.json
 logs/
 .sysid/
+/.outlineviewer/outlineviewer-window.json

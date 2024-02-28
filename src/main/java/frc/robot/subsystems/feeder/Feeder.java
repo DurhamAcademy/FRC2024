@@ -2,12 +2,15 @@ package frc.robot.subsystems.feeder;
 
 import edu.wpi.first.math.controller.ProfiledPIDController;
 import edu.wpi.first.math.controller.SimpleMotorFeedforward;
+import edu.wpi.first.math.filter.Debouncer;
 import edu.wpi.first.math.trajectory.TrapezoidProfile;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants;
 import org.littletonrobotics.junction.AutoLogOutput;
 import org.littletonrobotics.junction.Logger;
+
+import static edu.wpi.first.math.filter.Debouncer.DebounceType.kBoth;
 
 public class Feeder extends SubsystemBase {
   private final FeederIO io;
@@ -16,8 +19,10 @@ public class Feeder extends SubsystemBase {
   private final ProfiledPIDController pidController;
   double offset = 0.0;
 
+  Debouncer debouncer = new Debouncer(.05, kBoth);
+
   public boolean getBeamBroken() {
-    return !inputs.beamUnobstructed;
+    return !debouncer.calculate(inputs.beamUnobstructed);
   }
 
   public Feeder(FeederIO io) {
