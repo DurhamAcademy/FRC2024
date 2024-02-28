@@ -145,7 +145,7 @@ public class DriveCommands {
         Pose2d speakerAimTargetPose = new Pose2d(.25, 5.5, new Rotation2d());
         final Pose2d[] previousPose = {null};
         ProfiledPIDController rotationController =
-        new ProfiledPIDController(0.0, 0, .0, new TrapezoidProfile.Constraints(25, 225));
+                new ProfiledPIDController(0.0, 0, .0, new TrapezoidProfile.Constraints(0.1, 1));
 
     SmartDashboard.putNumber("rotationPidP", DRIVE_ROTATION_P_VALUE);
         SmartDashboard.putNumber("rotationPidI", 0.0);
@@ -219,7 +219,7 @@ public class DriveCommands {
                       new TrapezoidProfile.State(
                           Radians.of(drive.getRotation().getRadians()),
                           drive.getAnglularVelocity()));
-                  rotationController.calculate(Radians.toBaseUnits(goalAngle.getRadians()));
+                    var value = rotationController.calculate(Rotation2d.fromRadians(goalAngle.getRadians()).getRotations());
                     drive.runVelocity(
                             ChassisSpeeds.fromFieldRelativeSpeeds(
                                     linearVelocity.getX() * drive.getMaxLinearSpeedMetersPerSec(),

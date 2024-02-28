@@ -209,7 +209,7 @@ public class RobotContainer {
                         () -> -driverController.getLeftX(),
                         () -> -driverController.getRightX());
         operatorController.povDown().onTrue(command.getCommand());
-        
+
         // ---- INTAKE COMMANDS ----
         driverController
                 .leftTrigger()
