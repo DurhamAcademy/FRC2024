@@ -213,31 +213,6 @@ public class RobotContainer {
                         },
                         drive)
                     .ignoringDisable(true));
-        // ---- FEEDER COMMANDS ----
-        driverController
-            .leftTrigger()
-            .and(feeder::getSensorFeed)
-            .whileTrue(
-                    new RunCommand(() -> feeder.runVolts(10.0), feeder)
-                    .until(() -> !feeder.getSensorFeed()));
-
-        // prepare the shooter for dumping into the amp
-          driverController.y().onTrue(Commands.runOnce(() -> modeHelper.switchTo(Mode.AMP)));
-
-        /*
-            .toggleOnTrue(
-                Commands.sequence(
-                    Commands.run(
-                            () -> shooter.setTargetShooterAngleRad(Rotation2d.fromDegrees(-22.5)),
-                            shooter)
-                        .until(() -> false),
-                    Commands.run(() -> feeder.runVolts(6.0), feeder)
-                        .withTimeout(2.0)
-                        .until(() -> !feeder.getSensorFeed()),
-                    Commands.runOnce(feeder::stop, feeder),
-                    Commands.run(
-                        () -> shooter.setTargetShooterAngleRad(Rotation2d.fromDegrees(45.0)))));
-        */
         // ---- INTAKE COMMANDS ----
         driverController
                 .leftTrigger()
