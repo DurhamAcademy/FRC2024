@@ -85,7 +85,7 @@ public class RobotContainer {
   private final LoggedDashboardNumber flywheelSpeedInput =
       new LoggedDashboardNumber("Flywheel Speed", 1500.0);
 
-  public static SysIDMode sysIDMode = SysIDMode.EverythingElse;
+  public static SysIDMode sysIDMode = SysIDMode.Shooter;
 
   /** The container for the robot. Contains subsystems, OI devices, and commands. */
   public RobotContainer() {
@@ -154,13 +154,6 @@ public class RobotContainer {
     autoChooser = new LoggedDashboardChooser<>("Auto Choices", AutoBuilder.buildAutoChooser());
 
     configureButtonBindings();
-  }
-
-  public enum SysIDMode {
-    Disabled,
-    DriveMotors,
-    TurnMotors,
-    EverythingElse
   }
 
   /**
@@ -277,7 +270,7 @@ public class RobotContainer {
                                 shooter.shooterRunVelocity(5000), //THIS NUMBER NEEDS TO BE CALIBRATED
                             intake))));
         break;
-      case EverythingElse:
+      case Shooter:
         var shooterSysId =
                 new SysIdRoutine(
                         new Config(Voltage.per(Units.Second).of(.25), Voltage.of(9.0), Seconds.of(36)),
@@ -311,6 +304,13 @@ public class RobotContainer {
                                 })));
         break;
     }
+  }
+
+  public enum SysIDMode {
+    Disabled,
+    DriveMotors,
+    TurnMotors,
+    Shooter
   }
 
   /**
