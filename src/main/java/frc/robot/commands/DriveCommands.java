@@ -25,12 +25,12 @@ import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import frc.robot.subsystems.drive.Drive;
-
 import java.util.function.DoubleSupplier;
 
 public class DriveCommands {
 
     private static final double DEADBAND = 0.1;
+  private static final double DEADBANDX = 1.0;
 
   private DriveCommands() {}
 
@@ -69,6 +69,7 @@ public class DriveCommands {
                   linearVelocity.getY() * drive.getMaxLinearSpeedMetersPerSec(),
                   omega * drive.getMaxAngularSpeedRadPerSec(),
                   drive.getRotation()));
+
         },
         drive);
   }
