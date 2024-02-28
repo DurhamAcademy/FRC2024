@@ -87,7 +87,7 @@ public class RobotContainer {
   private final LoggedDashboardNumber flywheelSpeedInput =
       new LoggedDashboardNumber("Flywheel Speed", 1500.0);
 
-  public static SysIDMode sysIDMode = SysIDMode.Shooter;
+  public static SysIDMode sysIDMode = SysIDMode.Disabled;
 
   /** The container for the robot. Contains subsystems, OI devices, and commands. */
   public RobotContainer() {
