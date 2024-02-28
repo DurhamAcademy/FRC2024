@@ -89,20 +89,13 @@ public class Shooter extends SubsystemBase {
                     shooterVelocityFB.calculate(shooterInputs.flywheelVelocityRadPerSec, setpointRadPS)
                             + this.shooterVelocityFF.calculate(shooterVelocityFB.getSetpoint()));
         }
-        Logger.recordOutput("shooterSpeed", setpointRadPS);
-        Logger.recordOutput("targetHoodAngle", targetHoodAngleRad);
-        Logger.recordOutput("hoodInputs.hoodPositionRad", hoodInputs.hoodPositionRad);
-        Logger.recordOutput("pidStuff", "" + hoodFB.getD() + " " + hoodFB.getI() + " " + hoodFB.getP());
         Logger.recordOutput("Shooter/ShooterSpeed", setpointRadPS);
         Logger.recordOutput("Shooter/TargetHoodAngle", targetHoodAngleRad);
+        Logger.recordOutput("Shooter/HoodInputs/HoodPositionRad", hoodInputs.hoodAbsolutePositionRad);
         hoodIO.setVoltage(
-                hoodFB.calculate(hoodInputs.hoodPositionRad, targetHoodAngleRad)
-                /*+ hoodFF.calcula te(hoodFB.getSetpoint().position, hoodFB.getSetpoint().velocity)*/);
-//        targetHoodAngleRad =
-//                hoodInputs.hoodPositionRad * HOOD_ENCODER_ANGLE_TO_REAL_ANGLE_RATIO
-//                        + HOOD_ENCODER_ANGLE_TO_REAL_ANGLE_OFFSET;
-        Logger.processInputs("Shooter", shooterInputs);
-        Logger.processInputs("Hood", hoodInputs);
+                hoodFB.calculate(
+                        hoodInputs.hoodAbsolutePositionRad,
+                        targetHoodAngleRad));
     }
 
     public boolean flywheelAtSetpoint() {
@@ -136,12 +129,11 @@ public class Shooter extends SubsystemBase {
     }
 
     /**
-     *
-   * Run open loop at the specified voltage.
-   */
-  public void runVoltage(Measure<Voltage> voltage) {
-      shooterRunVolts(voltage.in(Volts));
-  }
+     * Run open loop at the specified voltage.
+     */
+    public void runVoltage(Measure<Voltage> voltage) {
+        shooterRunVolts(voltage.in(Volts));
+    }
 
     /**
      * Run closed loop at the specified velocity.
