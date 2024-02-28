@@ -63,7 +63,7 @@ public class RobotContainer {
   private final Shooter shooter;
   private final Feeder feeder;
   private final Intake intake;
-  private Climb climb;
+  private final Climb climb;
 
   private final ModeHelper modeHelper = new ModeHelper(this);
 
@@ -252,7 +252,7 @@ public class RobotContainer {
                           shooter.shooterRunVelocity(3000);
                           shooter.setTargetShooterAngle(Rotation2d.fromRadians(0.0));
                         },
-                        shooter).andThen(new WaitUntilCommand(() -> (Math.abs(3000 - shooter.getShooterVelocityRPM()) < 50.0)).andThen(FeederCommands.feedToShooter(feeder))));
+                        shooter).andThen(new WaitUntilCommand(shooter::flywheelAtSetpoint).andThen(FeederCommands.feedToShooter(feeder))));
         break;
       case DriveMotors:
         drive.setDefaultCommand(
