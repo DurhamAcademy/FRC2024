@@ -1,6 +1,5 @@
 package frc.robot.subsystems.drive;
 
-import org.littletonrobotics.junction.Logger;
 import org.photonvision.PhotonCamera;
 import org.photonvision.simulation.SimCameraProperties;
 
@@ -49,12 +48,6 @@ public class VisionIOReal implements VisionIO {
     inputs.latencyMillis = cam.getLatestResult().getLatencyMillis();
     inputs.driverMode = cam.getDriverMode();
     inputs.timestampSeconds = cam.getLatestResult().getTimestampSeconds();
-    //    Logger.recordOutput("out", );
-    Logger.recordOutput(
-            "best",
-            (inputs.cameraResult.hasTargets())
-                    ? inputs.cameraResult.getBestTarget().getFiducialId()
-                    : -1);
-    // null);
+    inputs.connected = cam.isConnected();
   }
 }

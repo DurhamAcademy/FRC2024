@@ -43,12 +43,14 @@ import org.photonvision.PhotonPoseEstimator;
 
 import java.util.Optional;
 
+import static edu.wpi.first.math.util.Units.degreesToRadians;
+import static edu.wpi.first.math.util.Units.inchesToMeters;
 import static edu.wpi.first.units.Units.*;
 
 public class Drive extends SubsystemBase {
   private static final double MAX_LINEAR_SPEED = Units.feetToMeters(14.5);
-  private static final double TRACK_WIDTH_X = Units.inchesToMeters(20.75);
-  private static final double TRACK_WIDTH_Y = Units.inchesToMeters(20.75);
+  private static final double TRACK_WIDTH_X = inchesToMeters(20.75);
+  private static final double TRACK_WIDTH_Y = inchesToMeters(20.75);
   private static final double DRIVE_BASE_RADIUS =
       Math.hypot(TRACK_WIDTH_X / 2.0, TRACK_WIDTH_Y / 2.0);
   private static final double MAX_ANGULAR_SPEED = MAX_LINEAR_SPEED / DRIVE_BASE_RADIUS;
@@ -72,10 +74,17 @@ public class Drive extends SubsystemBase {
   // Update robotToCam with cameraSystem mounting pos
   Transform3d robotToCam =
       new Transform3d(
-          new Translation3d(0.5, 0.0, 0.5),
+              new Translation3d(
+                      inchesToMeters(-10.18),
+                      inchesToMeters(-7.074),
+                      inchesToMeters(8.53)
+              ),
           new Rotation3d(
-              0, 0,
-              0)); // Cam mounted facing forward, half a meter forward of center, half a meter up
+                  0,
+                  degreesToRadians(55),
+                  degreesToRadians(177)
+          )
+      ); // Cam mounted facing forward, half a meter forward of center, half a meter up
   // from center.
   private final PhotonPoseEstimator photonPoseEstimator =
       new PhotonPoseEstimator(
@@ -146,10 +155,11 @@ public class Drive extends SubsystemBase {
 
   public void periodic() {
     gyroIO.updateInputs(gyroInputs);
-    visionIO.updateInputs(visionInputs);
-
     Logger.processInputs("Drive/Gyro", gyroInputs);
+
+    visionIO.updateInputs(visionInputs);
     Logger.processInputs("Drive/Vision", visionInputs);
+
     for (var module : modules) {
       module.periodic();
     }

@@ -17,6 +17,7 @@ public interface VisionIO {
     boolean driverMode = false;
     double latencyMillis = 0;
     double timestampSeconds = 0;
+      boolean connected = false;
     PhotonPipelineResult cameraResult = new PhotonPipelineResult();
     private PhotonPipelineResult.APacketSerde aPacketSerde;
 
