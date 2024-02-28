@@ -61,6 +61,7 @@ public class Shooter extends SubsystemBase {
         switch (Constants.currentMode) {
             case REAL:
                 hoodFB = new ProfiledPIDController(2.0, 0.0, 0.0, new TrapezoidProfile.Constraints(1, 2));
+                hoodFB.setTolerance(0.1);
                 shooterVelocityFB =
                         new PIDController(0.0079065, 0.0, 0.0);
                 shooterVelocityFB.setTolerance(218.69); // this is the pid max velocity error (rad/sec)
@@ -116,8 +117,18 @@ public class Shooter extends SubsystemBase {
         Logger.recordOutput("shooter", mech1);
     }
 
+    @AutoLogOutput
     public boolean flywheelAtSetpoint() {
         return this.shooterVelocityFB.atSetpoint();
+    }
+
+    public boolean armAtSetpoint() {
+        this.hoodFB.atGoal();
+    }
+
+    @AutoLogOutput
+    public boolean allAtSetpoint() {
+        return flywheelAtSetpoint() && armAtSetpoint();
     }
 
     public void setCharacterizeMode(boolean on) {
