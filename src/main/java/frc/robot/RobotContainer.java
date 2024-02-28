@@ -44,13 +44,11 @@ import frc.robot.subsystems.intake.IntakeIOSim;
 import frc.robot.subsystems.intake.IntakeIOSparkMax;
 import frc.robot.subsystems.shooter.*;
 import frc.robot.util.Mode;
-import frc.robot.util.ModeHelper;
 import org.littletonrobotics.junction.networktables.LoggedDashboardChooser;
 import org.littletonrobotics.junction.networktables.LoggedDashboardNumber;
 
 import static edu.wpi.first.units.BaseUnits.Voltage;
 import static edu.wpi.first.units.Units.Seconds;
-import static edu.wpi.first.wpilibj2.command.Command.InterruptionBehavior.kCancelIncoming;
 import static frc.robot.commands.FeederCommands.feedToShooter;
 
 /**
@@ -67,7 +65,7 @@ public class RobotContainer {
   private final Intake intake;
   private final Climb climb;
 
-  private final ModeHelper modeHelper = new ModeHelper(this);
+//  private final ModeHelper modeHelper = new ModeHelper(this);
 
   // TODO: populate switch statements here
   public Command getEnterCommand(Mode m) {
@@ -86,6 +84,7 @@ public class RobotContainer {
   private final LoggedDashboardChooser<Command> autoChooser;
   private final LoggedDashboardNumber flywheelSpeedInput =
       new LoggedDashboardNumber("Flywheel Speed", 1500.0);
+  LoggedDashboardNumber angleOffsetInput = new LoggedDashboardNumber("Angle Offset", 0.0);
 
   public static SysIDMode sysIDMode = SysIDMode.Disabled;
 
@@ -102,7 +101,7 @@ public class RobotContainer {
                     new ModuleIOSparkMax(1),
                     new ModuleIOSparkMax(2),
                     new ModuleIOSparkMax(3));
-        shooter = new Shooter(new ShooterIOTalonFX(),new HoodIOSparkMax()); // new HoodIOSparkMax() {}
+        shooter = new Shooter(new ShooterIOTalonFX(), new HoodIOSparkMax()); // new HoodIOSparkMax() {}
           feeder = new Feeder(new FeederIOTalonFX());
           intake = new Intake(new IntakeIOSparkMax());
         climb = new Climb(new ClimbIOSparkMax());
@@ -217,7 +216,11 @@ public class RobotContainer {
         operatorController
                 .y()
             .whileTrue(
-                    ShooterCommands.autoAim(shooter, drive).alongWith(Commands.waitUntil(shooter::allAtSetpoint).andThen(feedToShooter(feeder).withInterruptBehavior(kCancelIncoming))));
+                    ShooterCommands.autoAim(shooter, drive, angleOffsetInput::get)
+                            .alongWith(
+                                    Commands.waitSeconds(0.5)
+                                            .andThen(Commands.waitUntil(shooter::allAtSetpoint)
+                                                    .andThen(feedToShooter(feeder).finallyDo(() -> shooter.shooterRunVolts(0.0))))));
 
         break;
       case DriveMotors:
@@ -258,8 +261,8 @@ public class RobotContainer {
                     .andThen(
                         (new RunCommand(
                             () ->
-                                shooter.shooterRunVelocity(5000), //THIS NUMBER NEEDS TO BE CALIBRATED
-                            intake))));
+                                    shooter.shooterRunVelocity(2500), //THIS NUMBER NEEDS TO BE CALIBRATED
+                                shooter)).withTimeout(5)));
         break;
       case Shooter:
         var shooterSysId =

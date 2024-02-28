@@ -29,20 +29,20 @@ public class HoodIOSparkMax implements HoodIO {
 
         absoluteEncoder.setInverted(true);
 
-        encoder.setPositionConversionFactor(MOTOR_TO_ENCODER_RATIO);
-        encoder.setVelocityConversionFactor(MOTOR_TO_ENCODER_RATIO);
-        encoder.setPosition(absoluteEncoder.getPosition());
+        absoluteEncoder.setPositionConversionFactor(MOTOR_TO_ENCODER_RATIO * GEAR_RATIO * Math.PI * 2);
+        encoder.setVelocityConversionFactor(MOTOR_TO_ENCODER_RATIO * GEAR_RATIO);
+        encoder.setPosition(absoluteEncoder.getPosition() * GEAR_RATIO);
         encoder.setMeasurementPeriod(20);
 
         leader.burnFlash();
     }
 
   public void updateInputs(HoodIOInputs inputs) {
-      inputs.hoodAbsolutePositionRad = MathUtil.angleModulus(absoluteEncoder.getPosition() * Math.PI * 2) * GEAR_RATIO;
+      inputs.hoodAbsolutePositionRad = MathUtil.angleModulus(absoluteEncoder.getPosition());
       inputs.hoodPositionRad = encoder.getPosition();//fixme: eventually switch above line to use encoder and have encoder setup on startup
       inputs.hoodAppliedVolts = leader.getBusVoltage() * leader.getAppliedOutput();
       inputs.hoodCurrentAmps = new double[]{leader.getOutputCurrent()};
-      inputs.hoodAbsoluteVelocityRadPerSec = (absoluteEncoder.getVelocity() * Math.PI * 2) * GEAR_RATIO;
+      inputs.hoodAbsoluteVelocityRadPerSec = (absoluteEncoder.getVelocity());
       inputs.hoodVelocityRadPerSec = encoder.getVelocity();
       inputs.hoodTemperature = new double[]{leader.getMotorTemperature()};
   }
