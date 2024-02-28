@@ -94,27 +94,18 @@ public class Shooter extends SubsystemBase {
 
         hoodIO.updateInputs(hoodInputs);
         Logger.processInputs("Hood", hoodInputs);
-        if (!characterizeMode) {
+//        if (!characterizeMode) {
             shooterIO.setFlywheelVoltage(
                     shooterVelocityFB.calculate(shooterInputs.flywheelVelocityRadPerSec, setpointRadPS)
                             + this.shooterVelocityFF.calculate(shooterVelocityFB.getSetpoint()));
-        }
-        Logger.recordOutput("shooterSpeed", setpointRadPS);
-        Logger.recordOutput("targetHoodAngle", targetHoodAngleRad);
-        Logger.recordOutput("hoodInputs.hoodPositionRad", hoodInputs.hoodPositionRad);
-        Logger.recordOutput("pidStuff", "" + hoodFB.getD() + " " + hoodFB.getI() + " " + hoodFB.getP());
+//        }
         Logger.recordOutput("Shooter/ShooterSpeed", setpointRadPS);
         Logger.recordOutput("Shooter/TargetHoodAngle", targetHoodAngleRad);
+        Logger.recordOutput("Shooter/HoodInputs/HoodPositionRad", hoodInputs.hoodAbsolutePositionRad);
         hoodIO.setVoltage(
-                hoodFB.calculate(hoodInputs.hoodPositionRad, targetHoodAngleRad)
-                /*+ hoodFF.calcula te(hoodFB.getSetpoint().position, hoodFB.getSetpoint().velocity)*/);
-//        targetHoodAngleRad =
-//                hoodInputs.hoodPositionRad * HOOD_ENCODER_ANGLE_TO_REAL_ANGLE_RATIO
-//                        + HOOD_ENCODER_ANGLE_TO_REAL_ANGLE_OFFSET;
-        sState.setAngle(hoodInputs.hoodPositionRad);
-        Logger.processInputs("Shooter", shooterInputs);
-        Logger.processInputs("Hood", hoodInputs);
-        Logger.recordOutput("shooter", mech1);
+                hoodFB.calculate(
+                        hoodInputs.hoodAbsolutePositionRad,
+                        targetHoodAngleRad));
     }
 
     @AutoLogOutput
@@ -158,20 +149,17 @@ public class Shooter extends SubsystemBase {
     }
 
     /**
-     *
-   * Run open loop at the specified voltage.
-   */
-  public void runVoltage(Measure<Voltage> voltage) {
-      shooterRunVolts(voltage.in(Volts));
-  }
+     * Run open loop at the specified voltage.
+     */
+    public void runVoltage(Measure<Voltage> voltage) {
+        shooterRunVolts(voltage.in(Volts));
+    }
 
     /**
      * Run closed loop at the specified velocity.
      */
     public void shooterRunVelocity(double velocityRPM) {
-        var velocityRadPerSec = Units.rotationsPerMinuteToRadiansPerSecond(velocityRPM);
-
-        setpointRadPS = velocityRadPerSec;
+        setpointRadPS = Units.rotationsPerMinuteToRadiansPerSecond(velocityRPM);
 
         // Log flywheel setpoint
         Logger.recordOutput("Shooter/SetpointRPM", velocityRPM);

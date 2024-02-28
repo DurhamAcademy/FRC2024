@@ -75,8 +75,8 @@ public class Drive extends SubsystemBase {
   Transform3d robotToCam =
       new Transform3d(
               new Translation3d(
-                      inchesToMeters(-10.18),
-                      inchesToMeters(-7.074),
+                      inchesToMeters(10.18),
+                      inchesToMeters(7.074),
                       inchesToMeters(8.53) - 0.035
               ),
           new Rotation3d(
