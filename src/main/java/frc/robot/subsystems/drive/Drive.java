@@ -365,7 +365,7 @@ public class Drive extends SubsystemBase {
   }
 
   /** Resets the current odometry pose. */
-  public void setPose(Pose2d pose) throws GyroConnectionException {
+  public void setPose(Pose2d pose) {
     this.pose = pose;
     if (gyroInputs.connected)
       this.poseEstimator.resetPosition(gyroInputs.yawPosition, swerveModulePositions, pose);
