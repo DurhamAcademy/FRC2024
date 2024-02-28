@@ -59,7 +59,7 @@ import static edu.wpi.first.units.Units.Seconds;
  */
 public class RobotContainer {
   // Subsystems
-  private final Drive drive;
+  private Drive drive;
   private final Shooter shooter;
   private final Feeder feeder;
   private final Intake intake;
@@ -95,6 +95,7 @@ public class RobotContainer {
         drive =
             new Drive(
                 new GyroIOPigeon2(),
+                new VisionIOReal("ShootSideCamera"),
                     new ModuleIOSparkMax(0),
                     new ModuleIOSparkMax(1),
                     new ModuleIOSparkMax(2),
@@ -117,6 +118,8 @@ public class RobotContainer {
         drive =
             new Drive(
                 new GyroIO() {},
+                new VisionIOSim(
+                    "ShootSideCamera", () -> (drive == null) ? (drive.getPose()) : new Pose2d()),
                 new ModuleIOSim(),
                 new ModuleIOSim(),
                 new ModuleIOSim(),
@@ -132,6 +135,7 @@ public class RobotContainer {
         drive =
             new Drive(
                 new GyroIO() {},
+                new VisionIO() {},
                 new ModuleIO() {},
                 new ModuleIO() {},
                 new ModuleIO() {},

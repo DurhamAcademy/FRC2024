@@ -13,20 +13,24 @@
 
 package frc.robot.subsystems.drive;
 
-import static edu.wpi.first.units.Units.*;
-
 import com.pathplanner.lib.auto.AutoBuilder;
 import com.pathplanner.lib.pathfinding.Pathfinding;
 import com.pathplanner.lib.util.HolonomicPathFollowerConfig;
 import com.pathplanner.lib.util.PathPlannerLogging;
 import com.pathplanner.lib.util.ReplanningConfig;
+import edu.wpi.first.apriltag.AprilTagFieldLayout;
+import edu.wpi.first.apriltag.AprilTagFields;
 import edu.wpi.first.math.estimator.SwerveDrivePoseEstimator;
-import edu.wpi.first.math.geometry.Pose2d;
-import edu.wpi.first.math.geometry.Rotation2d;
-import edu.wpi.first.math.geometry.Translation2d;
-import edu.wpi.first.math.kinematics.*;
+import edu.wpi.first.math.geometry.*;
+import edu.wpi.first.math.kinematics.ChassisSpeeds;
+import edu.wpi.first.math.kinematics.SwerveDriveKinematics;
+import edu.wpi.first.math.kinematics.SwerveModulePosition;
+import edu.wpi.first.math.kinematics.SwerveModuleState;
 import edu.wpi.first.math.util.Units;
-import edu.wpi.first.units.*;
+import edu.wpi.first.units.Angle;
+import edu.wpi.first.units.Measure;
+import edu.wpi.first.units.Velocity;
+import edu.wpi.first.units.Voltage;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.DriverStation.Alliance;
 import edu.wpi.first.wpilibj.sysid.SysIdRoutineLog;
@@ -34,11 +38,19 @@ import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.util.LocalADStarAK;
 import org.littletonrobotics.junction.AutoLogOutput;
 import org.littletonrobotics.junction.Logger;
+import org.photonvision.EstimatedRobotPose;
+import org.photonvision.PhotonPoseEstimator;
+
+import java.util.Optional;
+
+import static edu.wpi.first.math.util.Units.degreesToRadians;
+import static edu.wpi.first.math.util.Units.inchesToMeters;
+import static edu.wpi.first.units.Units.*;
 
 public class Drive extends SubsystemBase {
   private static final double MAX_LINEAR_SPEED = Units.feetToMeters(14.5);
-  private static final double TRACK_WIDTH_X = Units.inchesToMeters(20.75);
-  private static final double TRACK_WIDTH_Y = Units.inchesToMeters(20.75);
+  private static final double TRACK_WIDTH_X = inchesToMeters(20.75);
+  private static final double TRACK_WIDTH_Y = inchesToMeters(20.75);
   private static final double DRIVE_BASE_RADIUS =
       Math.hypot(TRACK_WIDTH_X / 2.0, TRACK_WIDTH_Y / 2.0);
   private static final double MAX_ANGULAR_SPEED = MAX_LINEAR_SPEED / DRIVE_BASE_RADIUS;
@@ -47,22 +59,51 @@ public class Drive extends SubsystemBase {
   private final GyroIOInputsAutoLogged gyroInputs = new GyroIOInputsAutoLogged();
   private final Module[] modules = new Module[4]; // FL, FR, BL, BR
   private final SwerveModulePosition[] swerveModulePositions;
+  private final VisionIO visionIO;
+  private final VisionIO.VisionIOInputs visionInputs = new VisionIO.VisionIOInputs();
+
+  //  private final
 
   private SwerveDriveKinematics kinematics = new SwerveDriveKinematics(getModuleTranslations());
   private SwerveDrivePoseEstimator poseEstimator;
   private Pose2d pose = new Pose2d();
   private Rotation2d lastGyroRotation = new Rotation2d();
 
+  AprilTagFieldLayout aprilTagFieldLayout = AprilTagFields.k2024Crescendo.loadAprilTagLayoutField();
+
+  // Update robotToCam with cameraSystem mounting pos
+  Transform3d robotToCam =
+      new Transform3d(
+              new Translation3d(
+                      inchesToMeters(-10.18),
+                      inchesToMeters(-7.074),
+                      inchesToMeters(8.53)
+              ),
+          new Rotation3d(
+                  0,
+                  degreesToRadians(55),
+                  degreesToRadians(177)
+          )
+      ); // Cam mounted facing forward, half a meter forward of center, half a meter up
+  // from center.
+  private final PhotonPoseEstimator photonPoseEstimator =
+      new PhotonPoseEstimator(
+          aprilTagFieldLayout,
+              PhotonPoseEstimator.PoseStrategy.MULTI_TAG_PNP_ON_COPROCESSOR,
+          robotToCam);
   SwerveDrivePoseEstimator noGyroPoseEstimation;
   Rotation2d noGyroRotation;
 
   public Drive(
       GyroIO gyroIO,
+      VisionIO visionIO,
       ModuleIO flModuleIO,
       ModuleIO frModuleIO,
       ModuleIO blModuleIO,
       ModuleIO brModuleIO) {
+    this.visionIO = visionIO;
     this.gyroIO = gyroIO;
+
     modules[0] = new Module(flModuleIO, 0);
     modules[1] = new Module(frModuleIO, 1);
     modules[2] = new Module(blModuleIO, 2);
@@ -115,6 +156,10 @@ public class Drive extends SubsystemBase {
   public void periodic() {
     gyroIO.updateInputs(gyroInputs);
     Logger.processInputs("Drive/Gyro", gyroInputs);
+
+    visionIO.updateInputs(visionInputs);
+    Logger.processInputs("Drive/Vision", visionInputs);
+
     for (var module : modules) {
       module.periodic();
     }
@@ -170,7 +215,30 @@ public class Drive extends SubsystemBase {
           pose.rotateBy(noGyroRotation.minus(pose.getRotation())).exp(twist).getRotation();
       pose = noGyroPoseEstimation.update(noGyroRotation, swerveModulePositions);
     }
+
+    Logger.recordOutput("pose", pose);
+
+    Optional<EstimatedRobotPose> estPose = photonPoseEstimator.update(visionInputs.cameraResult);
+    estPose.ifPresent(
+            estimatedRobotPose -> {
+              Logger.recordOutput("estRoPose", estimatedRobotPose.estimatedPose);
+              poseEstimator.addVisionMeasurement(
+                      estimatedRobotPose.estimatedPose.toPose2d(), estimatedRobotPose.timestampSeconds);
+            });
   }
+
+  /*public void updateVisionPosition(double leftDist, double rightDist, Rotation2d rotation) {
+    // Rotation2d rotation; // need to set to something
+    poseEstimator.update(rotation, swerveModulePositions);
+    var res = cameraSystem.getLatestResult();
+    if (res.hasTargets()) {
+      var imageCaptureTime = res.getTimestampSeconds();
+      var camToTargetTrans = res.getBestTarget().getBestCameraToTarget();
+      var camPose = Constants.kFarTargetPose.transformBy(camToTargetTrans.inverse());
+      poseEstimator.addVisionMeasurement(
+          camPose.transformBy(Constants.kCameraToRobot).toPose2d(), imageCaptureTime);
+    }
+  }*/
 
   private void updateSwerveModulePositions() {
     // populate the list
@@ -284,7 +352,7 @@ public class Drive extends SubsystemBase {
   }
 
   /** Returns the current odometry pose. */
-  @AutoLogOutput(key = "Odometry/Robot")
+  //  @AutoLogOutput(key = "Odometry/Robot")
   public Pose2d getPose() {
     return pose;
   }
