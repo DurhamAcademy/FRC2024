@@ -28,7 +28,6 @@ import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine.Config;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine.Direction;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine.Mechanism;
 import frc.robot.commands.DriveCommands;
-import frc.robot.commands.FeederCommands;
 import frc.robot.commands.IntakeCommands;
 import frc.robot.subsystems.climb.Climb;
 import frc.robot.subsystems.climb.ClimbIO;
@@ -50,6 +49,8 @@ import org.littletonrobotics.junction.networktables.LoggedDashboardNumber;
 
 import static edu.wpi.first.units.BaseUnits.Voltage;
 import static edu.wpi.first.units.Units.Seconds;
+import static edu.wpi.first.wpilibj2.command.Command.InterruptionBehavior.kCancelIncoming;
+import static frc.robot.commands.FeederCommands.feedToShooter;
 
 /**
  * This class is where the bulk of the robot should be declared. Since Command-based is a
@@ -200,19 +201,7 @@ public class RobotContainer {
 
         // ---- DRIVETRAIN COMMANDS ----
         driverController.x().whileTrue(Commands.runOnce(drive::stopWithX, drive));
-        driverController
-            .b()
-            .whileTrue(
-                Commands.runOnce(
-                        () -> {
-                          try {
-                            drive.setPose(
-                                new Pose2d(drive.getPose().getTranslation(), new Rotation2d()));
-                          } catch (Drive.GyroConnectionException ignored) {
-                          }
-                        },
-                        drive)
-                    .ignoringDisable(true));
+
         // ---- INTAKE COMMANDS ----
         driverController
                 .leftTrigger()
@@ -231,7 +220,8 @@ public class RobotContainer {
                           shooter.shooterRunVelocity(3000);
                           shooter.setTargetShooterAngle(Rotation2d.fromRadians(0.0));
                         },
-                        shooter).andThen(new WaitUntilCommand(shooter::flywheelAtSetpoint).andThen(FeederCommands.feedToShooter(feeder))));
+                        shooter).alongWith(Commands.waitUntil(shooter::allAtSetpoint).andThen(feedToShooter(feeder).withInterruptBehavior(kCancelIncoming))));
+
         break;
       case DriveMotors:
         drive.setDefaultCommand(
