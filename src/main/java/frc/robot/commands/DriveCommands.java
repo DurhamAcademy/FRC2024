@@ -19,9 +19,12 @@ import static edu.wpi.first.math.MathUtil.applyDeadband;
 import static edu.wpi.first.units.Units.*;
 
 import edu.wpi.first.math.InterpolatingMatrixTreeMap;
+import static edu.wpi.first.units.Units.*;
+
 import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.controller.ProfiledPIDController;
 import edu.wpi.first.math.controller.ProfiledPIDController;
+import edu.wpi.first.math.geometry.*;
 import edu.wpi.first.math.geometry.*;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
@@ -48,6 +51,7 @@ import java.util.function.DoubleSupplier;
 public class DriveCommands {
 
     private static final double DEADBAND = 0.1;
+  private static final double DEADBANDX = 1.0;
     private static final double CANCEL_COMMAND_DEADBAND = 0.2;
     private static final double DRIVE_ROTATION_P_VALUE = 35.0;
     private static TrapezoidProfile.Constraints rotationConstraints =
@@ -120,6 +124,7 @@ public class DriveCommands {
                   linearVelocity.getY() * drive.getMaxLinearSpeedMetersPerSec(),
                   omega * drive.getMaxAngularSpeedRadPerSec(),
                   drive.getRotation()));
+
         },
         drive);
   }

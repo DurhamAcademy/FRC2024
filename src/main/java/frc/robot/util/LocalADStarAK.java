@@ -95,7 +95,7 @@ public class LocalADStarAK implements Pathfinder {
    */
   @Override
   public void setDynamicObstacles(
-          List<Pair<Translation2d, Translation2d>> obs, Translation2d currentRobotPos) {
+      List<Pair<Translation2d, Translation2d>> obs, Translation2d currentRobotPos) {
     if (!Logger.hasReplaySource()) {
       io.adStar.setDynamicObstacles(obs, currentRobotPos);
     }

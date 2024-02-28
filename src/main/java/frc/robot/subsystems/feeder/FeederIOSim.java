@@ -14,12 +14,12 @@
 package frc.robot.subsystems.feeder;
 
 import edu.wpi.first.math.system.plant.DCMotor;
-import edu.wpi.first.wpilibj.simulation.SingleJointedArmSim;
+import edu.wpi.first.wpilibj.simulation.FlywheelSim;
 
 public class FeederIOSim implements FeederIO {
-  private SingleJointedArmSim sim =
-      new SingleJointedArmSim(
-          DCMotor.getNEO(1), 1.5, 0.025, 0.1, -Math.PI / 4, Math.PI / 2, true, 0);
+  private final FlywheelSim sim =
+          new FlywheelSim(
+              DCMotor.getNEO(1), 1.5, 0.025);
   //  private ProfiledPIDController pid = new ProfiledPIDController(0.0, 0.0, 0.0);
   //  private SimpleMotorFeedforward ffModel = new SimpleMotorFeedforward(0.0, 0.0);
 
@@ -31,13 +31,13 @@ public class FeederIOSim implements FeederIO {
     if (closedLoop) {
       //      appliedVolts = MathUtil.clamp(pid.calculate(sim.getAngleRads()) + ffVolts, -12.0,
       // 12.0);
-      sim.setInputVoltage(appliedVolts);
     }
+    sim.setInputVoltage(appliedVolts);
 
     sim.update(0.02);
 
-    inputs.positionRad = sim.getAngleRads();
-    inputs.velocityRadPerSec = sim.getVelocityRadPerSec();
+    inputs.positionRad = sim.getAngularVelocityRadPerSec();
+    inputs.velocityRadPerSec = sim.getAngularVelocityRadPerSec();
     inputs.appliedVolts = appliedVolts;
     inputs.currentAmps = new double[] {sim.getCurrentDrawAmps()};
   }
@@ -45,12 +45,13 @@ public class FeederIOSim implements FeederIO {
   @Override
   public void setVoltage(double volts) {
     closedLoop = false;
-    appliedVolts = 0.0;
+    appliedVolts = volts;
     sim.setInputVoltage(volts);
   }
 
   @Override
   public void stop() {
+    sim.setState(sim.getAngularVelocityRadPerSec());
     setVoltage(0.0);
   }
 }

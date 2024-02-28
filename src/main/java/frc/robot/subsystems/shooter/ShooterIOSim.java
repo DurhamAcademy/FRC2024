@@ -43,7 +43,6 @@ public class ShooterIOSim implements ShooterIO {
   public void updateInputs(ShooterIOInputs inputs) {
     sim.update(0.02);
 
-    inputs.flywheelPositionRad = 0.0;
     inputs.flywheelVelocityRadPerSec = sim.getAngularVelocityRadPerSec();
     inputs.flywheelAppliedVolts = appliedVolts;
     inputs.flywheelCurrentAmps = new double[] {sim.getCurrentDrawAmps()};

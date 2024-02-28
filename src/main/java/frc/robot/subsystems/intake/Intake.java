@@ -1,10 +1,10 @@
 package frc.robot.subsystems.intake;
 
-import static edu.wpi.first.units.Units.*;
-
+import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.controller.ArmFeedforward;
 import edu.wpi.first.math.controller.ProfiledPIDController;
 import edu.wpi.first.math.geometry.Rotation2d;
+import edu.wpi.first.math.trajectory.TrapezoidProfile;
 import edu.wpi.first.math.trajectory.TrapezoidProfile.Constraints;
 import edu.wpi.first.wpilibj.RobotController;
 import edu.wpi.first.wpilibj.smartdashboard.Mechanism2d;
@@ -13,6 +13,8 @@ import edu.wpi.first.wpilibj.util.Color8Bit;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants;
 import org.littletonrobotics.junction.Logger;
+
+import static edu.wpi.first.units.Units.*;
 
 public class Intake extends SubsystemBase {
   private final MechanismLigament2d ligament1;
@@ -26,11 +28,25 @@ public class Intake extends SubsystemBase {
 
   Mechanism2d mechanism2d = new Mechanism2d(0, 0);
 
+  // double position = 0.0;
+  Rotation2d armTarget = Rotation2d.fromDegrees(-90);
+
+  Rotation2d off1 = new Rotation2d(1.2466477);
+  Rotation2d off1A = new Rotation2d(0.313352305);
+  Rotation2d off2 = new Rotation2d(1.36216528);
+  Rotation2d off2A = new Rotation2d(0.154247715);
   public Intake(IntakeIO io) {
     this.io = io;
     switch (Constants.currentMode) {
       case REAL:
-        // FIXME: add arm FF and FB
+        armFF = new ArmFeedforward(0.0, 0.21, 0.195, 0.0);
+        armFB =
+            new ProfiledPIDController(
+                    7.0,
+                0.0,
+                0.0,
+                    new Constraints(RadiansPerSecond.of(1), RadiansPerSecond.per(Second).of(1.5)));
+        break;
       case REPLAY:
         armFF = new ArmFeedforward(0.1, .15, 1.95);
         armFB =
@@ -44,7 +60,7 @@ public class Intake extends SubsystemBase {
         armFF = new ArmFeedforward(0.0, 0.21, 0.195, 0.0);
         armFB =
             new ProfiledPIDController(
-                1.0,
+                5.0,
                 0.0,
                 0.0,
                 new Constraints(RotationsPerSecond.of(3), RotationsPerSecond.per(Second).of(9)));
@@ -55,43 +71,44 @@ public class Intake extends SubsystemBase {
         break;
     }
     var root = mechanism2d.getRoot("Root", .305, .220);
-
+    armFB.enableContinuousInput(-Math.PI, Math.PI);
     ligament1 =
         new MechanismLigament2d("Intake", .135, off1.getDegrees(), .1, new Color8Bit(1, 1, 1));
     ligament1A =
         new MechanismLigament2d(
-            "Intake", 0.232427, -off1A.plus(off1).getDegrees(), .5, new Color8Bit(1, 1, 1));
+            "Intake", 0.232427, off1A.minus(quarterTurn).getDegrees(), .5, new Color8Bit(1, 1, 1));
     //    ligament1
     ligament2 =
         new MechanismLigament2d("Intake2", .227, off2.getDegrees(), .1, new Color8Bit(1, 1, 1));
     ligament2A =
         new MechanismLigament2d(
-            "Intake2", 0.232983, -off2A.plus(off2).getDegrees(), .5, new Color8Bit(1, 1, 1));
+            "Intake2", 0.232983, off2A.minus(quarterTurn).getDegrees(), .5, new Color8Bit(1, 1, 1));
     root.append(ligament1).append(ligament1A);
     root.append(ligament2).append(ligament2A);
-  }
 
-  Rotation2d off1 = new Rotation2d(1.2466477);
-  Rotation2d off1A = new Rotation2d(0.313352305);
-  Rotation2d off2 = new Rotation2d(1.36216528);
-  Rotation2d off2A = new Rotation2d(0.154247715);
-  // double position = 0.0;
-  Rotation2d armTarget = Rotation2d.fromDegrees(0);
+  }
+  Rotation2d quarterTurn = Rotation2d.fromRadians(Math.PI / 2);
 
   @Override
   public void periodic() {
     io.updateInputs(inputs);
     Logger.processInputs("Intake", inputs);
+    if (Math.abs(MathUtil.angleModulus(armFB.getSetpoint().position) - MathUtil.angleModulus(armTarget.getRadians())) > .25) {
+    }
     if (RobotController.isSysActive())
       io.setArmVoltage(
-          armFB.calculate(inputs.armPositionRad, armTarget.getRadians())
+              armFB.calculate(inputs.armPositionRad, MathUtil.angleModulus(armTarget.getRadians()))
               + armFF.calculate(armFB.getSetpoint().position, armFB.getSetpoint().velocity));
     else io.setArmVoltage(0.0);
 
-    Logger.recordOutput("Intake", mechanism2d);
     Rotation2d rotation2d = new Rotation2d(inputs.armPositionRad);
-    ligament1.setAngle(rotation2d.plus(off1));
-    ligament2.setAngle(rotation2d.plus(off2));
+    ligament1.setAngle(rotation2d.plus(off1).minus(quarterTurn).times(-1));
+    ligament2.setAngle(rotation2d.plus(off2).minus(quarterTurn).times(-1));
+    Logger.recordOutput("Intake", mechanism2d);
+  }
+
+  public void resetArmFB() {
+    armFB.reset(new TrapezoidProfile.State(Radians.of(inputs.armPositionRad), RadiansPerSecond.of(inputs.armVelocityRadPerSec)));
   }
 
   public void setIntakePosition(Rotation2d position) {

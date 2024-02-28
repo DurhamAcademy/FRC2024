@@ -23,6 +23,8 @@ public interface ShooterIO {
     public double flywheelAppliedVolts = 0.0;
     public double[] flywheelCurrentAmps = new double[] {};
     public double[] flywheelTemperature = new double[] {};
+    public double[] flywheelAncillaryTemperature = new double[]{};
+    public double[] flywheelProcessorTemperature = new double[]{};
   }
 
   /** Updates the set of loggable inputs. */
