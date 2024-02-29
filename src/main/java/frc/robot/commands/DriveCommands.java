@@ -223,7 +223,7 @@ public class DriveCommands {
                                     value,
                                     drive.getRotation()));
                     previousPose[0] = drive.getPose();
-                })
+                }, drive)
                 .until(
                         () -> {
                             // if the controller is giving a turn input, end the command
