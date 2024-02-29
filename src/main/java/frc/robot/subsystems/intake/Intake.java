@@ -45,7 +45,7 @@ public class Intake extends SubsystemBase {
                     7.0,
                 0.0,
                 0.0,
-                    new Constraints(RadiansPerSecond.of(4), RadiansPerSecond.per(Second).of(2)));
+                    new Constraints(RadiansPerSecond.of(4), RadiansPerSecond.per(Second).of(7)));
         break;
       case REPLAY:
         armFF = new ArmFeedforward(0.1, .15, 1.95);

@@ -180,13 +180,7 @@ public class RobotContainer {
                 () -> -driverController.getLeftY(),
                 () -> -driverController.getLeftX(),
                 () -> -driverController.getRightX()));
-        intake.setDefaultCommand(
-            new RunCommand(
-                () -> {
-                    intake.setIntakePosition(Rotation2d.fromDegrees(-90));
-                  intake.setRollerPercentage(0.0);
-                },
-                intake));
+          intake.setDefaultCommand(IntakeCommands.idleCommand(intake));
         feeder.setDefaultCommand(new RunCommand(() -> feeder.runVolts(0.0), feeder));
         shooter.setDefaultCommand(new RunCommand(() -> {
           shooter.shooterRunVolts(0.0);
