@@ -7,6 +7,7 @@ import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import frc.robot.subsystems.drive.Drive;
 import frc.robot.subsystems.shooter.Shooter;
+import org.littletonrobotics.junction.Logger;
 
 import java.util.function.DoubleSupplier;
 
@@ -22,10 +23,14 @@ public class ShooterCommands {
     }
 
     private static void populateITM() { //im making separate methods for this because I am not sure how much adjustments you would have to make
-        distanceToAngle.put(0.0, 0.0);
-        distanceToAngle.put(1000.0, 0.0);
-        distanceToRPM.put(0.0, 3000.0);
-        distanceToRPM.put(1000.0, 3000.0);
+        distanceToAngle.put(0.0, .703);
+        distanceToAngle.put(.894, .703);
+        distanceToAngle.put(3.506, .423);
+        distanceToAngle.put(1000.0, .703);
+        distanceToRPM.put(0.0, 3500.0);
+        distanceToRPM.put(0.894, 3500.0);
+        distanceToRPM.put(3.506, 5000.0);
+        distanceToRPM.put(1000.0, 4000.0);
     }
 
     public static Command autoAim(Shooter shooter, Drive drive, DoubleSupplier supplier) {
@@ -35,9 +40,10 @@ public class ShooterCommands {
             Pose3d shooter1 = new Pose3d(drive.getPose()).plus(shooterOffset);
             Pose3d pose3d = speakerPos.relativeTo(shooter1);
             double distance = getDistance(pose3d);
+            Logger.recordOutput("distanceFromGoal", distance);
             double atan = Math.atan(pose3d.getZ() / distance);
-            shooter.setTargetShooterAngle(Rotation2d.fromRadians(atan + supplier.getAsDouble()));
-            shooter.shooterRunVelocity(4500);
+            shooter.setTargetShooterAngle(Rotation2d.fromRadians(distanceToAngle.get(distance)));
+            shooter.shooterRunVelocity(distanceToRPM.get(distance));
         }, shooter).handleInterrupt(() -> {
             shooter.shooterRunVelocity(0.0);
         });
