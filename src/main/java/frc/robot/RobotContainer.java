@@ -211,7 +211,7 @@ public class RobotContainer {
                         () -> -driverController.getLeftY(),
                         () -> -driverController.getLeftX(),
                         () -> -driverController.getRightX());
-        operatorController.povDown().onTrue(command.getCommand());
+        driverController.a().onTrue(command.getCommand());
 
         // ---- INTAKE COMMANDS ----
         driverController

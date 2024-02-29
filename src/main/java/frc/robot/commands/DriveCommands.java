@@ -145,14 +145,9 @@ public class DriveCommands {
         Pose2d speakerAimTargetPose = new Pose2d(.25, 5.5, new Rotation2d());
         final Pose2d[] previousPose = {null};
         ProfiledPIDController rotationController =
-                new ProfiledPIDController(0.0, 0, .0, new TrapezoidProfile.Constraints(0.1, 1));
+                new ProfiledPIDController(0.2, 0, .0, new TrapezoidProfile.Constraints(0.1, 1));
 
-    SmartDashboard.putNumber("rotationPidP", DRIVE_ROTATION_P_VALUE);
-        SmartDashboard.putNumber("rotationPidI", 0.0);
-        SmartDashboard.putNumber("rotationPidD", 1.5);
-        SmartDashboard.putNumber("rotationPidMV", 0.0);
-        SmartDashboard.putNumber("rotationPidMA", 0.0);
-        rotationController.enableContinuousInput(Rotations.toBaseUnits(-.5), Rotations.toBaseUnits(.5));
+        rotationController.enableContinuousInput(Rotations.toBaseUnits(0), Rotations.toBaseUnits(1));
 
     var command =
         new RunCommand(
@@ -219,12 +214,12 @@ public class DriveCommands {
                       new TrapezoidProfile.State(
                           Radians.of(drive.getRotation().getRadians()),
                           drive.getAnglularVelocity()));
-                    var value = rotationController.calculate(Rotation2d.fromRadians(goalAngle.getRadians()).getRotations());
+                    var value = rotationController.calculate(drive.getPose().getRotation().getRotations());
                     drive.runVelocity(
                             ChassisSpeeds.fromFieldRelativeSpeeds(
                                     linearVelocity.getX() * drive.getMaxLinearSpeedMetersPerSec(),
                                     linearVelocity.getY() * drive.getMaxLinearSpeedMetersPerSec(),
-                          rotationController.getSetpoint().velocity,
+                                    value,
                                     drive.getRotation()));
                     previousPose[0] = drive.getPose();
                 })
