@@ -37,7 +37,7 @@ public class ShooterCommands {
             double distance = getDistance(pose3d);
             double atan = Math.atan(pose3d.getZ() / distance);
             shooter.setTargetShooterAngle(Rotation2d.fromRadians(atan + supplier.getAsDouble()));
-            shooter.shooterRunVelocity(3000);
+            shooter.shooterRunVelocity(4500);
         }, shooter).handleInterrupt(() -> {
             shooter.shooterRunVelocity(0.0);
         });
