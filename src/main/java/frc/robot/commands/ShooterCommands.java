@@ -7,7 +7,6 @@ import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import frc.robot.subsystems.drive.Drive;
 import frc.robot.subsystems.shooter.Shooter;
-import org.littletonrobotics.junction.Logger;
 
 import java.util.function.DoubleSupplier;
 
@@ -42,20 +41,6 @@ public class ShooterCommands {
         }, shooter).handleInterrupt(() -> {
             shooter.shooterRunVelocity(0.0);
         });
-    }
-
-    public static Command autoAimOnly(Shooter shooter, Drive drive, DoubleSupplier supplier) {
-        populateITM();
-        //the parameter is the robot, idk how to declare it, also this returns the angle
-        return Commands.run(() -> {
-            Pose3d shooter1 = new Pose3d(drive.getPose()).plus(shooterOffset);
-            Pose3d pose3d = speakerPos.relativeTo(shooter1);
-            double distance = getDistance(pose3d);
-            Logger.recordOutput("distance", distance);
-            double atan = Math.atan(pose3d.getZ() / distance);
-            shooter.setTargetShooterAngle(Rotation2d.fromRadians(atan + supplier.getAsDouble()));
-            shooter.shooterRunVelocity(0.0);
-        }, shooter);
     }
 
     private static class Result {

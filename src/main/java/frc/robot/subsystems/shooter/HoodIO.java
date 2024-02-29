@@ -9,13 +9,11 @@ public interface HoodIO {
 
   @AutoLog
   public static class HoodIOInputs {
-    public double hoodAbsolutePositionRad = 0.0;
     public double hoodPositionRad = 0.0;
-    public double hoodAbsoluteVelocityRadPerSec = 0.0;
+    public double hoodVelocityRadPerSec = 0.0;
     public double hoodAppliedVolts = 0.0;
     public double[] hoodCurrentAmps = new double[] {};
     public double[] hoodTemperature = new double[] {};
-    public double hoodVelocityRadPerSec;
   }
 
   /** Run open loop at the specified voltage. */

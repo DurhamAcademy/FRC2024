@@ -263,8 +263,8 @@ public class RobotContainer {
                     .andThen(
                         (new RunCommand(
                             () ->
-                                    shooter.shooterRunVelocity(2500), //THIS NUMBER NEEDS TO BE CALIBRATED
-                                shooter)).withTimeout(5)));
+                                    shooter.shooterRunVelocity(5000), //THIS NUMBER NEEDS TO BE CALIBRATED
+                                intake))));
         break;
       case Shooter:
         var shooterSysId =
