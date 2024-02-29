@@ -30,9 +30,8 @@ public class HoodIOSparkMax implements HoodIO {
         absoluteEncoder.setInverted(true);
 
         absoluteEncoder.setPositionConversionFactor(MOTOR_TO_ENCODER_RATIO * GEAR_RATIO * Math.PI * 2);
-        encoder.setVelocityConversionFactor(MOTOR_TO_ENCODER_RATIO * GEAR_RATIO);
-        encoder.setPosition(absoluteEncoder.getPosition() * GEAR_RATIO);
-        encoder.setMeasurementPeriod(20);
+        encoder.setVelocityConversionFactor(MOTOR_TO_ENCODER_RATIO * GEAR_RATIO * 0.2103595429);
+        encoder.setPosition(absoluteEncoder.getPosition() * GEAR_RATIO * 0.2103595429);
 
         leader.burnFlash();
     }

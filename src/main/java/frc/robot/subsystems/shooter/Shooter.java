@@ -17,6 +17,7 @@ import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.controller.ProfiledPIDController;
 import edu.wpi.first.math.controller.SimpleMotorFeedforward;
+import edu.wpi.first.math.filter.LinearFilter;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.trajectory.TrapezoidProfile;
 import edu.wpi.first.math.util.Units;
@@ -44,10 +45,10 @@ public class Shooter extends SubsystemBase {
     private ProfiledPIDController hoodFB;
     private SimpleMotorFeedforward shooterVelocityFF;
     private boolean characterizeMode = false;
+    private LinearFilter hoodFilter = LinearFilter.singlePoleIIR(0.07, 0.02);
     Mechanism2d mech1 = new Mechanism2d(3,3);
     MechanismRoot2d root = mech1.getRoot("shooter", 0 ,0);
     MechanismLigament2d sState = root.append(new MechanismLigament2d("shooter", 0.14, -90.0));
-
     /**
      * Creates a new Shooter.
      */
@@ -103,8 +104,7 @@ public class Shooter extends SubsystemBase {
         Logger.recordOutput("Shooter/TargetHoodAngle", targetHoodAngleRad);
         Logger.recordOutput("Shooter/HoodInputs/HoodPositionRad", hoodInputs.hoodAbsolutePositionRad);
         hoodIO.setVoltage(
-                hoodFB.calculate(
-                        hoodInputs.hoodAbsolutePositionRad,
+                hoodFB.calculate(hoodFilter.calculate(hoodInputs.hoodAbsolutePositionRad),
                         targetHoodAngleRad));
     }
 

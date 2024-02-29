@@ -28,6 +28,7 @@ import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine.Config;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine.Direction;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine.Mechanism;
 import frc.robot.commands.DriveCommands;
+import frc.robot.commands.FeederCommands;
 import frc.robot.commands.IntakeCommands;
 import frc.robot.commands.ShooterCommands;
 import frc.robot.subsystems.climb.Climb;
@@ -208,8 +209,8 @@ public class RobotContainer {
                 .leftTrigger()
                 .whileTrue(
                         IntakeCommands.intakeCommand(intake)
-                                .alongWith(IntakeCommands.feedToBeamBreak(feeder)))
-                .onFalse(IntakeCommands.feedToBeamBreak(feeder).withTimeout(5));
+                                .alongWith(FeederCommands.feedToBeamBreak(feeder)))
+                .onFalse(FeederCommands.feedToBeamBreak(feeder).withTimeout(5));
         driverController.rightBumper().whileTrue(IntakeCommands.idleCommand(intake));
 
         // ---- SHOOTER COMMANDS ----
@@ -220,7 +221,8 @@ public class RobotContainer {
                             .alongWith(
                                     Commands.waitSeconds(0.5)
                                             .andThen(Commands.waitUntil(shooter::allAtSetpoint)
-                                                    .andThen(feedToShooter(feeder).finallyDo(() -> shooter.shooterRunVolts(0.0))))));
+                                                    .andThen(feedToShooter(feeder)
+                                                            .finallyDo(() -> shooter.shooterRunVelocity(0.0))))));
 
         break;
       case DriveMotors:
