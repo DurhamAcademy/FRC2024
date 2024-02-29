@@ -145,7 +145,7 @@ public class DriveCommands {
         Pose2d speakerAimTargetPose = new Pose2d(.25, 5.5, new Rotation2d());
         final Pose2d[] previousPose = {null};
         ProfiledPIDController rotationController =
-                new ProfiledPIDController(0.2, 0, .0, new TrapezoidProfile.Constraints(0.1, 1));
+                new ProfiledPIDController(1, 0, .0, new TrapezoidProfile.Constraints(0.1, 1));
 
         rotationController.enableContinuousInput(Rotations.toBaseUnits(0), Rotations.toBaseUnits(1));
 
@@ -207,14 +207,15 @@ public class DriveCommands {
                     } else goalAngleVelocity = RadiansPerSecond.zero();
 
                     // calculate how much speed is needed to get there
-                  rotationController.setGoal(
-                      new TrapezoidProfile.State(
-                          Radians.of(goalAngle.getRadians()), goalAngleVelocity));
-                  rotationController.reset(
-                      new TrapezoidProfile.State(
-                          Radians.of(drive.getRotation().getRadians()),
-                          drive.getAnglularVelocity()));
-                    var value = rotationController.calculate(drive.getPose().getRotation().getRotations());
+//                  rotationController.reset(
+//                      new TrapezoidProfile.State(
+//                          Radians.of(drive.getRotation().getRadians()),
+//                          drive.getAnglularVelocity()));
+//                  rotationController.setGoal(
+//                      new TrapezoidProfile.State(
+//                          Radians.of(goalAngle.getRadians())));
+                    var value = rotationController.calculate(drive.getPose().getRotation().getRotations(), goalAngle.getRotations());
+                    Logger.recordOutput("angle value", value);
                     drive.runVelocity(
                             ChassisSpeeds.fromFieldRelativeSpeeds(
                                     linearVelocity.getX() * drive.getMaxLinearSpeedMetersPerSec(),
