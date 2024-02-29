@@ -146,7 +146,7 @@ public class Drive extends SubsystemBase {
               modules[3].getPosition()
             },
             new Pose2d(3.0, 5.0, new Rotation2d(3.0)));
-    poseEstimator.setVisionMeasurementStdDevs(new Matrix<>(SimpleMatrix.diag(5, 5, 5)));
+    poseEstimator.setVisionMeasurementStdDevs(new Matrix<>(SimpleMatrix.diag(2, 2, 2)));
 
     swerveModulePositions = new SwerveModulePosition[modules.length];
     noGyroPoseEstimation = null;
