@@ -217,7 +217,7 @@ public class RobotContainer {
         operatorController
                 .povDown()
                         .whileTrue(
-                                IntakeCommands.flushIntake(intake)
+                                IntakeCommands.flushIntake(intake).alongWith(FeederCommands.flushFeeder(feeder))
                         );
 
 
