@@ -20,6 +20,7 @@ import com.pathplanner.lib.util.PathPlannerLogging;
 import com.pathplanner.lib.util.ReplanningConfig;
 import edu.wpi.first.apriltag.AprilTagFieldLayout;
 import edu.wpi.first.apriltag.AprilTagFields;
+import edu.wpi.first.math.Matrix;
 import edu.wpi.first.math.estimator.SwerveDrivePoseEstimator;
 import edu.wpi.first.math.geometry.*;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
@@ -36,6 +37,7 @@ import edu.wpi.first.wpilibj.DriverStation.Alliance;
 import edu.wpi.first.wpilibj.sysid.SysIdRoutineLog;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.util.LocalADStarAK;
+import org.ejml.simple.SimpleMatrix;
 import org.littletonrobotics.junction.AutoLogOutput;
 import org.littletonrobotics.junction.Logger;
 import org.photonvision.EstimatedRobotPose;
@@ -76,8 +78,8 @@ public class Drive extends SubsystemBase {
   Transform3d robotToCam =
       new Transform3d(
               new Translation3d(
-                      inchesToMeters(-10.18),
-                      inchesToMeters(-7.074),
+                      inchesToMeters(10.18),
+                      inchesToMeters(7.074),
                       inchesToMeters(8.53) - 0.035
               ),
           new Rotation3d(
@@ -114,11 +116,7 @@ public class Drive extends SubsystemBase {
     AutoBuilder.configureHolonomic(
         this::getPose,
         pose1 -> {
-          try {
             setPose(pose1);
-          } catch (GyroConnectionException e) {
-            throw new RuntimeException(e);
-          }
         },
         () -> kinematics.toChassisSpeeds(getModuleStates()),
         this::runVelocity,
@@ -148,11 +146,14 @@ public class Drive extends SubsystemBase {
               modules[3].getPosition()
             },
             new Pose2d(3.0, 5.0, new Rotation2d(3.0)));
+    poseEstimator.setVisionMeasurementStdDevs(new Matrix<>(SimpleMatrix.diag(5, 5, 5)));
 
     swerveModulePositions = new SwerveModulePosition[modules.length];
     noGyroPoseEstimation = null;
     noGyroRotation = null;
   }
+
+
 
   public void periodic() {
     gyroIO.updateInputs(gyroInputs);
@@ -366,7 +367,7 @@ public class Drive extends SubsystemBase {
   }
 
   /** Resets the current odometry pose. */
-  public void setPose(Pose2d pose) throws GyroConnectionException {
+  public void setPose(Pose2d pose) {
     this.pose = pose;
     if (gyroInputs.connected)
       this.poseEstimator.resetPosition(gyroInputs.yawPosition, swerveModulePositions, pose);
