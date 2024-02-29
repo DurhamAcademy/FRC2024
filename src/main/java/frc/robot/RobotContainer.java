@@ -214,6 +214,13 @@ public class RobotContainer {
                 .onFalse(FeederCommands.feedToBeamBreak(feeder).withTimeout(5));
         driverController.rightBumper().whileTrue(IntakeCommands.idleCommand(intake));
 
+        operatorController
+                .povDown()
+                        .whileTrue(
+                                IntakeCommands.flushIntake(intake)
+                        );
+
+
         // ---- SHOOTER COMMANDS ----
         operatorController
                 .y()

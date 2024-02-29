@@ -15,6 +15,15 @@ public class IntakeCommands {
                 intake);
     }
 
+    public static Command flushIntake(Intake intake){
+        return new RunCommand(
+                () -> {
+                    intake.setIntakePosition(Rotation2d.fromDegrees(-5.0));
+                    intake.setRollerPercentage(-0.5);
+                },
+                intake);
+    }
+
     public static Command idleCommand(Intake intake) {
         return new RunCommand(
                 () -> {
