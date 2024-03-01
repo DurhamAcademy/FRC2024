@@ -48,6 +48,8 @@ public class Shooter extends SubsystemBase {
     MechanismRoot2d root = mech1.getRoot("shooter", 0 ,0);
     MechanismLigament2d sState = root.append(new MechanismLigament2d("shooter", 0.14, -90.0));
 
+    private boolean hasReset = false;
+
     /**
      * Creates a new Shooter.
      */
@@ -60,7 +62,7 @@ public class Shooter extends SubsystemBase {
         // separate robot with different tuning)
         switch (Constants.currentMode) {
             case REAL:
-                hoodFB = new ProfiledPIDController(2.0, 0.0, 0.0, new TrapezoidProfile.Constraints(1, 2));
+                hoodFB = new ProfiledPIDController(3.0, 0.0, 0.0, new TrapezoidProfile.Constraints(3, 8));
                 hoodFB.setTolerance(0.1);
                 shooterVelocityFB =
                         new PIDController(0.0079065, 0.0, 0.0);
@@ -94,6 +96,12 @@ public class Shooter extends SubsystemBase {
 
         hoodIO.updateInputs(hoodInputs);
         Logger.processInputs("Hood", hoodInputs);
+
+        if (!hasReset) {
+            hoodFB.reset(hoodInputs.hoodPositionRad);
+            hasReset = true;
+        }
+
         if (!characterizeMode) {
             shooterIO.setFlywheelVoltage(
                     shooterVelocityFB.calculate(shooterInputs.flywheelVelocityRadPerSec, setpointRadPS)
