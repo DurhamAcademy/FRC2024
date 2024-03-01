@@ -205,7 +205,8 @@ public class RobotContainer {
                         () -> {
                           climb.runLeftVolts(
                                   MathUtil.applyDeadband(operatorController.getLeftY(), 0.075) * 12);
-                          climb.runRightVolts(operatorController.getRightY() * 12);
+                          climb.runRightVolts(
+                                  MathUtil.applyDeadband(operatorController.getRightY(), 0.075 * 12));
                         },
                         climb));
 
