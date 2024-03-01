@@ -1,15 +1,17 @@
-package frc.robot;
+package frc.robot.util;
 
 import edu.wpi.first.util.sendable.Sendable;
 import edu.wpi.first.util.sendable.SendableBuilder;
-import edu.wpi.first.wpilibj.shuffleboard.*;
+import edu.wpi.first.wpilibj.shuffleboard.BuiltInWidgets;
+import edu.wpi.first.wpilibj.shuffleboard.Shuffleboard;
+import edu.wpi.first.wpilibj.shuffleboard.ShuffleboardTab;
 import edu.wpi.first.wpilibj.smartdashboard.Field2d;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import frc.robot.subsystems.drive.Drive;
 import frc.robot.subsystems.drive.VisionIOReal;
 import frc.robot.subsystems.feeder.Feeder;
 import frc.robot.subsystems.intake.Intake;
-import frc.robot.subsystems.shooter.HoodIOSparkMax;
+import frc.robot.subsystems.shooter.HoodIO;
 import frc.robot.subsystems.shooter.Shooter;
 import org.littletonrobotics.junction.networktables.LoggedDashboardChooser;
 
@@ -22,7 +24,7 @@ public class DashBoard {
             Shooter shooter,
             Feeder feeder,
             Intake intake,
-            HoodIOSparkMax hood,
+            HoodIO.HoodIOInputs hood,
             VisionIOReal vision
     ) {
         main.addDouble("Flywheel RPM", () -> shooter.getShooterVelocityRPM())
@@ -46,6 +48,8 @@ public class DashBoard {
                 builder.addDoubleProperty("Robot Angle", () -> drive.getRotation().getRadians(), null);
             }
         });
+
+        main.add("Hood Angle Manager", hood.hoodPositionRad);
 
         main.add("Field", new Field2d());
     }
