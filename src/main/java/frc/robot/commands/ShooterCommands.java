@@ -32,7 +32,7 @@ public class ShooterCommands {
         distanceToAngle.put(0.0, .703);
         distanceToAngle.put(.894, .703);
         distanceToAngle.put(1.7, 0.50);
-        distanceToAngle.put(2.39, 0.475);
+        distanceToAngle.put(2.39, 0.46);
         distanceToAngle.put(3.506, .423);
         distanceToAngle.put(1000.0, .703);
         distanceToRPM.put(0.0, 3500.0);
