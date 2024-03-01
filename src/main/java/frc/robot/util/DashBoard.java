@@ -9,12 +9,11 @@ import frc.robot.subsystems.drive.Drive;
 import frc.robot.subsystems.drive.VisionIOReal;
 import frc.robot.subsystems.feeder.Feeder;
 import frc.robot.subsystems.intake.Intake;
-import frc.robot.subsystems.shooter.HoodIO;
 import frc.robot.subsystems.shooter.HoodIOSparkMax;
 import frc.robot.subsystems.shooter.Shooter;
 import org.littletonrobotics.junction.networktables.LoggedDashboardChooser;
 
-import static com.sun.tools.classfile.AccessFlags.Kind.Field;
+//import static com.sun.tools.classfile.AccessFlags.Kind.Field;
 
 public class DashBoard {
     public DashBoard(
@@ -48,7 +47,7 @@ public class DashBoard {
             }
         });
 
-        main.add("Field", Field);
+        main.add("Field", new Field2d());
     }
     ShuffleboardTab main = Shuffleboard.getTab("Main");
 }
