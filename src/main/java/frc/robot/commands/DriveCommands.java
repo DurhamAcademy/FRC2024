@@ -24,6 +24,7 @@ import edu.wpi.first.math.trajectory.TrapezoidProfile;
 import edu.wpi.first.units.Angle;
 import edu.wpi.first.units.Measure;
 import edu.wpi.first.units.Velocity;
+import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.RunCommand;
@@ -36,7 +37,9 @@ import java.util.function.DoubleSupplier;
 
 import static edu.wpi.first.math.MathUtil.applyDeadband;
 import static edu.wpi.first.math.MathUtil.inputModulus;
+import static edu.wpi.first.math.geometry.Rotation2d.fromRotations;
 import static edu.wpi.first.units.Units.*;
+import static edu.wpi.first.wpilibj.DriverStation.Alliance.Blue;
 
 public class DriveCommands {
 
@@ -113,7 +116,8 @@ public class DriveCommands {
                                     linearVelocity.getX() * drive.getMaxLinearSpeedMetersPerSec(),
                                     linearVelocity.getY() * drive.getMaxLinearSpeedMetersPerSec(),
                                     omega * drive.getMaxAngularSpeedRadPerSec(),
-                                    drive.getRotation()));
+                                    drive.getRotation().rotateBy(
+                                            fromRotations((DriverStation.getAlliance().orElse(Blue) == Blue) ? 0.0 : .5))));
 
                 },
                 drive);
@@ -227,7 +231,8 @@ public class DriveCommands {
                                             linearVelocity.getX() * drive.getMaxLinearSpeedMetersPerSec(),
                                             linearVelocity.getY() * drive.getMaxLinearSpeedMetersPerSec(),
                                             (rotationController.getSetpoint().velocity + value) * ((Robot.isSimulation()) ? 6.28 : -6.28),
-                                            drive.getRotation()));
+                                            drive.getRotation().rotateBy(
+                                                    fromRotations((DriverStation.getAlliance().orElse(Blue) == Blue) ? 0.0 : .5))));
                             previousPose[0] = drive.getPose();
                         }, drive)
                         .beforeStarting(() -> {
