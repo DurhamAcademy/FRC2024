@@ -50,6 +50,7 @@ import org.littletonrobotics.junction.networktables.LoggedDashboardNumber;
 
 import static edu.wpi.first.units.BaseUnits.Voltage;
 import static edu.wpi.first.units.Units.Seconds;
+import static edu.wpi.first.wpilibj2.command.Commands.either;
 import static edu.wpi.first.wpilibj2.command.Commands.sequence;
 import static frc.robot.commands.FeederCommands.feedToShooter;
 
@@ -246,11 +247,15 @@ public class RobotContainer {
         operatorController
                 .y()
                 .whileTrue(
-                        sequence(
-                                ShooterCommands.autoAim(shooter, drive)
-                                        .until(() -> !feeder.getBeamBroken()),
-                                ShooterCommands.autoAim(shooter, drive)
-                                        .withTimeout(0.25)
+                        either(
+                                sequence(
+                                        ShooterCommands.autoAim(shooter, drive)
+                                                .until(() -> !feeder.getBeamBroken()),
+                                        ShooterCommands.autoAim(shooter, drive)
+                                                .withTimeout(0.25)
+                                ),
+                                ShooterCommands.autoAim(shooter, drive),
+                                () -> !feeder.getBeamBroken()
                         )
                 );
         driverController

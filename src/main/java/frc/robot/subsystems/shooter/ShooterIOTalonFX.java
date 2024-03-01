@@ -34,6 +34,7 @@ public class ShooterIOTalonFX implements ShooterIO {
   private final StatusSignal<Double> leaderDeviceTemp = leader.getDeviceTemp();
   private final StatusSignal<Double> leaderAncillaryDeviceTemp = leader.getAncillaryDeviceTemp();
   private final StatusSignal<Double> leaderProcessorTemp = leader.getProcessorTemp();
+  private final StatusSignal<Double> followerAppliedVolts = follower.getMotorVoltage();
   private final StatusSignal<Double> followerCurrent = follower.getStatorCurrent();
   private final StatusSignal<Double> followerDeviceTemp = follower.getDeviceTemp();
   private final StatusSignal<Double> followerAncillaryDeviceTemp = follower.getAncillaryDeviceTemp();
@@ -71,6 +72,7 @@ public class ShooterIOTalonFX implements ShooterIO {
     inputs.flywheelVelocityRadPerSec =
         Units.rotationsToRadians(leaderVelocity.getValueAsDouble()) * GEAR_RATIO;
     inputs.flywheelAppliedVolts = leaderAppliedVolts.getValueAsDouble();
+    inputs.flywheelVoltages = new double[]{leaderAppliedVolts.getValueAsDouble(), followerAppliedVolts.getValueAsDouble()};
     inputs.flywheelCurrentAmps =
         new double[] {leaderCurrent.getValueAsDouble(), followerCurrent.getValueAsDouble()};
     inputs.flywheelTemperature

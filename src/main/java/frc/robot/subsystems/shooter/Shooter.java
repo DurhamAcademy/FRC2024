@@ -137,27 +137,12 @@ public class Shooter extends SubsystemBase {
         shooterIO.setFlywheelVoltage(voltage.in(Volts));
     }
 
-    /**
-     * Run open loop at the specified voltage.
-     */
-    public void shooterRunVolts(double volts) {
-        shooterIO.setFlywheelVoltage(volts);
-    }
-
     public Measure<Voltage> getCharacterizationAppliedVolts() {
         return Volts.of(this.shooterInputs.flywheelAppliedVolts);
     }
 
     public void hoodRunVolts(double volts) {
         hoodIO.setVoltage(volts);
-    }
-
-    /**
-     *
-     * Run open loop at the specified voltage.
-     */
-    public void runVoltage(Measure<Voltage> voltage) {
-        shooterRunVolts(voltage.in(Volts));
     }
 
     /**

@@ -21,6 +21,7 @@ public interface ShooterIO {
     public double flywheelPositionRad = 0.0;
     public double flywheelVelocityRadPerSec = 0.0;
     public double flywheelAppliedVolts = 0.0;
+    public double[] flywheelVoltages = new double[]{};
     public double[] flywheelCurrentAmps = new double[] {};
     public double[] flywheelTemperature = new double[] {};
     public double[] flywheelAncillaryTemperature = new double[]{};

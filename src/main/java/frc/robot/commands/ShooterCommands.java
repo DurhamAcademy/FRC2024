@@ -31,6 +31,7 @@ public class ShooterCommands {
     private static void populateITM() { //im making separate methods for this because I am not sure how much adjustments you would have to make
         distanceToAngle.put(0.0, .703);
         distanceToAngle.put(.894, .703);
+        distanceToAngle.put(1.7, 0.55);
         distanceToAngle.put(3.506, .423);
         distanceToAngle.put(1000.0, .703);
         distanceToRPM.put(0.0, 3500.0);
@@ -55,7 +56,7 @@ public class ShooterCommands {
 
     public static Command shooterIdle(Shooter shooter) {
         return Commands.run(() -> {
-            shooter.shooterRunVolts(0.0);
+            shooter.shooterRunVelocity(0.0);
             shooter.setTargetShooterAngle(Rotation2d.fromRadians(1.5));
         }, shooter);
     }
