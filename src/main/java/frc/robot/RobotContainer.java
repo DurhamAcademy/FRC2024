@@ -193,9 +193,9 @@ public class RobotContainer {
         drive.setDefaultCommand(
                 DriveCommands.joystickDrive(
                         drive,
-                        () -> -driverController.getLeftY(),
-                        () -> -driverController.getLeftX(),
-                        () -> -driverController.getRightX()));
+                        driverController::getLeftY,
+                        driverController::getLeftX,
+                        driverController::getRightX));
         intake.setDefaultCommand(IntakeCommands.idleCommand(intake));
         feeder.setDefaultCommand(new RunCommand(() -> feeder.runVolts(0.0), feeder));
         shooter.setDefaultCommand(ShooterCommands.shooterIdle(shooter));
@@ -215,9 +215,9 @@ public class RobotContainer {
         var command =
                 DriveCommands.aimAtSpeakerCommand(
                         drive,
-                        () -> -driverController.getLeftY(),
-                        () -> -driverController.getLeftX(),
-                        () -> -driverController.getRightX());
+                        driverController::getLeftY,
+                        driverController::getLeftX,
+                        driverController::getRightX);
         driverController.a().onTrue(command.getCommand());
 
         // ---- INTAKE COMMANDS ----
@@ -306,6 +306,8 @@ public class RobotContainer {
                                                 () -> shooter.shooterRunVelocity(5000), //THIS NUMBER NEEDS TO BE CALIBRATED
 
                                                 intake))));
+        break;
+      case TurnMotors:
         break;
       case Shooter:
         var shooterSysId =
