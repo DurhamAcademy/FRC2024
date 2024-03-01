@@ -27,6 +27,7 @@ import edu.wpi.first.units.Velocity;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.RunCommand;
+import frc.robot.Robot;
 import frc.robot.subsystems.drive.Drive;
 import org.littletonrobotics.junction.Logger;
 
@@ -144,9 +145,9 @@ public class DriveCommands {
 
         final Pose2d[] previousPose = {null};
         ProfiledPIDController rotationController =
-                new ProfiledPIDController(.5, 0, .0, new TrapezoidProfile.Constraints(1, 2));
+                new ProfiledPIDController(.7, 0, .0, new TrapezoidProfile.Constraints(1, 2));
 
-        rotationController.enableContinuousInput(Rotations.toBaseUnits(0), Rotations.toBaseUnits(1));
+        rotationController.enableContinuousInput(0, 1);
 
         var command =
                 new RunCommand(
@@ -225,7 +226,7 @@ public class DriveCommands {
                                     ChassisSpeeds.fromFieldRelativeSpeeds(
                                             linearVelocity.getX() * drive.getMaxLinearSpeedMetersPerSec(),
                                             linearVelocity.getY() * drive.getMaxLinearSpeedMetersPerSec(),
-                                            (value) * -6.28,
+                                            (rotationController.getSetpoint().velocity + value) * ((Robot.isSimulation()) ? 6.28 : -6.28),
                                             drive.getRotation()));
                             previousPose[0] = drive.getPose();
                         }, drive)
