@@ -254,7 +254,7 @@ public class RobotContainer {
                 .rightTrigger()
                 .whileTrue(
                         sequence(
-                                Commands.waitUntil(() -> (shooter.allAtSetpoint() && (shooter.getShooterVelocityRPM() > 1000))),
+                                Commands.waitUntil(() -> (shooter.allAtSetpoint() && (shooter.getShooterVelocityRPM() > 1000) && command.getReadySupplier().getAsBoolean())),
                                 feedToShooter(feeder)
                                         .until(() -> !feeder.getBeamBroken()),
                                 feedToShooter(feeder)
