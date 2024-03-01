@@ -72,6 +72,7 @@ public class Intake extends SubsystemBase {
     }
     var root = mechanism2d.getRoot("Root", .305, .220);
     armFB.enableContinuousInput(-Math.PI, Math.PI);
+    armFB.setTolerance(0.025);
     ligament1 =
         new MechanismLigament2d("Intake", .135, off1.getDegrees(), .1, new Color8Bit(1, 1, 1));
     ligament1A =
