@@ -1,12 +1,18 @@
 package frc.robot.commands;
 
+import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.filter.Debouncer;
-import edu.wpi.first.wpilibj2.command.*;
+import edu.wpi.first.wpilibj2.command.Command;
+import edu.wpi.first.wpilibj2.command.InstantCommand;
+import edu.wpi.first.wpilibj2.command.RunCommand;
+import edu.wpi.first.wpilibj2.command.SequentialCommandGroup;
 import frc.robot.subsystems.climb.Climb;
 
 import java.util.function.BooleanSupplier;
+import java.util.function.DoubleSupplier;
 
 import static edu.wpi.first.math.filter.Debouncer.DebounceType.kFalling;
+import static edu.wpi.first.wpilibj2.command.Commands.*;
 
 public class ClimbCommands {
     // run left until cannot move, if cannot move
@@ -28,26 +34,22 @@ public class ClimbCommands {
                 rightDebounce = new Debouncer(1.0, kFalling);
             }
         };
-        return new InstantCommand(debouncers::reset).andThen(
-                new ParallelCommandGroup(
-                        new SequentialCommandGroup(
+        SequentialCommandGroup sequentialCommandGroup = new InstantCommand(debouncers::reset).andThen(
+                parallel(
+                        sequence(
                                 runLeft(climb, true)
                                         .onlyWhile(getDebounce(debouncers.leftDebounce, climb.getLeftVelocityRadPerSec(), () -> debouncers.cannotMoveAL = true))
-                                        .withTimeout(1),
-                                runLeft(climb, false).onlyIf(() -> !debouncers.cannotMoveAL)
-                                        .onlyWhile(getDebounce(debouncers.leftDebounce, climb.getLeftVelocityRadPerSec(), () -> debouncers.cannotMoveBL = true))
-                                        .withTimeout(5)
+                                        .withTimeout(8)
                         ),
-                        new SequentialCommandGroup(
+                        sequence(
                                 runRight(climb, true)
                                         .onlyWhile(getDebounce(debouncers.leftDebounce, climb.getRightVelocityRadPerSec(), () -> debouncers.cannotMoveAR = true))
-                                        .withTimeout(1),
-                                runRight(climb, false).onlyIf(() -> !debouncers.cannotMoveAR)
-                                        .onlyWhile(getDebounce(debouncers.leftDebounce, climb.getRightVelocityRadPerSec(), () -> debouncers.cannotMoveBR = true))
-                                        .withTimeout(5)
+                                        .withTimeout(8)
                         )
                 )
         );
+        sequentialCommandGroup.addRequirements(climb);
+        return sequentialCommandGroup;
     }
 
     private static BooleanSupplier getDebounce(Debouncer debouncers, double climb, Runnable onTrue) {
@@ -56,6 +58,16 @@ public class ClimbCommands {
             if (calculate) onTrue.run();
             return calculate;
         };
+    }
+
+    public static Command runClimb(Climb climb, DoubleSupplier leftSupplier, DoubleSupplier rightSupplier) {
+        return run(
+                () -> {
+                    climb.runLeftVolts(
+                            MathUtil.applyDeadband(leftSupplier.getAsDouble(), 0.075) * 12);
+                    climb.runRightVolts(rightSupplier.getAsDouble() * 12);
+                },
+                climb);
     }
 
     private static RunCommand runLeft(Climb climb, boolean direction) {

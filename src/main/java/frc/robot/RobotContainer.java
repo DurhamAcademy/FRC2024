@@ -15,7 +15,6 @@ package frc.robot;
 
 import com.pathplanner.lib.auto.AutoBuilder;
 import com.pathplanner.lib.auto.NamedCommands;
-import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.units.Units;
@@ -27,10 +26,7 @@ import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine.Config;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine.Direction;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine.Mechanism;
-import frc.robot.commands.DriveCommands;
-import frc.robot.commands.FeederCommands;
-import frc.robot.commands.IntakeCommands;
-import frc.robot.commands.ShooterCommands;
+import frc.robot.commands.*;
 import frc.robot.subsystems.climb.Climb;
 import frc.robot.subsystems.climb.ClimbIO;
 import frc.robot.subsystems.climb.ClimbIOSparkMax;
@@ -201,14 +197,10 @@ public class RobotContainer {
         feeder.setDefaultCommand(new RunCommand(() -> feeder.runVolts(0.0), feeder));
         shooter.setDefaultCommand(ShooterCommands.shooterIdle(shooter));
         // CLIMB DEFAULT COMMAND
-        climb.setDefaultCommand(
-                Commands.run(
-                        () -> {
-                          climb.runLeftVolts(
-                                  MathUtil.applyDeadband(operatorController.getLeftY(), 0.075) * 12);
-                          climb.runRightVolts(operatorController.getRightY() * 12);
-                        },
-                        climb));
+        climb.setDefaultCommand(sequence(
+                ClimbCommands.zero(climb, 15.0).withTimeout(5),
+                ClimbCommands.runClimb(climb, operatorController::getLeftY, operatorController::getRightY)
+        ));
 
         // ---- DRIVETRAIN COMMANDS ----
         driverController.x().whileTrue(Commands.runOnce(drive::stopWithX, drive));
