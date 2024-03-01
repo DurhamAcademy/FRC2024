@@ -117,7 +117,7 @@ public class DriveCommands {
                                     linearVelocity.getY() * drive.getMaxLinearSpeedMetersPerSec(),
                                     omega * drive.getMaxAngularSpeedRadPerSec(),
                                     drive.getRotation().rotateBy(
-                                            fromRotations((DriverStation.getAlliance().orElse(Blue) == Blue) ? 0.0 : .5))));
+                                            getAllianceRotation())));
 
                 },
                 drive);
@@ -232,7 +232,7 @@ public class DriveCommands {
                                             linearVelocity.getY() * drive.getMaxLinearSpeedMetersPerSec(),
                                             (rotationController.getSetpoint().velocity + value) * ((Robot.isSimulation()) ? 6.28 : -6.28),
                                             drive.getRotation().rotateBy(
-                                                    fromRotations((DriverStation.getAlliance().orElse(Blue) == Blue) ? 0.0 : .5))));
+                                                    getAllianceRotation())));
                             previousPose[0] = drive.getPose();
                         }, drive)
                         .beforeStarting(() -> {
@@ -247,6 +247,10 @@ public class DriveCommands {
                                     return isLTE || isGTE;
                                 });
         return new CommandAndReadySupplier(command, () -> rotationController.atGoal());
+    }
+
+    private static Rotation2d getAllianceRotation() {
+        return fromRotations((DriverStation.getAlliance().orElse(Blue) == Blue) ? 0.5 : 0.0);
     }
 
     public static CommandAndReadySupplier aimAtSpeakerCommand(
