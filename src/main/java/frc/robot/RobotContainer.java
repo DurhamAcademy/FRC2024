@@ -226,8 +226,6 @@ public class RobotContainer {
                 .whileTrue(
                         IntakeCommands.intakeCommand(intake)
                                 .alongWith(FeederCommands.feedToBeamBreak(feeder))
-                                .andThen(new RunCommand(() -> intake.setIntakePosition(Rotation2d.fromDegrees(-75.0)))
-                                        .andThen(new RunCommand(() -> intake.setRollerPercentage(-75.0))))
                 )
                 .onFalse(FeederCommands.feedToBeamBreak(feeder).withTimeout(5));
         driverController.rightBumper().whileTrue(IntakeCommands.idleCommand(intake));
