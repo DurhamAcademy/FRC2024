@@ -180,13 +180,7 @@ public class RobotContainer {
                 () -> -driverController.getLeftY(),
                 () -> -driverController.getLeftX(),
                 () -> -driverController.getRightX()));
-        intake.setDefaultCommand(
-            new RunCommand(
-                () -> {
-                    intake.setIntakePosition(Rotation2d.fromDegrees(-90));
-                  intake.setRollerPercentage(0.0);
-                },
-                intake));
+          intake.setDefaultCommand(IntakeCommands.idleCommand(intake));
         feeder.setDefaultCommand(new RunCommand(() -> feeder.runVolts(0.0), feeder));
         shooter.setDefaultCommand(new RunCommand(() -> {
           shooter.shooterRunVolts(0.0);
@@ -204,6 +198,14 @@ public class RobotContainer {
 
         // ---- DRIVETRAIN COMMANDS ----
         driverController.x().whileTrue(Commands.runOnce(drive::stopWithX, drive));
+
+        var command =
+                DriveCommands.aimAtSpeakerCommand(
+                        drive,
+                        () -> -driverController.getLeftY(),
+                        () -> -driverController.getLeftX(),
+                        () -> -driverController.getRightX());
+        driverController.a().onTrue(command.getCommand());
 
         // ---- INTAKE COMMANDS ----
         driverController
@@ -273,11 +275,11 @@ public class RobotContainer {
         driverController
             .rightTrigger()
             .whileTrue(
-                    new RunCommand(() -> shooter.setTargetShooterAngle(new Rotation2d(-0.61)))
+                new RunCommand(() -> shooter.setTargetShooterAngle(new Rotation2d(-0.61)))
                     .andThen(
                         (new RunCommand(
-                            () ->
-                                    shooter.shooterRunVelocity(5000), //THIS NUMBER NEEDS TO BE CALIBRATED
+                            () -> shooter.shooterRunVelocity(5000) , //THIS NUMBER NEEDS TO BE CALIBRATED
+
                                 intake))));
         break;
       case Shooter:

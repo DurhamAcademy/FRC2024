@@ -69,6 +69,7 @@ public class Drive extends SubsystemBase {
   private SwerveDriveKinematics kinematics = new SwerveDriveKinematics(getModuleTranslations());
   private SwerveDrivePoseEstimator poseEstimator;
   private Pose2d pose = new Pose2d();
+  private Measure<Velocity<Angle>> angularVelocity = RadiansPerSecond.zero();
   private Rotation2d lastGyroRotation = new Rotation2d();
 
   AprilTagFieldLayout aprilTagFieldLayout = AprilTagFields.k2024Crescendo.loadAprilTagLayoutField();
@@ -145,7 +146,7 @@ public class Drive extends SubsystemBase {
               modules[3].getPosition()
             },
             new Pose2d(3.0, 5.0, new Rotation2d(3.0)));
-    poseEstimator.setVisionMeasurementStdDevs(new Matrix<>(SimpleMatrix.diag(5, 5, 5)));
+    poseEstimator.setVisionMeasurementStdDevs(new Matrix<>(SimpleMatrix.diag(2, 2, 2)));
 
     swerveModulePositions = new SwerveModulePosition[modules.length];
     noGyroPoseEstimation = null;
@@ -202,6 +203,7 @@ public class Drive extends SubsystemBase {
 
       // update the pose estimator
       pose = poseEstimator.update(gyroInputs.yawPosition, swerveModulePositions);
+      angularVelocity = RadiansPerSecond.of(gyroInputs.yawVelocityRadPerSec);
 
     } else {
       if (noGyroPoseEstimation == null) {
@@ -215,6 +217,7 @@ public class Drive extends SubsystemBase {
       noGyroRotation =
           pose.rotateBy(noGyroRotation.minus(pose.getRotation())).exp(twist).getRotation();
       pose = noGyroPoseEstimation.update(noGyroRotation, swerveModulePositions);
+      angularVelocity = RadiansPerSecond.of(twist.dtheta / .02);
     }
 
     Logger.recordOutput("pose", pose);
@@ -442,5 +445,10 @@ public class Drive extends SubsystemBase {
       new Translation2d(-TRACK_WIDTH_X / 2.0, TRACK_WIDTH_Y / 2.0),
       new Translation2d(-TRACK_WIDTH_X / 2.0, -TRACK_WIDTH_Y / 2.0)
     };
+  }
+
+  @AutoLogOutput
+  public Measure<Velocity<Angle>> getAnglularVelocity() {
+    return this.angularVelocity.negate();
   }
 }
