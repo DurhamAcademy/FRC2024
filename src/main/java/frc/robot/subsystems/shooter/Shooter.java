@@ -64,7 +64,7 @@ public class Shooter extends SubsystemBase {
                 hoodFB.setTolerance(0.1);
                 shooterVelocityFB =
                         new PIDController(0.0079065, 0.0, 0.0);
-                shooterVelocityFB.setTolerance(218.69); // this is the pid max velocity error (rad/sec)
+                shooterVelocityFB.setTolerance(218.69 * .25); // this is the pid max velocity error (rad/sec)
                 shooterVelocityFF = new SimpleMotorFeedforward(.58287, .013052, .0038592);
                 break;
             case REPLAY:
