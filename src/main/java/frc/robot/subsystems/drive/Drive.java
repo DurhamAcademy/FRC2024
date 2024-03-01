@@ -451,4 +451,8 @@ public class Drive extends SubsystemBase {
   public Measure<Velocity<Angle>> getAnglularVelocity() {
     return this.angularVelocity.negate();
   }
+
+  public Module[] shuffleboardMethod(){
+    return modules;
+  }
 }

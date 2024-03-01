@@ -263,7 +263,7 @@ public class RobotContainer {
                                 feedToShooter(feeder)
                                         .withTimeout(.25)
                         )
-                )
+                );
 
         break;
       case DriveMotors:
