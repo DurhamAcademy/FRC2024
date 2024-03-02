@@ -166,12 +166,14 @@ public class RobotContainer {
 
     // Set up auto routines
     NamedCommands.registerCommand(
-            "Run Flywheel",
-            Commands.startEnd(
-                            () -> shooter.shooterRunVelocity(flywheelSpeedInput.get()),
-                            shooter::stopShooter,
-                            shooter)
-                    .withTimeout(5.0));
+            "Shoot",
+            sequence(
+                    FeederCommands.feedToBeamBreak(feeder)
+                    Commands.waitUntil(() -> (shooter.allAtSetpoint() && (shooter.getShooterVelocityRPM() > 1000))),
+                    FeederCommands.feedToShooter(feeder)
+            )
+                    .deadlineWith(ShooterCommands.JustShoot(shooter))
+                    .withTimeout(8.0));
     autoChooser = new LoggedDashboardChooser<>("Auto Choices", AutoBuilder.buildAutoChooser());
 
     configureButtonBindings();

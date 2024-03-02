@@ -34,7 +34,7 @@ public class ShooterCommands {
         distanceToAngle.put(1.7, 0.50);
         distanceToAngle.put(2.39, 0.46);
         distanceToAngle.put(3.506, .423);
-        distanceToAngle.put(1000.0, .703);
+        distanceToAngle.put(1000.0, .0);
         distanceToRPM.put(0.0, 3500.0);
         distanceToRPM.put(0.894, 3500.0);
         distanceToRPM.put(3.506, 5000.0);
@@ -52,6 +52,14 @@ public class ShooterCommands {
             double atan = Math.atan(pose3d.getZ() / distance);
             shooter.setTargetShooterAngle(Rotation2d.fromRadians(distanceToAngle.get(distance)));
             shooter.shooterRunVelocity(distanceToRPM.get(distance));
+        }, shooter);
+    }
+
+    public static Command JustShoot(Shooter shooter) {
+        //the parameter is the robot, idk how to declare it, also this returns the angle
+        return Commands.run(() -> {
+            shooter.setTargetShooterAngle(.8);
+            shooter.shooterRunVelocity(3500);
         }, shooter);
     }
 
