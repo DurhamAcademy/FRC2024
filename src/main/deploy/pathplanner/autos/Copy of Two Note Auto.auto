@@ -2,8 +2,8 @@
   "version": 1.0,
   "startingPose": {
     "position": {
-      "x": 1.4319927741779674,
-      "y": 5.547645912855483
+      "x": 1.31541381706172,
+      "y": 5.543773865831875
     },
     "rotation": 0
   },
@@ -18,9 +18,22 @@
           }
         },
         {
-          "type": "wait",
+          "type": "parallel",
           "data": {
-            "waitTime": 1.5
+            "commands": [
+              {
+                "type": "path",
+                "data": {
+                  "pathName": "Copy of 0-1.1"
+                }
+              },
+              {
+                "type": "named",
+                "data": {
+                  "name": "Intake"
+                }
+              }
+            ]
           }
         },
         {

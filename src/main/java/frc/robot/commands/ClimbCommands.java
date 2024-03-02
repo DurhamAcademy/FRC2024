@@ -65,7 +65,8 @@ public class ClimbCommands {
                 () -> {
                     climb.runLeftVolts(
                             MathUtil.applyDeadband(leftSupplier.getAsDouble(), 0.075) * 12);
-                    climb.runRightVolts(rightSupplier.getAsDouble() * 12);
+                    climb.runRightVolts(
+                            MathUtil.applyDeadband(rightSupplier.getAsDouble(), 0.075) * 12);
                 },
                 climb);
     }

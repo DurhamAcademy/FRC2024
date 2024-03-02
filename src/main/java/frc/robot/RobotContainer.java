@@ -46,7 +46,6 @@ import org.littletonrobotics.junction.networktables.LoggedDashboardNumber;
 
 import static edu.wpi.first.units.BaseUnits.Voltage;
 import static edu.wpi.first.units.Units.Seconds;
-import static edu.wpi.first.wpilibj2.command.Commands.either;
 import static edu.wpi.first.wpilibj2.command.Commands.sequence;
 import static frc.robot.commands.FeederCommands.feedToShooter;
 
@@ -164,6 +163,21 @@ public class RobotContainer {
         break;
     }
 
+
+    var command =
+            DriveCommands.aimAtSpeakerCommand(
+                    drive,
+                    driverController::getLeftY,
+                    driverController::getLeftX,
+                    driverController::getRightX);
+    command.getCommand();
+    NamedCommands.registerCommand(
+            "AutoShoot",
+            ShooterCommands.autoAim(shooter, drive).alongWith(
+                    sequence(
+                            Commands.waitUntil(shooter::allAtSetpoint),
+                            FeederCommands.feedToShooter(feeder)
+                    )));
     // Set up auto routines
     NamedCommands.registerCommand(
             "Shoot",
@@ -174,6 +188,10 @@ public class RobotContainer {
             )
                     .deadlineWith(ShooterCommands.JustShoot(shooter))
                     .withTimeout(8.0));
+    NamedCommands.registerCommand(
+            "Intake",
+            IntakeCommands.intakeCommand(intake).withTimeout(4.0)
+    );
     autoChooser = new LoggedDashboardChooser<>("Auto Choices", AutoBuilder.buildAutoChooser());
 
     configureButtonBindings();
@@ -213,7 +231,7 @@ public class RobotContainer {
                         driverController::getLeftY,
                         driverController::getLeftX,
                         driverController::getRightX);
-        driverController.a().onTrue(command.getCommand());
+        driverController.leftBumper().onTrue(command.getCommand());
 
         // ---- INTAKE COMMANDS ----
         driverController
@@ -241,16 +259,16 @@ public class RobotContainer {
         operatorController
                 .y()
                 .whileTrue(
-                        either(
-                                sequence(
-                                        ShooterCommands.autoAim(shooter, drive)
-                                                .until(() -> !feeder.getBeamBroken()),
-                                        ShooterCommands.autoAim(shooter, drive)
-                                                .withTimeout(0.25)
-                                ),
-                                ShooterCommands.autoAim(shooter, drive),
-                                () -> !feeder.getBeamBroken()
-                        )
+//                        either(
+//                                sequence(
+//                                        ShooterCommands.autoAim(shooter, drive)
+//                                                .until(() -> !feeder.getBeamBroken()),
+//                                        ShooterCommands.autoAim(shooter, drive)
+//                                                .withTimeout(0.25)
+//                                ),
+                        ShooterCommands.autoAim(shooter, drive)//,
+//                                () -> !feeder.getBeamBroken()
+//                        )
                 );
         driverController
                 .rightTrigger()
