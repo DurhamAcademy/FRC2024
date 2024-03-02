@@ -262,7 +262,9 @@ public class RobotContainer {
                                 feedToShooter(feeder)
                                         .until(() -> !feeder.getBeamBroken()),
                                 feedToShooter(feeder)
-                                        .withTimeout(.25)
+                                        .withTimeout(.25),
+                                ShooterCommands.zeroHood(shooter)
+
                         )
                 );
 

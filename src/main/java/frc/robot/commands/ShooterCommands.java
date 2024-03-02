@@ -69,4 +69,13 @@ public class ShooterCommands {
             this.distance = distance;
         }
     }
+
+    public static Command zeroHood(Shooter shooter){
+        return Commands.run(() -> {
+            shooter.shooterRunVolts(-4.0);
+            shooter.setTargetShooterAngle(Rotation2d.fromRadians(2.0));
+        });
+
+
+    }
 }
