@@ -9,6 +9,7 @@ public interface HoodIO {
 
   @AutoLog
   public static class HoodIOInputs {
+    public double motorPositionRad = 0.0;
     public double hoodPositionRad = 0.0;
     public double hoodVelocityRadPerSec = 0.0;
     public double hoodAppliedVolts = 0.0;

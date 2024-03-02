@@ -98,7 +98,7 @@ public class Shooter extends SubsystemBase {
         Logger.processInputs("Hood", hoodInputs);
 
         if (!hasReset) {
-            hoodFB.reset(hoodInputs.hoodPositionRad);
+            hoodFB.reset(hoodInputs.motorPositionRad);
             hasReset = true;
         }
 
@@ -109,9 +109,9 @@ public class Shooter extends SubsystemBase {
         }
         Logger.recordOutput("Shooter/ShooterSpeed", setpointRadPS);
         Logger.recordOutput("Shooter/TargetHoodAngle", targetHoodAngleRad);
-        Logger.recordOutput("Shooter/HoodInputs/HoodPositionRad", hoodInputs.hoodPositionRad);
+        Logger.recordOutput("Shooter/HoodInputs/MotorPositionRad", hoodInputs.motorPositionRad);
         hoodIO.setVoltage(
-                hoodFB.calculate(hoodInputs.hoodPositionRad, targetHoodAngleRad)
+                hoodFB.calculate(hoodInputs.motorPositionRad, targetHoodAngleRad)
                 /*+ hoodFF.calcula te(hoodFB.getSetpoint().position, hoodFB.getSetpoint().velocity)*/);
 //        targetHoodAngleRad =
 //                hoodInputs.hoodPositionRad * HOOD_ENCODER_ANGLE_TO_REAL_ANGLE_RATIO

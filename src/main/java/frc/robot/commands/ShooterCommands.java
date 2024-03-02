@@ -58,7 +58,7 @@ public class ShooterCommands {
     public static Command JustShoot(Shooter shooter) {
         //the parameter is the robot, idk how to declare it, also this returns the angle
         return Commands.run(() -> {
-            shooter.setTargetShooterAngle(.8);
+            shooter.setTargetShooterAngle(Rotation2d.fromRadians(.8));
             shooter.shooterRunVelocity(3500);
         }, shooter);
     }
