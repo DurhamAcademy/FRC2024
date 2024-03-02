@@ -168,7 +168,7 @@ public class RobotContainer {
     NamedCommands.registerCommand(
             "Shoot",
             sequence(
-                    FeederCommands.feedToBeamBreak(feeder)
+                    FeederCommands.feedToBeamBreak(feeder),
                     Commands.waitUntil(() -> (shooter.allAtSetpoint() && (shooter.getShooterVelocityRPM() > 1000))),
                     FeederCommands.feedToShooter(feeder)
             )
