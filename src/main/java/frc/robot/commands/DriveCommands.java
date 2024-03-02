@@ -15,6 +15,7 @@ package frc.robot.commands;
 
 import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.controller.ProfiledPIDController;
+import edu.wpi.first.math.filter.LinearFilter;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Transform2d;
@@ -152,6 +153,7 @@ public class DriveCommands {
                 new ProfiledPIDController(.5, 0, .0, new TrapezoidProfile.Constraints(1, 2));
 
         rotationController.enableContinuousInput(0, 1);
+        var filter = LinearFilter.singlePoleIIR(0.08, 0.02);
 
         var command =
                 new RunCommand(
@@ -225,12 +227,13 @@ public class DriveCommands {
 //                                    goalAngleVelocity.in(RotationsPerSecond)*.0025
 //                            )
                             );
+
                             Logger.recordOutput("angle value", (value));
                             drive.runVelocity(
                                     ChassisSpeeds.fromFieldRelativeSpeeds(
                                             linearVelocity.getX() * drive.getMaxLinearSpeedMetersPerSec(),
                                             linearVelocity.getY() * drive.getMaxLinearSpeedMetersPerSec(),
-                                            (rotationController.getSetpoint().velocity + value) * ((Robot.isSimulation()) ? 6.28 : -6.28),
+                                            filter.calculate(rotationController.getSetpoint().velocity + value) * ((Robot.isSimulation()) ? 6.28 : -6.28),
                                             drive.getRotation().rotateBy(
                                                     getAllianceRotation())));
                             previousPose[0] = drive.getPose();

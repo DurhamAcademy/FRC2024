@@ -27,7 +27,7 @@ public class IntakeCommands {
     public static Command idleCommand(Intake intake) {
         return new RunCommand(
                 () -> {
-                    intake.setIntakePosition(Rotation2d.fromRadians(-2.1));
+                    intake.setIntakePosition(Rotation2d.fromRadians(-2.15));
                     intake.setRollerPercentage(0.0);
                 },
                 intake);

@@ -21,6 +21,7 @@ import com.pathplanner.lib.util.ReplanningConfig;
 import edu.wpi.first.apriltag.AprilTagFieldLayout;
 import edu.wpi.first.apriltag.AprilTagFields;
 import edu.wpi.first.math.Matrix;
+import edu.wpi.first.math.Nat;
 import edu.wpi.first.math.estimator.SwerveDrivePoseEstimator;
 import edu.wpi.first.math.geometry.*;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
@@ -37,7 +38,6 @@ import edu.wpi.first.wpilibj.DriverStation.Alliance;
 import edu.wpi.first.wpilibj.sysid.SysIdRoutineLog;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.util.LocalADStarAK;
-import org.ejml.simple.SimpleMatrix;
 import org.littletonrobotics.junction.AutoLogOutput;
 import org.littletonrobotics.junction.Logger;
 import org.photonvision.EstimatedRobotPose;
@@ -146,7 +146,7 @@ public class Drive extends SubsystemBase {
               modules[3].getPosition()
             },
             new Pose2d(3.0, 5.0, new Rotation2d(3.0)));
-    poseEstimator.setVisionMeasurementStdDevs(new Matrix<>(SimpleMatrix.diag(2, 2, 2)));
+    poseEstimator.setVisionMeasurementStdDevs(new Matrix<>(Nat.N3(), Nat.N1(), new double[]{2, 2, 2}));
 
     swerveModulePositions = new SwerveModulePosition[modules.length];
     noGyroPoseEstimation = null;

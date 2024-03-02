@@ -108,7 +108,7 @@ public class Module {
     // Run closed loop turn control
     if (angleSetpoint != null) {
       io.setTurnVoltage(
-          turnFeedback.calculate(getAngle().getRadians(), angleSetpoint.getRadians()));
+              turnFeedback.calculate(inputs.turnAbsolutePosition.getRadians(), angleSetpoint.getRadians()));
 
       // Run closed loop drive control
       // Only allowed if closed loop turn control is running

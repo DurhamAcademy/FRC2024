@@ -43,7 +43,7 @@ public class ClimbCommands {
                         ),
                         sequence(
                                 runRight(climb, true)
-                                        .onlyWhile(getDebounce(debouncers.leftDebounce, climb.getRightVelocityRadPerSec(), () -> debouncers.cannotMoveAR = true))
+                                        .onlyWhile(getDebounce(debouncers.rightDebounce, climb.getRightVelocityRadPerSec(), () -> debouncers.cannotMoveAR = true))
                                         .withTimeout(8)
                         )
                 )
