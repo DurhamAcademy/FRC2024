@@ -168,7 +168,7 @@ public class RobotContainer {
     NamedCommands.registerCommand(
             "Shoot",
             sequence(
-                    FeederCommands.feedToBeamBreak(feeder)
+                    FeederCommands.feedToBeamBreak(feeder),
                     Commands.waitUntil(() -> (shooter.allAtSetpoint() && (shooter.getShooterVelocityRPM() > 1000))),
                     FeederCommands.feedToShooter(feeder)
             )
@@ -229,13 +229,6 @@ public class RobotContainer {
                         .whileTrue(
                                 IntakeCommands.flushIntake(intake).alongWith(FeederCommands.flushFeeder(feeder))
                         );
-        driverController
-                .leftTrigger()
-                .whileTrue(
-                        IntakeCommands.intakeCommand(intake)
-                                .alongWith(FeederCommands.feedToBeamBreak(feeder)))
-                .onFalse(FeederCommands.feedToBeamBreak(feeder).withTimeout(5));
-
 
         // ---- SHOOTER COMMANDS ----
         operatorController
