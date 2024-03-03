@@ -1,11 +1,10 @@
 package frc.robot.subsystems.shooter;
 
-import com.revrobotics.CANSparkLowLevel;
-import com.revrobotics.CANSparkMax;
-import com.revrobotics.RelativeEncoder;
-import com.revrobotics.SparkAbsoluteEncoder;
+import com.revrobotics.*;
 import edu.wpi.first.math.MathUtil;
 import org.littletonrobotics.junction.Logger;
+
+import java.util.Arrays;
 
 public class HoodIOSparkMax implements HoodIO {
     private static final double GEAR_RATIO = 1.5;
@@ -20,29 +19,48 @@ public class HoodIOSparkMax implements HoodIO {
     boolean hasReset = false;
 
     public HoodIOSparkMax() {
-        leader.restoreFactoryDefaults();
-        leader.setCANTimeout(250);
-        leader.setInverted(false);
-        leader.enableVoltageCompensation(12.0);
-        leader.setSmartCurrentLimit(50);
-        motorEncoder.setPositionConversionFactor(MOTOR_TO_ROBOT);
-        motorEncoder.setVelocityConversionFactor(MOTOR_TO_ROBOT);
-        motorEncoder.setPosition(encoder.getPosition());
-        encoder.setInverted(true);
+        REVLibError[] codes = new REVLibError[13];
+        for (int tries = 0; tries < 5; tries++) {
+            int a = 0;
+            codes[a++] = leader.restoreFactoryDefaults();
+            codes[a++] = leader.setCANTimeout(250);
+            leader.setInverted(false);
+            codes[a++] = leader.enableVoltageCompensation(12.0);
+            codes[a++] = leader.setSmartCurrentLimit(50);
 
-        leader.burnFlash();
+            codes[a++] = motorEncoder.setPositionConversionFactor(MOTOR_TO_ROBOT);
+            codes[a++] = motorEncoder.setVelocityConversionFactor(MOTOR_TO_ROBOT);
+            codes[a++] = motorEncoder.setPosition(encoder.getPosition());
+            codes[a++] = encoder.setInverted(true);
 
-        motorEncoder.setPositionConversionFactor(MOTOR_TO_ROBOT);
-        motorEncoder.setVelocityConversionFactor(MOTOR_TO_ROBOT);
-        motorEncoder.setPosition(MathUtil.angleModulus(encoder.getPosition() * Math.PI * 2) / GEAR_RATIO);
-        System.out.println();
-        System.out.println();
+            codes[a++] = leader.burnFlash();
+
+            codes[a++] = motorEncoder.setPositionConversionFactor(MOTOR_TO_ROBOT);
+            codes[a++] = motorEncoder.setVelocityConversionFactor(MOTOR_TO_ROBOT);
+            codes[a++] = motorEncoder.setPosition(MathUtil.angleModulus(encoder.getPosition() * Math.PI * 2) / GEAR_RATIO);
+            boolean failed = false;
+            for (REVLibError code : codes) {
+                if (!code.equals(REVLibError.kOk)) {
+                    failed = true;
+                    System.out.println("an error occured while starting the motor");
+                    System.out.println(Arrays.deepToString(codes));
+                    System.out.println("waiting 1 second");
+                    try {
+                        Thread.sleep(1000);
+                    } catch (InterruptedException e) {
+                        System.out.println("an error occured while sleeping:");
+                        System.out.println(e);
+                    }
+                }
+            }
+            if (!failed) break;
+        }
+        System.out.println("printing codes:");
+        System.out.println(Arrays.deepToString(codes));
+        System.out.println("finished printing codes.");
     }
 
   public void updateInputs(HoodIOInputs inputs) {
-      if (!hasReset) {
-
-      }
       inputs.hoodPositionRad = MathUtil.angleModulus(encoder.getPosition() * Math.PI * 2) / GEAR_RATIO;
       inputs.motorPositionRad = motorEncoder.getPosition();
       inputs.hoodAppliedVolts = leader.getBusVoltage() * leader.getAppliedOutput();
