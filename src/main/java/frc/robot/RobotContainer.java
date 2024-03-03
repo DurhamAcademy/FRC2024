@@ -170,7 +170,6 @@ public class RobotContainer {
                     driverController::getLeftY,
                     driverController::getLeftX,
                     driverController::getRightX);
-    command.getCommand();
     NamedCommands.registerCommand(
             "AutoShoot",
             ShooterCommands.autoAim(shooter, drive).alongWith(
@@ -218,7 +217,7 @@ public class RobotContainer {
         shooter.setDefaultCommand(ShooterCommands.shooterIdle(shooter));
         // CLIMB DEFAULT COMMAND
         climb.setDefaultCommand(sequence(
-                ClimbCommands.zero(climb, 15.0).withTimeout(5),
+                ClimbCommands.zero(climb, 10.0).withTimeout(5),
                 ClimbCommands.runClimb(climb, operatorController::getLeftY, operatorController::getRightY)
         ));
 

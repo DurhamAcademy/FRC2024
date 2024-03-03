@@ -19,7 +19,7 @@ public class HoodIOSparkMax implements HoodIO {
     boolean hasReset = false;
 
     public HoodIOSparkMax() {
-        REVLibError[] codes = new REVLibError[13];
+        REVLibError[] codes = new REVLibError[12];
         for (int tries = 0; tries < 5; tries++) {
             int a = 0;
             codes[a++] = leader.restoreFactoryDefaults();
@@ -40,7 +40,7 @@ public class HoodIOSparkMax implements HoodIO {
             codes[a++] = motorEncoder.setPosition(MathUtil.angleModulus(encoder.getPosition() * Math.PI * 2) / GEAR_RATIO);
             boolean failed = false;
             for (REVLibError code : codes) {
-                if (!code.equals(REVLibError.kOk)) {
+                if (code != REVLibError.kOk) {
                     failed = true;
                     System.out.println("an error occured while starting the motor");
                     System.out.println(Arrays.deepToString(codes));
