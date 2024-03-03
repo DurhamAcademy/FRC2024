@@ -47,6 +47,7 @@ import java.util.Optional;
 import static edu.wpi.first.math.util.Units.degreesToRadians;
 import static edu.wpi.first.math.util.Units.inchesToMeters;
 import static edu.wpi.first.units.Units.*;
+import static java.lang.Math.abs;
 
 public class Drive extends SubsystemBase {
   private static final double MAX_LINEAR_SPEED = 1.0;
@@ -223,8 +224,18 @@ public class Drive extends SubsystemBase {
     estPose.ifPresent(
             estimatedRobotPose -> {
               Logger.recordOutput("estRoPose", estimatedRobotPose.estimatedPose);
-              poseEstimator.addVisionMeasurement(
-                      estimatedRobotPose.estimatedPose.toPose2d(), estimatedRobotPose.timestampSeconds);
+              Pose2d pose2d = estimatedRobotPose.estimatedPose.toPose2d();
+              var distance = pose2d.getTranslation().getDistance(pose.getTranslation());
+
+              if (
+                      (pose2d.getX() <= 16.5) &&
+                              (pose2d.getX() > 0) &&
+                              (pose2d.getY() <= 8.2) &&
+                              (pose2d.getY() > 0) &&
+                              (abs(distance) <= 1.0)
+              ) // only add it if it's less than 1 meter and in the field
+                poseEstimator.addVisionMeasurement(
+                        pose2d, estimatedRobotPose.timestampSeconds);
             });
   }
 
