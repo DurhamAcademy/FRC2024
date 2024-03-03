@@ -31,10 +31,11 @@ public class ShooterCommands {
     private static void populateITM() { //im making separate methods for this because I am not sure how much adjustments you would have to make
         distanceToAngle.put(0.0, 1.0);
         distanceToAngle.put(1.1, .8);
-        distanceToAngle.put(1.7, 0.50);
-        distanceToAngle.put(2.39, 0.46);
+        distanceToAngle.put(1.7, 0.49);
+        distanceToAngle.put(2.39, 0.45);
         distanceToAngle.put(3.506, .423);
         distanceToAngle.put(1000.0, .0);
+        //distanceToRPM
         distanceToRPM.put(0.0, 3500.0);
         distanceToRPM.put(0.894, 3500.0);
         distanceToRPM.put(3.506, 5000.0);

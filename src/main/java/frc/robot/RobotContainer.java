@@ -225,6 +225,7 @@ public class RobotContainer {
         // ---- DRIVETRAIN COMMANDS ----
         driverController.x().whileTrue(Commands.runOnce(drive::stopWithX, drive));
 
+
         var command =
                 DriveCommands.aimAtSpeakerCommand(
                         drive,
@@ -262,6 +263,11 @@ public class RobotContainer {
                         ShooterCommands.autoAim(shooter, drive)//,
 //                                () -> !feeder.getBeamBroken()
 //                        )
+                );
+        operatorController
+                .x()
+                .whileTrue(
+                        ShooterCommands.JustShoot(shooter)
                 );
         driverController
                 .rightTrigger()

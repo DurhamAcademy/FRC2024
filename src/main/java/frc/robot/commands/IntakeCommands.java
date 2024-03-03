@@ -9,7 +9,7 @@ public class IntakeCommands {
     public static Command intakeCommand(Intake intake) {
         return new RunCommand(
                 () -> {
-                    intake.setIntakePosition(Rotation2d.fromDegrees(-5.0));
+                    intake.setIntakePosition(Rotation2d.fromDegrees(-10.0));
                     intake.setRollerPercentage(0.75);
                 },
                 intake);
