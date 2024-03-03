@@ -279,6 +279,16 @@ public class RobotContainer {
                                         .withTimeout(.25)
                         )
                 );
+        operatorController
+                .start()
+                .onTrue(
+                        ShooterCommands.addToOffsett()
+                );
+        operatorController
+                .back()
+                .onTrue(
+                        ShooterCommands.removeFromoOffset()
+                );
 
         break;
       case DriveMotors:

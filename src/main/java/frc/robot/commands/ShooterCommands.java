@@ -6,6 +6,7 @@ import edu.wpi.first.math.interpolation.InterpolatingDoubleTreeMap;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
+import edu.wpi.first.wpilibj2.command.RunCommand;
 import frc.robot.subsystems.drive.Drive;
 import frc.robot.subsystems.shooter.Shooter;
 import org.littletonrobotics.junction.Logger;
@@ -14,6 +15,8 @@ import static edu.wpi.first.wpilibj.DriverStation.Alliance.Blue;
 
 
 public class ShooterCommands {
+    static double shooterAngleAdjustment = 0.0;
+
     static InterpolatingDoubleTreeMap distanceToAngle = new InterpolatingDoubleTreeMap();
     static InterpolatingDoubleTreeMap distanceToRPM = new InterpolatingDoubleTreeMap();
 
@@ -50,7 +53,7 @@ public class ShooterCommands {
             double distance = getDistance(pose3d);
             Logger.recordOutput("distanceFromGoal", distance);
             double atan = Math.atan(pose3d.getZ() / distance);
-            shooter.setTargetShooterAngle(Rotation2d.fromRadians(distanceToAngle.get(distance)));
+            shooter.setTargetShooterAngle(Rotation2d.fromRadians(distanceToAngle.get(distance)+ shooterAngleAdjustment));
             shooter.shooterRunVelocity(distanceToRPM.get(distance));
         }, shooter);
     }
@@ -68,6 +71,16 @@ public class ShooterCommands {
             shooter.shooterRunVelocity(0.0);
             shooter.setTargetShooterAngle(Rotation2d.fromRadians(1.5));
         }, shooter);
+    }
+
+    public static Command addToOffsett(){
+        shooterAngleAdjustment += 0.017;
+        return new RunCommand(null);
+    }
+
+    public static Command removeFromoOffset(){
+        shooterAngleAdjustment -= 0.017;
+        return new RunCommand(null);
     }
 
     private static class Result {
