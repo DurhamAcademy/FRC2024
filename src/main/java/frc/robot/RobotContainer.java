@@ -178,7 +178,9 @@ private final CommandXboxController driverController = new CommandXboxController
                         Commands.waitUntil(() -> (shooter.allAtSetpoint() && (shooter.getShooterVelocityRPM() > 1000))),
                         FeederCommands.feedToShooter(feeder)
                 )
-                        .deadlineWith(ShooterCommands.JustShoot(shooter))
+                        .deadlineWith(ShooterCommands.JustShoot(shooter)).andThen(
+                                ShooterCommands.shooterIdle(shooter)
+                        )
                         .withTimeout(8.0));
         NamedCommands.registerCommand(
                 "Intake",
