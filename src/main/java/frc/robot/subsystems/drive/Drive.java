@@ -16,6 +16,7 @@ package frc.robot.subsystems.drive;
 import com.pathplanner.lib.auto.AutoBuilder;
 import com.pathplanner.lib.pathfinding.Pathfinding;
 import com.pathplanner.lib.util.HolonomicPathFollowerConfig;
+import com.pathplanner.lib.util.PIDConstants;
 import com.pathplanner.lib.util.PathPlannerLogging;
 import com.pathplanner.lib.util.ReplanningConfig;
 import edu.wpi.first.apriltag.AprilTagFieldLayout;
@@ -28,6 +29,8 @@ import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.math.kinematics.SwerveDriveKinematics;
 import edu.wpi.first.math.kinematics.SwerveModulePosition;
 import edu.wpi.first.math.kinematics.SwerveModuleState;
+import edu.wpi.first.math.numbers.N1;
+import edu.wpi.first.math.numbers.N3;
 import edu.wpi.first.units.Angle;
 import edu.wpi.first.units.Measure;
 import edu.wpi.first.units.Velocity;
@@ -41,16 +44,17 @@ import org.littletonrobotics.junction.AutoLogOutput;
 import org.littletonrobotics.junction.Logger;
 import org.photonvision.EstimatedRobotPose;
 import org.photonvision.PhotonPoseEstimator;
+import org.photonvision.targeting.PhotonTrackedTarget;
 
+import java.util.List;
 import java.util.Optional;
 
-import static edu.wpi.first.math.util.Units.degreesToRadians;
 import static edu.wpi.first.math.util.Units.inchesToMeters;
 import static edu.wpi.first.units.Units.*;
-import static java.lang.Math.abs;
+import static frc.robot.Constants.robotToCam;
 
 public class Drive extends SubsystemBase {
-  private static final double MAX_LINEAR_SPEED = 1.0;
+  private static final double MAX_LINEAR_SPEED = 4.5;
   private static final double TRACK_WIDTH_X = inchesToMeters(20.75);
   private static final double TRACK_WIDTH_Y = inchesToMeters(20.75);
   private static final double DRIVE_BASE_RADIUS =
@@ -69,25 +73,12 @@ public class Drive extends SubsystemBase {
   private SwerveDriveKinematics kinematics = new SwerveDriveKinematics(getModuleTranslations());
   private SwerveDrivePoseEstimator poseEstimator;
   private Pose2d pose = new Pose2d();
+  PIDConstants positionPID = new PIDConstants(5.0, .01);
   private Measure<Velocity<Angle>> angularVelocity = RadiansPerSecond.zero();
   private Rotation2d lastGyroRotation = new Rotation2d();
 
   AprilTagFieldLayout aprilTagFieldLayout = AprilTagFields.k2024Crescendo.loadAprilTagLayoutField();
 
-  // Update robotToCam with cameraSystem mounting pos
-  Transform3d robotToCam =
-      new Transform3d(
-              new Translation3d(
-                      inchesToMeters(10.18),
-                      inchesToMeters(7.074),
-                      inchesToMeters(8.53) - 0.035
-              ),
-          new Rotation3d(
-                  0,
-                  degreesToRadians(55 - 90),
-                  degreesToRadians(3)
-          )
-      ); // Cam mounted facing forward, half a meter forward of center, half a meter up
   // from center.
   private final PhotonPoseEstimator photonPoseEstimator =
       new PhotonPoseEstimator(
@@ -96,7 +87,8 @@ public class Drive extends SubsystemBase {
           robotToCam);
   SwerveDrivePoseEstimator noGyroPoseEstimation;
   Rotation2d noGyroRotation;
-
+  PIDConstants rotationPID = new PIDConstants(0.5, .01);
+  private Pose2d previousPose = new Pose2d();
   public Drive(
       GyroIO gyroIO,
       VisionIO visionIO,
@@ -118,8 +110,8 @@ public class Drive extends SubsystemBase {
             this::setPose,
         () -> kinematics.toChassisSpeeds(getModuleStates()),
         this::runVelocity,
-        new HolonomicPathFollowerConfig(
-            MAX_LINEAR_SPEED, DRIVE_BASE_RADIUS, new ReplanningConfig()),
+            new HolonomicPathFollowerConfig(positionPID, rotationPID,
+                    MAX_LINEAR_SPEED, DRIVE_BASE_RADIUS, new ReplanningConfig(true, true)),
         () ->
             DriverStation.getAlliance().isPresent()
                 && DriverStation.getAlliance().get() == Alliance.Red,
@@ -144,7 +136,7 @@ public class Drive extends SubsystemBase {
               modules[3].getPosition()
             },
             new Pose2d(3.0, 5.0, new Rotation2d(3.0)));
-    poseEstimator.setVisionMeasurementStdDevs(new Matrix<>(Nat.N3(), Nat.N1(), new double[]{2, 2, 2}));
+    poseEstimator.setVisionMeasurementStdDevs(new Matrix<>(Nat.N3(), Nat.N1(), new double[]{4, 4, 8}));
 
     swerveModulePositions = new SwerveModulePosition[modules.length];
     noGyroPoseEstimation = null;
@@ -154,6 +146,9 @@ public class Drive extends SubsystemBase {
 
 
   public void periodic() {
+    previousPose = pose;
+
+
     gyroIO.updateInputs(gyroInputs);
     Logger.processInputs("Drive/Gyro", gyroInputs);
 
@@ -228,29 +223,42 @@ public class Drive extends SubsystemBase {
               var distance = pose2d.getTranslation().getDistance(pose.getTranslation());
 
               if (
-                      (pose2d.getX() <= 16.5) &&
-                              (pose2d.getX() > 0) &&
-                              (pose2d.getY() <= 8.2) &&
-                              (pose2d.getY() > 0) &&
-                              (abs(distance) <= 1.0)
+                      (estimatedRobotPose.estimatedPose.getX() <= 16.5) &&
+                              (estimatedRobotPose.estimatedPose.getX() > 0) &&
+                              (estimatedRobotPose.estimatedPose.getZ() <= .5) &&
+                              (estimatedRobotPose.estimatedPose.getZ() > -0.5) &&
+                              (estimatedRobotPose.estimatedPose.getY() <= 8.2) &&
+                              (estimatedRobotPose.estimatedPose.getY() > 0)
               ) // only add it if it's less than 1 meter and in the field
+              {
+                Matrix<N3, N1> visionMatrix;
+                switch (estimatedRobotPose.targetsUsed.size()) {
+                  case 0:
+                    visionMatrix = new Matrix<>(Nat.N3(), Nat.N1(), new double[]{16, 16, 32});
+                  case 1:
+                    var mult = estimatedRobotPose.targetsUsed.get(0).getPoseAmbiguity() * 10;
+                    if (
+                            (pose.getX() <= 16.5) &&
+                                    (pose.getX() > 0) &&
+                                    (pose.getY() <= 8.2) &&
+                                    (pose.getY() > 0)
+                    ) {
+                      mult /= 4;
+                    }
+                    visionMatrix = new Matrix<>(Nat.N3(), Nat.N1(), new double[]{8 * mult, 8 * mult, 12 * mult});
+                    break;
+                  case 2:
+                    visionMatrix = new Matrix<>(Nat.N3(), Nat.N1(), new double[]{.75, .75, 2});
+                  default:
+                    visionMatrix = new Matrix<>(Nat.N3(), Nat.N1(), new double[]{0.05, 0.05, 0.2});
+                }
                 poseEstimator.addVisionMeasurement(
-                        pose2d, estimatedRobotPose.timestampSeconds);
+                        pose2d, estimatedRobotPose.timestampSeconds, visionMatrix);
+              }
             });
+    getTwistPerDt();
+    getTagCount();
   }
-
-  /*public void updateVisionPosition(double leftDist, double rightDist, Rotation2d rotation) {
-    // Rotation2d rotation; // need to set to something
-    poseEstimator.update(rotation, swerveModulePositions);
-    var res = cameraSystem.getLatestResult();
-    if (res.hasTargets()) {
-      var imageCaptureTime = res.getTimestampSeconds();
-      var camToTargetTrans = res.getBestTarget().getBestCameraToTarget();
-      var camPose = Constants.kFarTargetPose.transformBy(camToTargetTrans.inverse());
-      poseEstimator.addVisionMeasurement(
-          camPose.transformBy(Constants.kCameraToRobot).toPose2d(), imageCaptureTime);
-    }
-  }*/
 
   private void updateSwerveModulePositions() {
     // populate the list
@@ -351,6 +359,21 @@ public class Drive extends SubsystemBase {
     var averageDriveMotor = routineLog.motor("Average TurnMotor");
     averageDriveMotor.angularVelocity(driveVelocityAverage.divide(4.0));
     averageDriveMotor.angularPosition(drivePositionAverage.divide(4.0));
+    getVisionTags();
+  }
+
+  /**
+   * Returns all currently visable apriltags.
+   */
+  @AutoLogOutput(key = "Vision/Tags")
+  private Pose3d[] getVisionTags() {
+    List<PhotonTrackedTarget> targets = visionInputs.cameraResult.getTargets();
+    var out = new Pose3d[targets.size()];
+    for (int i = 0; i < targets.size(); i++) {
+      out[i] = new Pose3d(pose).plus(robotToCam.plus(targets.get(i).getBestCameraToTarget()));
+    }
+    ;
+    return out;
   }
 
   /** Returns the module states (turn angles and drive velocities) for all of the modules. */
@@ -363,10 +386,26 @@ public class Drive extends SubsystemBase {
     return states;
   }
 
+  /**
+   * Returns the amount of tags visible from the vision system
+   */
+  @AutoLogOutput(key = "Vision/Tag Count")
+  private int getTagCount() {
+    return visionInputs.cameraResult.getTargets().size();
+  }
+
   /** Returns the current odometry pose. */
-  //  @AutoLogOutput(key = "Odometry/Robot")
+  @AutoLogOutput(key = "Odometry/Robot")
   public Pose2d getPose() {
     return pose;
+  }
+
+  /**
+   * Returns the current odometry pose.
+   */
+  @AutoLogOutput(key = "Odometry/Pose Per Delta Time")
+  public Transform2d getTwistPerDt() {
+    return previousPose.minus(pose).div(.02);
   }
 
   /** Returns the current odometry rotation. */
@@ -380,59 +419,6 @@ public class Drive extends SubsystemBase {
     if (gyroInputs.connected)
       this.poseEstimator.resetPosition(gyroInputs.yawPosition, swerveModulePositions, pose);
     else this.noGyroPoseEstimation.resetPosition(noGyroRotation, swerveModulePositions, pose);
-    //    throw new GyroConnectionException(
-    //        "Pose estimator was written to without gyroscope data (idk what"
-    //            + " will happen after this because now if the gyroscope comes back online pose may
-    // act weird");
-  }
-
-  /**
-   * An exception that describes any problem that happens due to a disconnect from the gyroscope.
-   */
-  public static class GyroConnectionException extends Exception {
-    /**
-     * Constructs a new exception with the specified detail message. The cause is not initialized,
-     * and may subsequently be initialized by a call to {@link #initCause}.
-     *
-     * @param message the detail message. The detail message is saved for later retrieval by the
-     *     {@link #getMessage()} method.
-     */
-    public GyroConnectionException(String message) {
-      super(message);
-    }
-
-    /**
-     * Constructs a new exception with the specified detail message and cause.
-     *
-     * <p>Note that the detail message associated with {@code cause} is <i>not</i> automatically
-     * incorporated in this exception's detail message.
-     *
-     * @param message the detail message (which is saved for later retrieval by the {@link
-     *     #getMessage()} method).
-     * @param cause the cause (which is saved for later retrieval by the {@link #getCause()}
-     *     method). (A {@code null} value is permitted, and indicates that the cause is nonexistent
-     *     or unknown.)
-     * @since 1.4
-     */
-    public GyroConnectionException(String message, Throwable cause) {
-      super(message, cause);
-    }
-
-    /**
-     * Constructs a new exception with the specified detail message, cause, suppression enabled or
-     * disabled, and writable stack trace enabled or disabled.
-     *
-     * @param message the detail message.
-     * @param cause the cause. (A {@code null} value is permitted, and indicates that the cause is
-     *     nonexistent or unknown.)
-     * @param enableSuppression whether or not suppression is enabled or disabled
-     * @param writableStackTrace whether or not the stack trace should be writable
-     * @since 1.7
-     */
-    public GyroConnectionException(
-        String message, Throwable cause, boolean enableSuppression, boolean writableStackTrace) {
-      super(message, cause, enableSuppression, writableStackTrace);
-    }
   }
 
   /** Returns the maximum linear speed in meters per sec. */

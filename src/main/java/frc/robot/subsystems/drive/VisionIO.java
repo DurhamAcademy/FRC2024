@@ -61,7 +61,6 @@ public interface VisionIO {
       var packet = new Packet(cameraResult.getPacketSize());
       aPacketSerde = new PhotonPipelineResult.APacketSerde();
       aPacketSerde.pack(packet, cameraResult);
-
       table.put("CameraResultData", packet.getData());
     }
 
@@ -70,8 +69,8 @@ public interface VisionIO {
       //            driverMode = table.getBoolean("DriverMode", driverMode);
       latencyMillis = table.get("LatencyMillis", latencyMillis);
       timestampSeconds = table.get("TimestampSeconds", timestampSeconds);
-
-      cameraResult = aPacketSerde.unpack(new Packet(table.get("CameraResultData").getRaw()));
+      table.get("CameraResultData").getRaw();
+      cameraResult = PhotonPipelineResult.serde.unpack(new Packet(table.get("CameraResultData").getRaw()));
 
       cameraResult.setTimestampSeconds(timestampSeconds);
     }

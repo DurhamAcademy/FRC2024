@@ -6,7 +6,6 @@ import edu.wpi.first.math.interpolation.InterpolatingDoubleTreeMap;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
-import edu.wpi.first.wpilibj2.command.RunCommand;
 import frc.robot.subsystems.drive.Drive;
 import frc.robot.subsystems.shooter.Shooter;
 import org.littletonrobotics.junction.Logger;
@@ -75,12 +74,12 @@ public class ShooterCommands {
 
     public static Command addToOffsett(){
         shooterAngleAdjustment += 0.017;
-        return new RunCommand(null);
+        return Commands.runOnce(() -> shooterAngleAdjustment += 0.017);
     }
 
     public static Command removeFromoOffset(){
         shooterAngleAdjustment -= 0.017;
-        return new RunCommand(null);
+        return Commands.runOnce(() -> shooterAngleAdjustment += 0.017);
     }
 
     private static class Result {

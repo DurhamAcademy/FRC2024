@@ -17,8 +17,8 @@ import org.littletonrobotics.junction.networktables.LoggedDashboardChooser;
 
 //import static com.sun.tools.classfile.AccessFlags.Kind.Field;
 
-public class DashBoard {
-    public DashBoard(
+public class Dashboard {
+    public Dashboard(
             LoggedDashboardChooser autoChooser,
             Drive drive,
             Shooter shooter,
@@ -27,8 +27,8 @@ public class DashBoard {
             HoodIO.HoodIOInputs hood,
             VisionIOReal vision
     ) {
-        main.addDouble("Flywheel RPM", () -> shooter.getShooterVelocityRPM())
-                .withWidget(BuiltInWidgets.kGyro)
+        main.addDouble("Flywheel RPM", shooter::getShooterVelocityRPM)
+                .withWidget(BuiltInWidgets.kNumberBar)
                 .withSize(2, 2)
                 .withPosition(0, 0);
 
@@ -49,7 +49,8 @@ public class DashBoard {
             }
         });
 
-        main.add("Hood Angle Manager", hood.hoodPositionRad);
+        main.add("Hood Angle Manager", hood.hoodPositionRad)
+                .withWidget(BuiltInWidgets.kEncoder);
 
         main.add("Field", new Field2d());
     }

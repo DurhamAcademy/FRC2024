@@ -2,12 +2,16 @@ package frc.robot.subsystems.drive;
 
 import edu.wpi.first.apriltag.AprilTagFieldLayout;
 import edu.wpi.first.apriltag.AprilTagFields;
-import edu.wpi.first.math.geometry.*;
-import java.util.function.Supplier;
+import edu.wpi.first.math.geometry.Pose2d;
+import edu.wpi.first.math.geometry.Rotation2d;
 import org.photonvision.PhotonCamera;
 import org.photonvision.simulation.PhotonCameraSim;
 import org.photonvision.simulation.SimCameraProperties;
 import org.photonvision.simulation.VisionSystemSim;
+
+import java.util.function.Supplier;
+
+import static frc.robot.Constants.robotToCam;
 
 public class VisionIOSim implements VisionIO {
   VisionSystemSim cameraSystem;
@@ -26,31 +30,24 @@ public class VisionIOSim implements VisionIO {
     AprilTagFieldLayout aprilTagFieldLayout =
         AprilTagFields.k2024Crescendo.loadAprilTagLayoutField();
     // A 640 x 480 camera with a 0 degree diagonal FOV.
-    cameraProp.setCalibration(1280, 720, Rotation2d.fromDegrees(0)); // rotation not updated
+      cameraProp.setCalibration(1280, 720, Rotation2d.fromDegrees(70)); // rotation not updated
     // Approximate detection noise with average and standard deviation error in pixels.
     cameraProp.setCalibError(0.9309056222667738, 0.08);
     // Set the camera image capture framerate (Note: this is limited by robot loop rate).
-    cameraProp.setFPS(20); // not updated
+      cameraProp.setFPS(26.1); // not updated
     // The average and standard deviation in milliseconds of image data latency.
-    cameraProp.setAvgLatencyMs(35); // not updated
-    cameraProp.setLatencyStdDevMs(5); // not updated
+      cameraProp.setAvgLatencyMs(20.663); // not updated
+      cameraProp.setLatencyStdDevMs(5.811); // not updated
 
     //         Update robotToCam with cameraSystem mounting pos
-    Transform3d robotToCam =
-        new Transform3d(
-            new Translation3d(0.5, 0.0, 0.5),
-            new Rotation3d(
-                0, 0,
-                0)); // Cam mounted facing forward, half a meter forward of center, half a meter up
-    // from center.
     cameraSystem = new VisionSystemSim("main");
     cameraSystem.addAprilTags(aprilTagFieldLayout);
 
     camera = new PhotonCamera(name);
     PhotonCameraSim cameraSim = new PhotonCameraSim(camera, cameraProp);
-    cameraSim.enableRawStream(true);
+      cameraSim.enableRawStream(false);
     cameraSim.enableProcessedStream(true);
-    cameraSim.enableDrawWireframe(true);
+      cameraSim.enableDrawWireframe(false);
     cameraSystem.addCamera(cameraSim, robotToCam);
   }
 
