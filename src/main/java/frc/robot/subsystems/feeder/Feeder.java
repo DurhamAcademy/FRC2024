@@ -65,7 +65,7 @@ public class Feeder extends SubsystemBase {
 //    io.setVoltage(
 //        pidController.calculate(inputs.positionRad)
 //            + ffModel.calculate(pidController.getSetpoint().velocity));
-    Logger.processInputs("Flywheel", inputs);
+    Logger.processInputs("Feeder", inputs);
   }
 
   /** Run open loop at the specified voltage. */

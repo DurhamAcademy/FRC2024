@@ -15,11 +15,13 @@ package frc.robot;
 
 import com.pathplanner.lib.auto.AutoBuilder;
 import com.pathplanner.lib.auto.NamedCommands;
+import com.pathplanner.lib.util.PathPlannerLogging;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.units.Units;
 import edu.wpi.first.wpilibj.GenericHID;
 import edu.wpi.first.wpilibj.XboxController;
+import edu.wpi.first.wpilibj.smartdashboard.Field2d;
 import edu.wpi.first.wpilibj2.command.*;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
@@ -41,6 +43,7 @@ import frc.robot.subsystems.intake.IntakeIOSim;
 import frc.robot.subsystems.intake.IntakeIOSparkMax;
 import frc.robot.subsystems.shooter.*;
 import frc.robot.util.Mode;
+import org.littletonrobotics.junction.Logger;
 import org.littletonrobotics.junction.networktables.LoggedDashboardChooser;
 import org.littletonrobotics.junction.networktables.LoggedDashboardNumber;
 
@@ -61,6 +64,8 @@ public class RobotContainer {
     private final Feeder feeder;
     private final Intake intake;
     private final Climb climb;
+
+    private final Field2d field = new Field2d();
 
 //  private final ModeHelper modeHelper = new ModeHelper(this);
 // Controller
@@ -191,6 +196,18 @@ private final CommandXboxController driverController = new CommandXboxController
                 "Drive Backwards",
                 DriveCommands.joystickDrive(drive, () -> .1, () -> 0, () -> 0.0).withTimeout(4.0)
         );
+
+        PathPlannerLogging.setLogCurrentPoseCallback((pose) -> {
+          Logger.recordOutput("PathPlanner/CurrentPose", pose);
+        });
+
+        PathPlannerLogging.setLogTargetPoseCallback((pose) -> {
+          Logger.recordOutput("PathPlanner/TargetPose", pose);
+        });
+
+        PathPlannerLogging.setLogActivePathCallback((activePath) -> {
+//          field.getObject("path").setPoses(activePath);
+        });
         autoChooser = new LoggedDashboardChooser<>("Auto Choices", AutoBuilder.buildAutoChooser());
 
         configureButtonBindings();
