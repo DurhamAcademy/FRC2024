@@ -174,7 +174,7 @@ private final CommandXboxController driverController = new CommandXboxController
                         FeederCommands.feedToShooter(feeder)
                 )
                         .deadlineWith(ShooterCommands.JustShoot(shooter)).andThen(
-                                ShooterCommands.shooterIdle(shooter)
+                                ShooterCommands.shooterIdle(shooter).withTimeout(.25)
                         )
                         .withTimeout(8.0));
         NamedCommands.registerCommand(
