@@ -18,9 +18,22 @@
           }
         },
         {
-          "type": "path",
+          "type": "parallel",
           "data": {
-            "pathName": "0-1.1"
+            "commands": [
+              {
+                "type": "path",
+                "data": {
+                  "pathName": "0-1.1"
+                }
+              },
+              {
+                "type": "named",
+                "data": {
+                  "name": "Intake"
+                }
+              }
+            ]
           }
         },
         {

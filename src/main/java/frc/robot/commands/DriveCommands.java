@@ -162,10 +162,6 @@ public class DriveCommands {
         var command =
                 new RunCommand(
                         () -> {
-//                  rotationController.setP(SmartDashboard.getNumber("rotationPidP", 0.0));
-//                    rotationController.setI(SmartDashboard.getNumber("rotationPidI", 0.0));
-//                    rotationController.setD(SmartDashboard.getNumber("rotationPidD", 0.0));
-
                             // Calcaulate new linear velocity
                             Translation2d linearVelocity = getLinearVelocity(xSupplier, ySupplier);
                             // Get the angle to point at the goal
@@ -179,15 +175,17 @@ public class DriveCommands {
                             if (previousPose[0] != null) {
                                 robotVelocity = previousPose[0].minus(drive.getPose());
 
+                                Pose2d targetPose = ShooterCommands.getSpeakerPos().toPose2d();
+                                targetPose = targetPose.plus(new Transform2d(0.0, goalAngle.getSin() * 0.5, new Rotation2d()));
                                 double distance =
-                                        ShooterCommands.getSpeakerPos().toPose2d()
+                                        targetPose
                                                 .getTranslation()
                                                 .getDistance(previousPose[0].getTranslation());
                                 if (distance != 0) {
                                     movingWhileShootingTarget =
-                                            ShooterCommands.getSpeakerPos().toPose2d().plus(
+                                            targetPose.plus(
                                                     robotVelocity.times(0.02).times(16.5 / distance));
-                                } else movingWhileShootingTarget = ShooterCommands.getSpeakerPos().toPose2d();
+                                } else movingWhileShootingTarget = targetPose;
                             } else movingWhileShootingTarget = ShooterCommands.getSpeakerPos().toPose2d();
                             Logger.recordOutput("speakerAimTargetPose", movingWhileShootingTarget);
                     /*

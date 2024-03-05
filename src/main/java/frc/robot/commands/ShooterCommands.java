@@ -72,6 +72,13 @@ public class ShooterCommands {
         }, shooter);
     }
 
+    public static Command ampShoot(Shooter shooter) {
+        return Commands.run(() -> {
+            shooter.shooterRunVelocity(500.0);
+            shooter.setTargetShooterAngle(Rotation2d.fromRadians(-0.17));
+        }, shooter);
+    }
+
     public static Command addToOffsett(){
         shooterAngleAdjustment += 0.017;
         return Commands.runOnce(() -> shooterAngleAdjustment += 0.017);
