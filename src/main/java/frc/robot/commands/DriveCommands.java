@@ -219,9 +219,9 @@ public class DriveCommands {
 //                      new TrapezoidProfile.State(
 //                          Radians.of(drive.getRotation().getRadians()),
 //                          drive.getAnglularVelocity()));
-//                  rotationController.setGoal(
-//                      new TrapezoidProfile.State(
-//                          Radians.of(goalAngle.getRadians())));
+                            rotationController.setGoal(
+                                    new TrapezoidProfile.State(
+                                            Radians.of(goalAngle.getRadians()), goalAngleVelocity));
                             var value = rotationController.calculate(
                                     inputModulus(drive.getPose().getRotation().getRotations(), 0, 1),
 //                            new TrapezoidProfile.State(
