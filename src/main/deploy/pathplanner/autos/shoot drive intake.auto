@@ -2,10 +2,10 @@
   "version": 1.0,
   "startingPose": {
     "position": {
-      "x": 1.3636143207550049,
-      "y": 5.546269416809082
+      "x": 1.3724669218063354,
+      "y": 5.5861029624938965
     },
-    "rotation": -179.60212377461124
+    "rotation": 179.99469134034814
   },
   "command": {
     "type": "sequential",
@@ -30,7 +30,7 @@
               {
                 "type": "path",
                 "data": {
-                  "pathName": "Amp to Center Near Note.1"
+                  "pathName": "NewPath.1"
                 }
               }
             ]
