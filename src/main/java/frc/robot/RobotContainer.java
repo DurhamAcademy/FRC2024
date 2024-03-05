@@ -181,6 +181,10 @@ private final CommandXboxController driverController = new CommandXboxController
                         .until(feeder::getBeamBroken)
         );
         NamedCommands.registerCommand(
+                "Idle Intake",
+                IntakeCommands.idleCommand(intake).withTimeout(4.0)
+        );
+        NamedCommands.registerCommand(
                 "Drive Backwards",
                 DriveCommands.joystickDrive(drive, () -> .1, () -> 0, () -> 0.0).withTimeout(4.0)
         );
