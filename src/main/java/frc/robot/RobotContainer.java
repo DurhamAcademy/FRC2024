@@ -179,6 +179,9 @@ private final CommandXboxController driverController = new CommandXboxController
                 "Intake",
                 IntakeCommands.intakeCommand(intake).withTimeout(4.0)
                         .until(feeder::getBeamBroken)
+                        .andThen(
+                                IntakeCommands.idleCommand(intake).withTimeout(4.0)
+                        )
         );
         NamedCommands.registerCommand(
                 "Idle Intake",
