@@ -47,8 +47,17 @@ public class ShooterCommands {
         populateITM();
         //the parameter is the robot, idk how to declare it, also this returns the angle
         return Commands.run(() -> {
+            // Calcaulate new linear velocity
+            // Get the angle to point at the goal
+            var goalAngle =
+                    ShooterCommands.getSpeakerPos().toPose2d()
+                            .getTranslation()
+                            .minus(drive.getPose().getTranslation())
+                            .getAngle();
+            Pose3d targetPose = ShooterCommands.getSpeakerPos();
+            targetPose = targetPose.plus(new Transform3d(0.0, goalAngle.getSin() * 0.5, 0.0, new Rotation3d()));
             Pose3d shooter1 = new Pose3d(drive.getPose()).plus(shooterOffset);
-            Pose3d pose3d = getSpeakerPos().relativeTo(shooter1);
+            Pose3d pose3d = targetPose.relativeTo(shooter1);
             double distance = getDistance(pose3d);
             Logger.recordOutput("distanceFromGoal", distance);
             double atan = Math.atan(pose3d.getZ() / distance);
