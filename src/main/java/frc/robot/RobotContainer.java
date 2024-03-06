@@ -369,6 +369,35 @@ private final CommandXboxController driverController = new CommandXboxController
                                             shooter.setCharacterizeMode(true);
                                         })));
                 break;
+            case AllElse:
+                var feederSysID =
+                        new SysIdRoutine(
+                                new Config(Voltage.per(Units.Second).of(.25), Voltage.of(9.0), Seconds.of(36)),
+                                new Mechanism(
+                                        feeder::runVolts,
+                                        (log) -> {
+                                            var motor = log.motor("FeederKraken");
+                                            motor.voltage(feeder.getCharacterizationVoltage());
+                                            motor.angularPosition(feeder.getCharacterizationPosition());
+                                            motor.angularVelocity(feeder.getCharacterizationVelocity());
+                                            motor.current(feeder.getCharacterizationCurrent());
+                                        },
+                                        climb,
+                                        "FeederMotors"));
+                var intakeWheelsSysID =
+                        new SysIdRoutine(
+                                new Config(Voltage.per(Units.Second).of(1), Voltage.of(9.0), Seconds.of(9)),
+                                new Mechanism(
+                                        intake::runVolts,
+                                        (log) -> {
+                                            var motor = log.motor("IntakeWheels");
+                                            motor.voltage(intake.getWheelCharacterizationVoltage());
+                                            motor.angularPosition(intake.getWheelCharacterizationPosition());
+                                            motor.angularVelocity(intake.getWheelCharacterizationVelocity());
+                                            motor.current(intake.getWheelCharacterizationCurrent());
+                                        },
+                                        intake,
+                                        "IntakeWheels"));
         }
     }
 
@@ -385,6 +414,7 @@ private final CommandXboxController driverController = new CommandXboxController
         Disabled,
         DriveMotors,
         TurnMotors,
-        Shooter
+        Shooter,
+        AllElse
     }
 }

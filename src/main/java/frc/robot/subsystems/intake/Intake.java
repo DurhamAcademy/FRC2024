@@ -6,6 +6,7 @@ import edu.wpi.first.math.controller.ProfiledPIDController;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.trajectory.TrapezoidProfile;
 import edu.wpi.first.math.trajectory.TrapezoidProfile.Constraints;
+import edu.wpi.first.units.*;
 import edu.wpi.first.wpilibj.RobotController;
 import edu.wpi.first.wpilibj.smartdashboard.Mechanism2d;
 import edu.wpi.first.wpilibj.smartdashboard.MechanismLigament2d;
@@ -118,5 +119,34 @@ public class Intake extends SubsystemBase {
 
   public void setRollerPercentage(double percentage) {
     io.setRollerPercent(percentage);
+  }
+
+  public Measure<Voltage> getWheelCharacterizationVoltage() {
+    return Volts.of(inputs.rollerAppliedVolts);
+  }
+
+  public Measure<Angle> getWheelCharacterizationPosition() {
+    return Radians.of(inputs.rollerPositionRad);
+  }
+
+  public Measure<Velocity<Angle>> getWheelCharacterizationVelocity() {
+    return RadiansPerSecond.of(inputs.rollerVelocityRadPerSec);
+  }
+
+  /**
+   * Run open loop at the specified voltage.
+   */
+  public Measure<Current> getWheelCharacterizationCurrent() {
+    double sum = 0.0;
+    for (int i = inputs.rollerCurrentAmps.length - 1; i >= 0; i--) {
+      sum += inputs.rollerCurrentAmps[i];
+    }
+    if (inputs.rollerCurrentAmps.length != 0) {
+      return Amps.of(sum / inputs.rollerCurrentAmps.length);
+    } else return Amps.zero();
+  }
+
+  public void runVolts(Measure<Voltage> voltageMeasure) {
+    io.setRollerVoltage(voltageMeasure.in(Volts));
   }
 }

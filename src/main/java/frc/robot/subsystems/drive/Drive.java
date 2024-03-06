@@ -184,7 +184,7 @@ public class Drive extends SubsystemBase {
     // loop cycle in x, y, and theta based only on the modules,
     // without the gyro. The gyro is always disconnected in simulation.
     var twist = kinematics.toTwist2d(wheelDeltas);
-    if (gyroInputs.connected) {
+    if (gyroInputs.connected && false) {
       if (noGyroPoseEstimation != null) {
         // todo: make the next line conditional, only update pose if cameras are
         //  online, otherwise don't do it.

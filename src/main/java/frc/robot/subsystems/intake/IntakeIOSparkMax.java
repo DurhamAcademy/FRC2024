@@ -77,6 +77,10 @@ public class IntakeIOSparkMax implements IntakeIO {
   public void setRollerPercent(double percent) {
     roller.setVoltage(percent * roller.getBusVoltage());
   }
+
+  public void setRollerVoltage(double volts) {
+    roller.setVoltage(volts);
+  }
   //
   //    @Override
   //    public void setArmVelocity(double velocityRadPerSec, double ffVolts) {

@@ -30,7 +30,7 @@ import static edu.wpi.first.math.util.Units.inchesToMeters;
  * constants are needed, to reduce verbosity.
  */
 public final class Constants {
-  public static final Mode currentMode = (RobotBase.isReal()) ? Mode.REAL : Mode.SIM;
+    public static final Mode currentMode = (RobotBase.isReal()) ? Mode.REAL : Mode.REPLAY;
 
   public static enum Mode {
     /** Running on a real robot. */
