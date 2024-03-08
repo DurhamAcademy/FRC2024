@@ -67,24 +67,11 @@ public class Intake extends SubsystemBase {
         ligament2A = new MechanismLigament2d("Intake2", 0.232983, off2A.minus(quarterTurn).getDegrees(), .5, new Color8Bit(1, 1, 1));
         root.append(ligament1).append(ligament1A);
         root.append(ligament2).append(ligament2A);
-
     }
 
-    @Override
-    public void periodic() {
-        io.updateInputs(inputs);
-        Logger.processInputs("Intake", inputs);
-        if (Math.abs(MathUtil.angleModulus(armFB.getSetpoint().position) - MathUtil.angleModulus(armTarget.getRadians())) > .25) {
-        }
-        if (RobotController.isSysActive())
-            io.setArmVoltage(armFB.calculate(inputs.armPositionRad, MathUtil.angleModulus(armTarget.getRadians())) + armFF.calculate(armFB.getSetpoint().position, armFB.getSetpoint().velocity));
-        else io.setArmVoltage(0.0);
 
-        Rotation2d rotation2d = new Rotation2d(inputs.armPositionRad);
-        ligament1.setAngle(rotation2d.plus(off1).minus(quarterTurn).times(-1));
-        ligament2.setAngle(rotation2d.plus(off2).minus(quarterTurn).times(-1));
-        Logger.recordOutput("Intake", mechanism2d);
-    }
+    boolean mustReset = true;
+    private double rollerVoltageSetpoint = 0.0;
 
     public void resetArmFB() {
         armFB.reset(new TrapezoidProfile.State(Radians.of(inputs.armPositionRad), RadiansPerSecond.of(inputs.armVelocityRadPerSec)));
@@ -94,8 +81,38 @@ public class Intake extends SubsystemBase {
         armTarget = position;
     }
 
-    public void setRollerPercentage(double percentage) {
-        io.setRollerPercent(percentage);
+    @Override
+    public void periodic() {
+        if (mustReset) {
+            resetArmFB();
+            mustReset = false;
+        }
+        io.updateInputs(inputs);
+        Logger.processInputs("Intake", inputs);
+        if (RobotController.isSysActive())
+            io.setArmVoltage(
+                    armFB.calculate(inputs.armPositionRad, MathUtil.angleModulus(armTarget.getRadians()))
+                            + armFF.calculate(armFB.getSetpoint().position, armFB.getSetpoint().velocity));
+        else io.setArmVoltage(0.0);
+
+        Rotation2d rotation2d = new Rotation2d(inputs.armPositionRad);
+        ligament1.setAngle(
+                rotation2d
+                        .plus(off1)
+                        .minus(quarterTurn)
+                        .times(-1));
+        ligament2.setAngle(
+                rotation2d
+                        .plus(off2)
+                        .minus(quarterTurn)
+                        .times(-1));
+        Logger.recordOutput("Intake", mechanism2d);
+
+        io.setRollerVoltage(rollerVoltageSetpoint * ((inputs.armPositionRad > -4.5) ? -1 : 1));
+    }
+
+    public void setRollerVoltage(double percentage) {
+        rollerVoltageSetpoint = percentage;
     }
 
     public Measure<Voltage> getWheelCharacterizationVoltage() {
@@ -124,6 +141,6 @@ public class Intake extends SubsystemBase {
     }
 
     public void runVolts(Measure<Voltage> voltageMeasure) {
-        io.setRollerVoltage(voltageMeasure.in(Volts));
+        setRollerVoltage(voltageMeasure.in(Volts));
     }
 }

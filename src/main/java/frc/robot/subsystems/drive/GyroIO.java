@@ -24,5 +24,12 @@ public interface GyroIO {
     public boolean connected = false;
     public Rotation2d yawPosition = new Rotation2d();
     public double yawVelocityRadPerSec = 0.0;
+    public double accelX = 0.0;
+    public double accelY = 0.0;
+    public double accelZ = 0.0;
+    public double quatW = 0.0;
+    public double quatX = 0.0;
+    public double quatY = 0.0;
+    public double quatZ = 0.0;
   }
 }

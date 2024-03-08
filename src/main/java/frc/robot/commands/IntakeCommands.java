@@ -10,7 +10,7 @@ public class IntakeCommands {
         return new RunCommand(
                 () -> {
                     intake.setIntakePosition(Rotation2d.fromDegrees(-7));
-                    intake.setRollerPercentage(0.75);
+                    intake.setRollerVoltage(9.0);
                 },
                 intake);
     }
@@ -19,7 +19,7 @@ public class IntakeCommands {
         return new RunCommand(
                 () -> {
                     intake.setIntakePosition(Rotation2d.fromDegrees(-4.0));
-                    intake.setRollerPercentage(-0.5);
+                    intake.setRollerVoltage(-6.0);
                 },
                 intake);
     }
@@ -28,7 +28,7 @@ public class IntakeCommands {
         return new RunCommand(
                 () -> {
                     intake.setIntakePosition(Rotation2d.fromRadians(-2.15));
-                    intake.setRollerPercentage(0.0);
+                    intake.setRollerVoltage(0.0);
                 },
                 intake);
     }

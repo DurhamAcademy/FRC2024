@@ -29,6 +29,7 @@ import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine.Mechanism;
 import frc.robot.commands.*;
 import frc.robot.subsystems.climb.Climb;
 import frc.robot.subsystems.climb.ClimbIO;
+import frc.robot.subsystems.climb.ClimbIOSim;
 import frc.robot.subsystems.climb.ClimbIOSparkMax;
 import frc.robot.subsystems.drive.*;
 import frc.robot.subsystems.feeder.Feeder;
@@ -56,7 +57,7 @@ import static frc.robot.commands.FeederCommands.feedToShooter;
  * subsystems, commands, and button mappings) should be declared here.
  */
 public class RobotContainer {
-    public static SysIDMode sysIDMode = SysIDMode.Disabled;
+    public static SysIDMode sysIDMode = SysIDMode.AllElse;
     private final Shooter shooter;
     private final Feeder feeder;
     private final Intake intake;
@@ -94,13 +95,6 @@ private final CommandXboxController driverController = new CommandXboxController
                 feeder = new Feeder(new FeederIOTalonFX());
                 intake = new Intake(new IntakeIOSparkMax());
                 climb = new Climb(new ClimbIOSparkMax());
-                // drive = new Drive(
-                // new GyroIOPigeon2(),
-                // new ModuleIOTalonFX(0),
-                // new ModuleIOTalonFX(1),
-                // new ModuleIOTalonFX(2),
-                // new ModuleIOTalonFX(3));
-                // flywheel = new Flywheel(new FlywheelIOTalonFX());
                 break;
 
             case SIM:
@@ -119,8 +113,7 @@ private final CommandXboxController driverController = new CommandXboxController
                 });
                 feeder = new Feeder(new FeederIOSim());
                 intake = new Intake(new IntakeIOSim());
-                climb = new Climb(new ClimbIO() {
-                });
+                climb = new Climb(new ClimbIOSim());
                 break;
 
             default:
@@ -169,7 +162,7 @@ private final CommandXboxController driverController = new CommandXboxController
         NamedCommands.registerCommand(
                 "Shoot",
                 sequence(
-                        FeederCommands.feedToBeamBreak(feeder),
+                        FeederCommands.feedToBeamBreak(feeder, intake),
                         Commands.waitUntil(() -> (shooter.allAtSetpoint() && (shooter.getShooterVelocityRPM() > 1000))),
                         FeederCommands.feedToShooter(feeder)
                 )
@@ -240,14 +233,15 @@ private final CommandXboxController driverController = new CommandXboxController
                         .leftTrigger()
                         .whileTrue(
                                 IntakeCommands.intakeCommand(intake)
-                                        .alongWith(FeederCommands.feedToBeamBreak(feeder)))
-                        .onFalse(FeederCommands.feedToBeamBreak(feeder).withTimeout(5));
+                                        .alongWith(FeederCommands.feedToBeamBreak(feeder, intake)))
+                        .onFalse(FeederCommands.feedToBeamBreak(feeder, intake).withTimeout(5));
                 driverController.rightBumper().whileTrue(IntakeCommands.idleCommand(intake));
 
                 operatorController
                         .povDown()
                         .whileTrue(
-                                IntakeCommands.flushIntake(intake).alongWith(FeederCommands.flushFeeder(feeder))
+                                IntakeCommands.flushIntake(intake)
+                                        .alongWith(FeederCommands.flushFeeder(feeder, intake))
                         );
 
                 // ---- SHOOTER COMMANDS ----
@@ -374,13 +368,13 @@ private final CommandXboxController driverController = new CommandXboxController
                         new SysIdRoutine(
                                 new Config(Voltage.per(Units.Second).of(.25), Voltage.of(9.0), Seconds.of(36)),
                                 new Mechanism(
-                                        feeder::runVolts,
+                                        shooter::runHoodVoltage,
                                         (log) -> {
                                             var motor = log.motor("FeederKraken");
-                                            motor.voltage(feeder.getCharacterizationVoltage());
-                                            motor.angularPosition(feeder.getCharacterizationPosition());
-                                            motor.angularVelocity(feeder.getCharacterizationVelocity());
-                                            motor.current(feeder.getCharacterizationCurrent());
+                                            motor
+                                                    .voltage(shooter.getHoodCharacterizationVoltage())
+                                                    .angularPosition(shooter.getHoodCharacterizationPosition())
+                                                    .angularVelocity(shooter.getHoodCharacterizationVelocity());
                                         },
                                         climb,
                                         "FeederMotors"));
@@ -398,6 +392,18 @@ private final CommandXboxController driverController = new CommandXboxController
                                         },
                                         intake,
                                         "IntakeWheels"));
+                driverController.a().onTrue(
+                        sequence(
+                                feederSysID.quasistatic(Direction.kForward), //fixme feederSysID has incorrect name (intake arm sysid)
+                                feederSysID.quasistatic(Direction.kReverse),
+                                feederSysID.dynamic(Direction.kForward),
+                                feederSysID.dynamic(Direction.kReverse),
+                                intakeWheelsSysID.quasistatic(Direction.kForward),
+                                intakeWheelsSysID.quasistatic(Direction.kReverse),
+                                intakeWheelsSysID.dynamic(Direction.kForward),
+                                intakeWheelsSysID.dynamic(Direction.kReverse)
+                        )
+                );
         }
     }
 

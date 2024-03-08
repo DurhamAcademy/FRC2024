@@ -44,8 +44,8 @@ public class Shooter extends SubsystemBase {
     private ProfiledPIDController hoodFB;
     private SimpleMotorFeedforward shooterVelocityFF;
     private boolean characterizeMode = false;
-    Mechanism2d mech1 = new Mechanism2d(3,3);
-    MechanismRoot2d root = mech1.getRoot("shooter", 0 ,0);
+    Mechanism2d mech1 = new Mechanism2d(3, 3);
+    MechanismRoot2d root = mech1.getRoot("shooter", 0, 0);
     MechanismLigament2d sState = root.append(new MechanismLigament2d("shooter", 0.14, -90.0));
 
     private boolean hasReset = false;
@@ -211,5 +211,21 @@ public class Shooter extends SubsystemBase {
 
     public void setTargetShooterAngle(Rotation2d angle) {
         targetHoodAngleRad = MathUtil.clamp(angle.getRadians(), -2, 2);
+    }
+
+    public Measure<Voltage> getHoodCharacterizationVoltage() {
+        return Volts.of(hoodInputs.hoodAppliedVolts);
+    }
+
+    public Measure<Angle> getHoodCharacterizationPosition() {
+        return Radians.of(hoodInputs.hoodPositionRad);
+    }
+
+    public Measure<Velocity<Angle>> getHoodCharacterizationVelocity() {
+        return RadiansPerSecond.of(hoodInputs.hoodVelocityRadPerSec);
+    }
+
+    public void runHoodVoltage(Measure<Voltage> voltageMeasure) {
+        hoodRunVolts(voltageMeasure.in(Volts));
     }
 }

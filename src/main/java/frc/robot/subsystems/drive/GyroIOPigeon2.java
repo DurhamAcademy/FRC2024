@@ -27,19 +27,47 @@ public class GyroIOPigeon2 implements GyroIO {
   private final StatusSignal<Double> yaw = pigeon.getYaw();
   private final StatusSignal<Double> yawVelocity = pigeon.getAngularVelocityZWorld();
 
+  private final StatusSignal<Double> accelerationX = pigeon.getAccelerationX();
+  private final StatusSignal<Double> accelerationY = pigeon.getAccelerationY();
+  private final StatusSignal<Double> accelerationZ = pigeon.getAccelerationZ();
+
+  private final StatusSignal<Double> getMagFieldX = pigeon.getMagneticFieldX();
+  private final StatusSignal<Double> getMagFieldY = pigeon.getMagneticFieldY();
+  private final StatusSignal<Double> getMagFieldZ = pigeon.getMagneticFieldZ();
+
+  private final StatusSignal<Double> quatW = pigeon.getQuatW();
+  private final StatusSignal<Double> quatX = pigeon.getQuatX();
+  private final StatusSignal<Double> quatY = pigeon.getQuatY();
+  private final StatusSignal<Double> quatZ = pigeon.getQuatZ();
+
   public GyroIOPigeon2() {
     pigeon.getConfigurator().apply(new Pigeon2Configuration());
     pigeon.getConfigurator().setYaw(0.0);
-    yaw.setUpdateFrequency(100.0);
-    yawVelocity.setUpdateFrequency(100.0);
+    StatusSignal.setUpdateFrequencyForAll(
+            100,
+            yaw, yawVelocity, accelerationY, accelerationX, accelerationZ, getMagFieldX,
+            getMagFieldY, getMagFieldZ,
+            quatW, quatX, quatY, quatZ
+    );
     pigeon.optimizeBusUtilization();
   }
 
   @Override
   public void updateInputs(GyroIOInputs inputs) {
-    StatusCode x = BaseStatusSignal.refreshAll(yaw, yawVelocity);
+    StatusCode x = BaseStatusSignal.refreshAll(
+            yaw, yawVelocity, accelerationX, accelerationY, accelerationZ, getMagFieldX,
+            getMagFieldY, getMagFieldZ
+    );
     inputs.connected = x.equals(StatusCode.OK);
     inputs.yawPosition = Rotation2d.fromDegrees(yaw.getValueAsDouble());
     inputs.yawVelocityRadPerSec = Units.degreesToRadians(yawVelocity.getValueAsDouble());
+    inputs.accelX = accelerationX.getValueAsDouble();
+    inputs.accelY = accelerationY.getValueAsDouble();
+    inputs.accelZ = accelerationZ.getValueAsDouble();
+    inputs.quatW = quatW.getValueAsDouble();
+    inputs.quatX = quatX.getValueAsDouble();
+    inputs.quatY = quatY.getValueAsDouble();
+    inputs.quatZ = quatZ.getValueAsDouble();
+
   }
 }
