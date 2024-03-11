@@ -13,6 +13,7 @@ import edu.wpi.first.wpilibj.smartdashboard.MechanismLigament2d;
 import edu.wpi.first.wpilibj.util.Color8Bit;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants;
+import org.littletonrobotics.junction.AutoLogOutput;
 import org.littletonrobotics.junction.Logger;
 
 import static edu.wpi.first.units.Units.*;
@@ -81,6 +82,17 @@ public class Intake extends SubsystemBase {
         armTarget = position;
     }
 
+    boolean disableFeedControl = false;
+
+    @AutoLogOutput
+    public boolean feedControlDisabled() {
+        return disableFeedControl;
+    }
+
+    public void setFeedControl(boolean disabled) {
+        this.disableFeedControl = disabled;
+    }
+
     @Override
     public void periodic() {
         if (mustReset) {
@@ -89,7 +101,9 @@ public class Intake extends SubsystemBase {
         }
         io.updateInputs(inputs);
         Logger.processInputs("Intake", inputs);
-        if (RobotController.isSysActive())
+        if (disableFeedControl) {
+
+        } else if (RobotController.isSysActive())
             io.setArmVoltage(
                     armFB.calculate(inputs.armPositionRad, MathUtil.angleModulus(armTarget.getRadians()))
                             + armFF.calculate(armFB.getSetpoint().position, armFB.getSetpoint().velocity));
@@ -111,26 +125,26 @@ public class Intake extends SubsystemBase {
         io.setRollerVoltage(rollerVoltageSetpoint * ((inputs.armPositionRad > -4.5) ? -1 : 1));
     }
 
-    public void setRollerVoltage(double percentage) {
-        rollerVoltageSetpoint = percentage;
+    public void setRollerVoltage(double voltage) {
+        rollerVoltageSetpoint = voltage;
     }
 
-    public Measure<Voltage> getWheelCharacterizationVoltage() {
-        return Volts.of(inputs.rollerAppliedVolts);
+    public Measure<Voltage> getArmCharacterizationVoltage() {
+        return Volts.of(inputs.armAppliedVolts);
     }
 
-    public Measure<Angle> getWheelCharacterizationPosition() {
-        return Radians.of(inputs.rollerPositionRad);
+    public Measure<Angle> getArmCharacterizationPosition() {
+        return Radians.of(inputs.armPositionRad);
     }
 
-    public Measure<Velocity<Angle>> getWheelCharacterizationVelocity() {
-        return RadiansPerSecond.of(inputs.rollerVelocityRadPerSec);
+    public Measure<Velocity<Angle>> getArmCharacterizationVelocity() {
+        return RadiansPerSecond.of(inputs.armVelocityRadPerSec);
     }
 
     /**
      * Run open loop at the specified voltage.
      */
-    public Measure<Current> getWheelCharacterizationCurrent() {
+    public Measure<Current> getArmCharacterizationCurrent() {
         double sum = 0.0;
         for (int i = inputs.rollerCurrentAmps.length - 1; i >= 0; i--) {
             sum += inputs.rollerCurrentAmps[i];
@@ -140,7 +154,7 @@ public class Intake extends SubsystemBase {
         } else return Amps.zero();
     }
 
-    public void runVolts(Measure<Voltage> voltageMeasure) {
-        setRollerVoltage(voltageMeasure.in(Volts));
+    public void runArmVolts(Measure<Voltage> voltageMeasure) {
+        io.setArmVoltage(voltageMeasure.in(Volts));
     }
 }

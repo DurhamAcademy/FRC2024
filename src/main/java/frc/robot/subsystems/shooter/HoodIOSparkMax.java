@@ -2,6 +2,7 @@ package frc.robot.subsystems.shooter;
 
 import com.revrobotics.*;
 import edu.wpi.first.math.MathUtil;
+import edu.wpi.first.wpilibj.DutyCycleEncoder;
 import org.littletonrobotics.junction.Logger;
 
 import java.util.Arrays;
@@ -14,6 +15,8 @@ public class HoodIOSparkMax implements HoodIO {
 
     private final SparkAbsoluteEncoder encoder =
             leader.getAbsoluteEncoder(SparkAbsoluteEncoder.Type.kDutyCycle);
+
+    private final DutyCycleEncoder absoluteEncoder = new DutyCycleEncoder(0);
 
     private final RelativeEncoder motorEncoder = leader.getEncoder();
     boolean hasReset = false;
@@ -37,7 +40,7 @@ public class HoodIOSparkMax implements HoodIO {
 
             codes[a++] = motorEncoder.setPositionConversionFactor(MOTOR_TO_ROBOT);
             codes[a++] = motorEncoder.setVelocityConversionFactor(MOTOR_TO_ROBOT);
-            codes[a++] = motorEncoder.setPosition(MathUtil.angleModulus(encoder.getPosition() * Math.PI * 2) / GEAR_RATIO);
+//            codes[a] = motorEncoder.setPosition(MathUtil.angleModulus(encoder.getPosition() * Math.PI * 2) / GEAR_RATIO);
             boolean failed = false;
             for (REVLibError code : codes) {
                 if (code != REVLibError.kOk) {
@@ -60,14 +63,18 @@ public class HoodIOSparkMax implements HoodIO {
         System.out.println("finished printing codes.");
     }
 
-  public void updateInputs(HoodIOInputs inputs) {
-      inputs.hoodPositionRad = MathUtil.angleModulus(encoder.getPosition() * Math.PI * 2) / GEAR_RATIO;
-      inputs.motorPositionRad = motorEncoder.getPosition();
-      inputs.hoodAppliedVolts = leader.getBusVoltage() * leader.getAppliedOutput();
-      inputs.hoodCurrentAmps = new double[]{leader.getOutputCurrent()};
-      inputs.hoodVelocityRadPerSec = (encoder.getVelocity() * Math.PI * 2) / GEAR_RATIO;
-      inputs.hoodTemperature = new double[]{leader.getMotorTemperature()};
-  }
+    public void updateInputs(HoodIOInputs inputs) {
+        inputs.hoodPositionRad = /*MathUtil.angleModulus(*/(absoluteEncoder.getAbsolutePosition() * Math.PI * 2) / GEAR_RATIO;
+        inputs.motorPositionRad = motorEncoder.getPosition();
+        inputs.hoodAppliedVolts = leader.getBusVoltage() * leader.getAppliedOutput();
+        inputs.hoodCurrentAmps = new double[]{leader.getOutputCurrent()};
+        inputs.hoodVelocityRadPerSec = (encoder.getVelocity() * Math.PI * 2) / GEAR_RATIO;
+        inputs.hoodTemperature = new double[]{leader.getMotorTemperature()};
+    }
+
+    public void setBrakeMode(boolean enable) {
+        leader.setIdleMode(enable ? CANSparkBase.IdleMode.kBrake : CANSparkBase.IdleMode.kCoast);
+    }
 
     @Override
     public void setVoltage(double volts) {

@@ -46,8 +46,9 @@ import org.littletonrobotics.junction.networktables.LoggedDashboardChooser;
 import org.littletonrobotics.junction.networktables.LoggedDashboardNumber;
 
 import static edu.wpi.first.units.BaseUnits.Voltage;
+import static edu.wpi.first.units.Units.Radians;
 import static edu.wpi.first.units.Units.Seconds;
-import static edu.wpi.first.wpilibj2.command.Commands.sequence;
+import static edu.wpi.first.wpilibj2.command.Commands.*;
 import static frc.robot.commands.FeederCommands.feedToShooter;
 
 /**
@@ -152,30 +153,30 @@ private final CommandXboxController driverController = new CommandXboxController
                         driverController::getLeftX,
                         driverController::getRightX);
         NamedCommands.registerCommand(
-                "AutoShoot",
-                ShooterCommands.autoAim(shooter, drive).alongWith(
-                        sequence(
-                                Commands.waitUntil(shooter::allAtSetpoint),
-                                FeederCommands.feedToShooter(feeder)
-                        )));
+                "AutoShoot", Commands.none()
+//                ShooterCommands.autoAim(shooter, drive).alongWith(
+//                        sequence(
+//                                Commands.waitUntil(shooter::allAtSetpoint),
+//                                FeederCommands.feedToShooter(feeder)
+        );
         // Set up auto routines
         NamedCommands.registerCommand(
-                "Shoot",
-                sequence(
-                        FeederCommands.feedToBeamBreak(feeder, intake),
-                        Commands.waitUntil(() -> (shooter.allAtSetpoint() && (shooter.getShooterVelocityRPM() > 1000))),
-                        FeederCommands.feedToShooter(feeder)
-                )
-                        .deadlineWith(ShooterCommands.JustShoot(shooter))
-                        .withTimeout(8.0));
+                "Shoot", Commands.none()
+//                sequence(
+//                        FeederCommands.feedToBeamBreak(feeder, intake),
+//                        Commands.waitUntil(() -> (shooter.allAtSetpoint() && (shooter.getShooterVelocityRPM() > 1000))),
+//                        FeederCommands.feedToShooter(feeder)
+        );
+//                        .deadlineWith(ShooterCommands.JustShoot(shooter))
+//                        .withTimeout(8.0));
         NamedCommands.registerCommand(
-                "Intake",
-                IntakeCommands.intakeCommand(intake).withTimeout(4.0)
-                        .until(feeder::getBeamBroken)
+                "Intake", Commands.none()
+//                IntakeCommands.intakeCommand(intake).withTimeout(4.0)
+//                        .until(feeder::getBeamBroken)
         );
         NamedCommands.registerCommand(
-                "Drive Backwards",
-                DriveCommands.joystickDrive(drive, () -> .1, () -> 0, () -> 0.0).withTimeout(4.0)
+                "Drive Backwards", Commands.none()
+//                DriveCommands.joystickDrive(drive, () -> .1, () -> 0, () -> 0.0).withTimeout(4.0)
         );
         autoChooser = new LoggedDashboardChooser<>("Auto Choices", AutoBuilder.buildAutoChooser());
 
@@ -209,7 +210,7 @@ private final CommandXboxController driverController = new CommandXboxController
                                 driverController::getRightX));
                 intake.setDefaultCommand(IntakeCommands.idleCommand(intake));
                 feeder.setDefaultCommand(new RunCommand(() -> feeder.runVolts(0.0), feeder));
-                shooter.setDefaultCommand(ShooterCommands.shooterIdle(shooter));
+                shooter.setDefaultCommand(ShooterCommands.shooterSetZero(shooter));
                 // CLIMB DEFAULT COMMAND
                 climb.setDefaultCommand(sequence(
                         ClimbCommands.zero(climb, 10.0).withTimeout(5),
@@ -263,6 +264,22 @@ private final CommandXboxController driverController = new CommandXboxController
                         .x()
                         .whileTrue(
                                 ShooterCommands.JustShoot(shooter)
+                        );
+                operatorController
+                        .a()
+                        .onTrue(
+                                parallel(
+                                        ShooterCommands.ampShoot(shooter),
+                                        sequence(
+                                                waitSeconds(0.5),
+                                                FeederCommands.feedToShooter(feeder)
+                                        )
+                                ).withTimeout(1.0)
+                        );
+                operatorController
+                        .leftBumper()
+                        .whileTrue(
+                                FeederCommands.feedToBeamBreak(feeder, intake)
                         );
                 driverController
                         .rightTrigger()
@@ -364,9 +381,9 @@ private final CommandXboxController driverController = new CommandXboxController
                                         })));
                 break;
             case AllElse:
-                var feederSysID =
+                var shooterArmSysID =
                         new SysIdRoutine(
-                                new Config(Voltage.per(Units.Second).of(.25), Voltage.of(9.0), Seconds.of(36)),
+                                new Config(Voltage.per(Units.Second).of(1), Voltage.of(9.0), Seconds.of(5)),
                                 new Mechanism(
                                         shooter::runHoodVoltage,
                                         (log) -> {
@@ -382,28 +399,28 @@ private final CommandXboxController driverController = new CommandXboxController
                         new SysIdRoutine(
                                 new Config(Voltage.per(Units.Second).of(1), Voltage.of(9.0), Seconds.of(9)),
                                 new Mechanism(
-                                        intake::runVolts,
+                                        intake::runArmVolts,
                                         (log) -> {
                                             var motor = log.motor("IntakeWheels");
-                                            motor.voltage(intake.getWheelCharacterizationVoltage());
-                                            motor.angularPosition(intake.getWheelCharacterizationPosition());
-                                            motor.angularVelocity(intake.getWheelCharacterizationVelocity());
-                                            motor.current(intake.getWheelCharacterizationCurrent());
+                                            motor.voltage(intake.getArmCharacterizationVoltage());
+                                            motor.angularPosition(intake.getArmCharacterizationPosition());
+                                            motor.angularVelocity(intake.getArmCharacterizationVelocity());
+                                            motor.current(intake.getArmCharacterizationCurrent());
                                         },
                                         intake,
                                         "IntakeWheels"));
                 driverController.a().onTrue(
                         sequence(
-                                feederSysID.quasistatic(Direction.kForward), //fixme feederSysID has incorrect name (intake arm sysid)
-                                feederSysID.quasistatic(Direction.kReverse),
-                                feederSysID.dynamic(Direction.kForward),
-                                feederSysID.dynamic(Direction.kReverse),
-                                intakeWheelsSysID.quasistatic(Direction.kForward),
-                                intakeWheelsSysID.quasistatic(Direction.kReverse),
-                                intakeWheelsSysID.dynamic(Direction.kForward),
-                                intakeWheelsSysID.dynamic(Direction.kReverse)
+                                shooterArmSysID.quasistatic(Direction.kForward).until(() -> shooter.getHoodCharacterizationPosition().gte(Radians.of(1.8)) && shooter.getHoodCharacterizationPosition().lte(Radians.of(-1.6))), //fixme shooterArmSysID has incorrect name (intake arm sysid)
+                                shooterArmSysID.quasistatic(Direction.kReverse).until(() -> shooter.getHoodCharacterizationPosition().gte(Radians.of(1.8)) && shooter.getHoodCharacterizationPosition().lte(Radians.of(-1.6))),
+                                shooterArmSysID.dynamic(Direction.kForward).until(() -> shooter.getHoodCharacterizationPosition().gte(Radians.of(1.8)) && shooter.getHoodCharacterizationPosition().lte(Radians.of(-1.6))),
+                                shooterArmSysID.dynamic(Direction.kReverse).until(() -> shooter.getHoodCharacterizationPosition().gte(Radians.of(1.8)) && shooter.getHoodCharacterizationPosition().lte(Radians.of(-1.6)))
                         )
                 );
+//                                intakeWheelsSysID.quasistatic(Direction.kForward),
+//                                intakeWheelsSysID.quasistatic(Direction.kReverse),
+//                                intakeWheelsSysID.dynamic(Direction.kForward),
+//                                intakeWheelsSysID.dynamic(Direction.kReverse)
         }
     }
 

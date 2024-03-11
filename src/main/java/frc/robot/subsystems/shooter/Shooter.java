@@ -24,6 +24,7 @@ import edu.wpi.first.units.*;
 import edu.wpi.first.wpilibj.smartdashboard.Mechanism2d;
 import edu.wpi.first.wpilibj.smartdashboard.MechanismLigament2d;
 import edu.wpi.first.wpilibj.smartdashboard.MechanismRoot2d;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants;
 import org.littletonrobotics.junction.AutoLogOutput;
@@ -86,11 +87,15 @@ public class Shooter extends SubsystemBase {
             default:
                 break;
         }
-
+        SmartDashboard.putNumber("ShooterPIDD", hoodFB.getD());
+        SmartDashboard.putNumber("ShooterPIDP", hoodFB.getP());
     }
+
 
     @Override
     public void periodic() {
+        hoodFB.setD(SmartDashboard.getNumber("ShooterPIDD", 0.0));
+        hoodFB.setD(SmartDashboard.getNumber("ShooterPIDP", 0.0));
         shooterIO.updateInputs(shooterInputs);
         Logger.processInputs("Shooter", shooterInputs);
 

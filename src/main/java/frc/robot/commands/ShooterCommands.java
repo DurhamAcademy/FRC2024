@@ -11,6 +11,7 @@ import frc.robot.subsystems.shooter.Shooter;
 import org.littletonrobotics.junction.Logger;
 
 import static edu.wpi.first.wpilibj.DriverStation.Alliance.Blue;
+import static java.lang.Math.atan;
 
 
 public class ShooterCommands {
@@ -31,12 +32,12 @@ public class ShooterCommands {
     }
 
     private static void populateITM() { //im making separate methods for this because I am not sure how much adjustments you would have to make
-        distanceToAngle.put(0.0, 1.0);
-        distanceToAngle.put(1.1, .8);
-        distanceToAngle.put(1.7, 0.48);
-        distanceToAngle.put(2.39, 0.46);
-        distanceToAngle.put(3.506, .423);
-        distanceToAngle.put(1000.0, .0);
+        distanceToAngle.put(0.0, 0.0);
+        distanceToAngle.put(1.1, -0.2941);
+        distanceToAngle.put(1.7, -0.4172);
+        distanceToAngle.put(2.39, -0.2679);
+        distanceToAngle.put(3.506, -0.1229);
+        distanceToAngle.put(1000.0, 0.0);
         distanceToRPM.put(0.0, 3500.0);
         distanceToRPM.put(0.894, 3500.0);
         distanceToRPM.put(3.506, 5000.0);
@@ -60,8 +61,8 @@ public class ShooterCommands {
             Pose3d pose3d = targetPose.relativeTo(shooter1);
             double distance = getDistance(pose3d);
             Logger.recordOutput("distanceFromGoal", distance);
-            double atan = Math.atan(pose3d.getZ() / distance);
-            shooter.setTargetShooterAngle(Rotation2d.fromRadians(distanceToAngle.get(distance)+ shooterAngleAdjustment));
+            double atan = atan(pose3d.getZ() / distance);
+            shooter.setTargetShooterAngle(Rotation2d.fromRadians(atan + distanceToAngle.get(distance)));
             shooter.shooterRunVelocity(distanceToRPM.get(distance));
         }, shooter);
     }
@@ -78,6 +79,13 @@ public class ShooterCommands {
         return Commands.run(() -> {
             shooter.shooterRunVelocity(0.0);
             shooter.setTargetShooterAngle(Rotation2d.fromRadians(1.5));
+        }, shooter);
+    }
+
+    public static Command shooterSetZero(Shooter shooter) {
+        return Commands.run(() -> {
+            shooter.shooterRunVelocity(0.0);
+            shooter.setTargetShooterAngle(Rotation2d.fromRadians(0));
         }, shooter);
     }
 
