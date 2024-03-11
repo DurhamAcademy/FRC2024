@@ -22,7 +22,7 @@ public class HoodIOSparkMax implements HoodIO {
     boolean hasReset = false;
 
     public HoodIOSparkMax() {
-        REVLibError[] codes = new REVLibError[12];
+        REVLibError[] codes = new REVLibError[11];
         for (int tries = 0; tries < 5; tries++) {
             int a = 0;
             codes[a++] = leader.restoreFactoryDefaults();
@@ -68,7 +68,7 @@ public class HoodIOSparkMax implements HoodIO {
         inputs.motorPositionRad = motorEncoder.getPosition();
         inputs.hoodAppliedVolts = leader.getBusVoltage() * leader.getAppliedOutput();
         inputs.hoodCurrentAmps = new double[]{leader.getOutputCurrent()};
-        inputs.hoodVelocityRadPerSec = (encoder.getVelocity() * Math.PI * 2) / GEAR_RATIO;
+        inputs.hoodVelocityRadPerSec = (motorEncoder.getVelocity() * Math.PI * 2) / GEAR_RATIO;
         inputs.hoodTemperature = new double[]{leader.getMotorTemperature()};
     }
 

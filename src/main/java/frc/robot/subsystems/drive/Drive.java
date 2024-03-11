@@ -184,7 +184,7 @@ public class Drive extends SubsystemBase {
     // loop cycle in x, y, and theta based only on the modules,
     // without the gyro. The gyro is always disconnected in simulation.
     var twist = kinematics.toTwist2d(wheelDeltas);
-    if (gyroInputs.connected && false) {
+    if (gyroInputs.connected) {
       if (noGyroPoseEstimation != null) {
         // todo: make the next line conditional, only update pose if cameras are
         //  online, otherwise don't do it.
@@ -231,12 +231,13 @@ public class Drive extends SubsystemBase {
               var distance = pose2d.getTranslation().getDistance(pose.getTranslation());
 
               if (
-                      (estimatedRobotPose.estimatedPose.getX() <= 16.5) &&
+                      (!DriverStation.isFMSAttached()) ||
+                              ((estimatedRobotPose.estimatedPose.getX() <= 16.5) &&
                               (estimatedRobotPose.estimatedPose.getX() > 0) &&
-                              (estimatedRobotPose.estimatedPose.getZ() <= .5) &&
-                              (estimatedRobotPose.estimatedPose.getZ() > -0.5) &&
+                                      (estimatedRobotPose.estimatedPose.getZ() <= 1) &&
+                                      (estimatedRobotPose.estimatedPose.getZ() > -1) &&
                               (estimatedRobotPose.estimatedPose.getY() <= 8.2) &&
-                              (estimatedRobotPose.estimatedPose.getY() > 0)
+                                      (estimatedRobotPose.estimatedPose.getY() > 0))
               ) // only add it if it's less than 1 meter and in the field
               {
                 Matrix<N3, N1> visionMatrix;

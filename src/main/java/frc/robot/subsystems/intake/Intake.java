@@ -82,8 +82,6 @@ public class Intake extends SubsystemBase {
         armTarget = position;
     }
 
-    boolean disableFeedControl = false;
-
     @AutoLogOutput
     public boolean feedControlDisabled() {
         return disableFeedControl;
@@ -93,6 +91,7 @@ public class Intake extends SubsystemBase {
         this.disableFeedControl = disabled;
     }
 
+    boolean disableFeedControl = false;
     @Override
     public void periodic() {
         if (mustReset) {

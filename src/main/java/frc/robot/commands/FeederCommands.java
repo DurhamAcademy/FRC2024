@@ -25,7 +25,7 @@ public class FeederCommands {
                     feeder.runVolts(-4);
                     intake.setRollerVoltage(-4);
                 },
-                feeder, intake);
+                feeder);
     }
 
     public static Command feedToBeamBreak(Feeder feeder, Intake intake) {
@@ -33,17 +33,17 @@ public class FeederCommands {
                 run(() -> {
                     feeder.runVolts(6);
                     intake.setRollerVoltage(6);
-                }, feeder, intake)
+                }, feeder)
                         .onlyWhile(() -> !feeder.getBeamBroken()),
                 run(() -> {
                     feeder.runVolts(-4);
                     intake.setRollerVoltage(-4);
-                }, feeder, intake)
+                }, feeder)
                         .onlyWhile(feeder::getBeamBroken),
                 run(() -> {
                     feeder.runVolts(3);
                     intake.setRollerVoltage(3);
-                }, feeder, intake)
+                }, feeder)
                         .onlyWhile(() -> !feeder.getBeamBroken())
         );
     }

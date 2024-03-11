@@ -20,7 +20,10 @@ import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.units.Units;
 import edu.wpi.first.wpilibj.GenericHID;
 import edu.wpi.first.wpilibj.XboxController;
-import edu.wpi.first.wpilibj2.command.*;
+import edu.wpi.first.wpilibj2.command.Command;
+import edu.wpi.first.wpilibj2.command.Commands;
+import edu.wpi.first.wpilibj2.command.RunCommand;
+import edu.wpi.first.wpilibj2.command.WaitCommand;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine.Config;
@@ -58,7 +61,7 @@ import static frc.robot.commands.FeederCommands.feedToShooter;
  * subsystems, commands, and button mappings) should be declared here.
  */
 public class RobotContainer {
-    public static SysIDMode sysIDMode = SysIDMode.AllElse;
+    public static SysIDMode sysIDMode = SysIDMode.Disabled;
     private final Shooter shooter;
     private final Feeder feeder;
     private final Intake intake;
@@ -185,11 +188,11 @@ private final CommandXboxController driverController = new CommandXboxController
 
     // TODO: populate switch statements here
     public Command getEnterCommand(Mode m) {
-        return new InstantCommand();
+        return Commands.none();
     }
 
     public Command getExitCommand(Mode m) {
-        return new InstantCommand();
+        return Commands.none();
     }
 
     /**
@@ -210,7 +213,7 @@ private final CommandXboxController driverController = new CommandXboxController
                                 driverController::getRightX));
                 intake.setDefaultCommand(IntakeCommands.idleCommand(intake));
                 feeder.setDefaultCommand(new RunCommand(() -> feeder.runVolts(0.0), feeder));
-                shooter.setDefaultCommand(ShooterCommands.shooterSetZero(shooter));
+                shooter.setDefaultCommand(ShooterCommands.shooterIdle(shooter));
                 // CLIMB DEFAULT COMMAND
                 climb.setDefaultCommand(sequence(
                         ClimbCommands.zero(climb, 10.0).withTimeout(5),

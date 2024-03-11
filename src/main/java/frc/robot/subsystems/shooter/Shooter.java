@@ -24,7 +24,6 @@ import edu.wpi.first.units.*;
 import edu.wpi.first.wpilibj.smartdashboard.Mechanism2d;
 import edu.wpi.first.wpilibj.smartdashboard.MechanismLigament2d;
 import edu.wpi.first.wpilibj.smartdashboard.MechanismRoot2d;
-import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants;
 import org.littletonrobotics.junction.AutoLogOutput;
@@ -51,6 +50,8 @@ public class Shooter extends SubsystemBase {
 
     private boolean hasReset = false;
 
+    double previousAnglularVelocity = 0.0;
+
     /**
      * Creates a new Shooter.
      */
@@ -63,7 +64,7 @@ public class Shooter extends SubsystemBase {
         // separate robot with different tuning)
         switch (Constants.currentMode) {
             case REAL:
-                hoodFB = new ProfiledPIDController(2.0, 0.0, 0.0, new TrapezoidProfile.Constraints(4, 8));
+                hoodFB = new ProfiledPIDController(6.0, 0.0, .25, new TrapezoidProfile.Constraints(1912, 7600.0 / 32.0));
                 hoodFB.setTolerance(0.1);
                 shooterVelocityFB =
                         new PIDController(0.0079065, 0.0, 0.0);
@@ -87,15 +88,10 @@ public class Shooter extends SubsystemBase {
             default:
                 break;
         }
-        SmartDashboard.putNumber("ShooterPIDD", hoodFB.getD());
-        SmartDashboard.putNumber("ShooterPIDP", hoodFB.getP());
     }
-
 
     @Override
     public void periodic() {
-        hoodFB.setD(SmartDashboard.getNumber("ShooterPIDD", 0.0));
-        hoodFB.setD(SmartDashboard.getNumber("ShooterPIDP", 0.0));
         shooterIO.updateInputs(shooterInputs);
         Logger.processInputs("Shooter", shooterInputs);
 
@@ -115,6 +111,12 @@ public class Shooter extends SubsystemBase {
         Logger.recordOutput("Shooter/ShooterSpeed", setpointRadPS);
         Logger.recordOutput("Shooter/TargetHoodAngle", targetHoodAngleRad);
         Logger.recordOutput("Shooter/HoodInputs/MotorPositionRad", hoodInputs.motorPositionRad);
+
+        previousAnglularVelocity = hoodInputs.hoodVelocityRadPerSec;
+        if (previousAnglularVelocity != 0.0)
+            Logger.recordOutput(
+                    "Shooter/HoodAcceleration",
+                    RadiansPerSecond.of(previousAnglularVelocity - hoodInputs.hoodVelocityRadPerSec).per(Seconds.of(0.02)));
         hoodIO.setVoltage(
                 hoodFB.calculate(hoodInputs.motorPositionRad, targetHoodAngleRad)
                 /*+ hoodFF.calcula te(hoodFB.getSetpoint().position, hoodFB.getSetpoint().velocity)*/);
