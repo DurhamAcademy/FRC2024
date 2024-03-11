@@ -51,8 +51,4 @@
 //     public void periodic(){ //motor constant (extend, spin)
 //         //idk how to periodic
 //    }
-//
-//
-//
-//
 // }
