@@ -213,13 +213,13 @@ private final CommandXboxController driverController = new CommandXboxController
                 drive.setDefaultCommand(
                         DriveCommands.joystickDrive(
                                 drive,
-                                driverController::getLeftY,
-                                driverController::getLeftX,
-                                driverController::getRightX));
+                                () -> -driverController.getLeftY(),
+                                () -> -driverController.getLeftX(),
+                                () -> -driverController.getRightX()));
                 intake.setDefaultCommand(IntakeCommands.idleCommand(intake));
                 feeder.setDefaultCommand(new RunCommand(() -> feeder.runVolts(0.0), feeder));
                 shooter.setDefaultCommand(
-                        Commands.either(
+                        either(
                                 ShooterCommands.shooterIdle(shooter),
                                 sequence(
                                         ShooterCommands.shooterIdle(shooter).until(shooter::hoodAtSetpoint),
