@@ -37,13 +37,14 @@ public class ShooterCommands {
     private static void populateITM() { //im making separate methods for this because I am not sure how much adjustments you would have to make
         distanceToAngle.put(0.0, 0.0);
         distanceToAngle.put(1.1, -0.2941);
-        distanceToAngle.put(1.7, -0.4172);
-        distanceToAngle.put(2.39, -0.2679);
-        distanceToAngle.put(3.506, -0.1229);
+        distanceToAngle.put(1.7, -0.3472);
+        distanceToAngle.put(2.52, -0.1675);
+        distanceToAngle.put(4.235, 0.0150);
         distanceToAngle.put(1000.0, 0.0);
         distanceToRPM.put(0.0, 3500.0);
         distanceToRPM.put(0.894, 3500.0);
         distanceToRPM.put(3.506, 5000.0);
+        distanceToRPM.put(4.25, 4000.0);
         distanceToRPM.put(1000.0, 4000.0);
     }
 
@@ -65,6 +66,8 @@ public class ShooterCommands {
             double distance = getDistance(pose3d);
             Logger.recordOutput("distanceFromGoal", distance);
             double atan = atan(pose3d.getZ() / distance);
+            Logger.recordOutput("Aim/getZ", pose3d.getZ());
+            Logger.recordOutput("Aim/atan", atan);
             shooter.setTargetShooterAngle(Rotation2d.fromRadians(atan + distanceToAngle.get(distance)));
             shooter.shooterRunVelocity(distanceToRPM.get(distance));
         }, shooter)
