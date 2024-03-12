@@ -38,12 +38,13 @@ public class ShooterCommands {
         distanceToAngle.put(0.0, 0.0);
         distanceToAngle.put(1.1, -0.2941);
         distanceToAngle.put(1.7, -0.3472);
-        distanceToAngle.put(2.52, -0.1675);
+        distanceToAngle.put(2.52, -0.1700); //GOOD VALUES
         distanceToAngle.put(4.235, 0.0150);
         distanceToAngle.put(1000.0, 0.0);
         distanceToRPM.put(0.0, 3500.0);
         distanceToRPM.put(0.894, 3500.0);
         distanceToRPM.put(3.506, 5000.0);
+        distanceToRPM.put(2.52, 3750.0); //GOOD VALUES
         distanceToRPM.put(4.25, 4000.0);
         distanceToRPM.put(1000.0, 4000.0);
     }

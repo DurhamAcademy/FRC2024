@@ -9,7 +9,7 @@ import java.util.Arrays;
 
 public class HoodIOSparkMax implements HoodIO {
     private static final double GEAR_RATIO = 1.5;
-    private static final double MOTOR_TO_ROBOT = (1 / 16.2) * Math.PI * 2;
+    private static final double MOTOR_TO_ROBOT = (1 / (36 * GEAR_RATIO)) * Math.PI * 2;
 
     private final CANSparkMax leader = new CANSparkMax(25, CANSparkLowLevel.MotorType.kBrushless);
 

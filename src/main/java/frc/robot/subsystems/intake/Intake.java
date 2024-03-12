@@ -125,7 +125,7 @@ public class Intake extends SubsystemBase {
                         .times(-1));
         Logger.recordOutput("Intake", mechanism2d);
 
-        io.setRollerVoltage(rollerVoltageSetpoint * ((inputs.armPositionRad > -4.5) ? -1 : 1));
+        io.setRollerVoltage(rollerVoltageSetpoint/* * ((inputs.armPositionRad > -4.5) ? -1 : 1)*/);
     }
 
     public void setRollerVoltage(double voltage) {
