@@ -29,7 +29,6 @@ import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.RunCommand;
-import frc.robot.Robot;
 import frc.robot.subsystems.drive.Drive;
 import org.littletonrobotics.junction.Logger;
 import org.littletonrobotics.junction.networktables.LoggedDashboardBoolean;
@@ -243,7 +242,7 @@ public class DriveCommands {
                                             linearVelocity.getX() * drive.getMaxLinearSpeedMetersPerSec(),
                                             linearVelocity.getY() * drive.getMaxLinearSpeedMetersPerSec(),
 
-                                            ((filterCalc * ((invertVelocity.get()) ? 1 : 0)) + value) * ((Robot.isSimulation()) ? 6.28 : 6.28),
+                                            -value*6.28,
                                             drive.getRotation().rotateBy(
                                                     getAllianceRotation())));
                             previousPose[0] = drive.getPose();

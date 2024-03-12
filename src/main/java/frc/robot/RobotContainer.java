@@ -19,12 +19,13 @@ import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.units.Units;
 import edu.wpi.first.wpilibj.GenericHID;
+import edu.wpi.first.wpilibj.Joystick;
 import edu.wpi.first.wpilibj.XboxController;
 import edu.wpi.first.wpilibj2.command.Command;
-import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.RunCommand;
 import edu.wpi.first.wpilibj2.command.WaitCommand;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
+import edu.wpi.first.wpilibj2.command.button.JoystickButton;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine.Config;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine.Direction;
@@ -44,6 +45,7 @@ import frc.robot.subsystems.intake.IntakeIO;
 import frc.robot.subsystems.intake.IntakeIOSim;
 import frc.robot.subsystems.intake.IntakeIOSparkMax;
 import frc.robot.subsystems.shooter.*;
+import frc.robot.util.Dashboard;
 import frc.robot.util.Mode;
 import org.littletonrobotics.junction.networktables.LoggedDashboardChooser;
 import org.littletonrobotics.junction.networktables.LoggedDashboardNumber;
@@ -66,6 +68,8 @@ public class RobotContainer {
     private final Feeder feeder;
     private final Intake intake;
     private final Climb climb;
+    private final VisionIOReal vision;
+    private final Dashboard dashboard;
 
 //  private final ModeHelper modeHelper = new ModeHelper(this);
 // Controller
@@ -80,7 +84,7 @@ private final CommandXboxController driverController = new CommandXboxController
     private Drive drive;
 
     /**
-     * The container for the robot. Contains subsystems, OI devices, and commands.
+     * The container for the robot. Contains subsystems, IO devices, and commands.
      */
     public RobotContainer() {
 
@@ -148,7 +152,6 @@ private final CommandXboxController driverController = new CommandXboxController
                 break;
         }
 
-
         var command =
                 DriveCommands.aimAtSpeakerCommand(
                         drive,
@@ -156,7 +159,7 @@ private final CommandXboxController driverController = new CommandXboxController
                         driverController::getLeftX,
                         driverController::getRightX);
         NamedCommands.registerCommand(
-                "AutoShoot", Commands.none()
+                "AutoShoot", none()
 //                ShooterCommands.autoAim(shooter, drive).alongWith(
 //                        sequence(
 //                                Commands.waitUntil(shooter::allAtSetpoint),
@@ -164,7 +167,7 @@ private final CommandXboxController driverController = new CommandXboxController
         );
         // Set up auto routines
         NamedCommands.registerCommand(
-                "Shoot", Commands.none()
+                "Shoot", none()
 //                sequence(
 //                        FeederCommands.feedToBeamBreak(feeder, intake),
 //                        Commands.waitUntil(() -> (shooter.allAtSetpoint() && (shooter.getShooterVelocityRPM() > 1000))),
@@ -173,33 +176,35 @@ private final CommandXboxController driverController = new CommandXboxController
 //                        .deadlineWith(ShooterCommands.JustShoot(shooter))
 //                        .withTimeout(8.0));
         NamedCommands.registerCommand(
-                "Intake", Commands.none()
+                "Intake", none()
 //                IntakeCommands.intakeCommand(intake).withTimeout(4.0)
 //                        .until(feeder::getBeamBroken)
         );
         NamedCommands.registerCommand(
-                "Drive Backwards", Commands.none()
+                "Drive Backwards", none()
 //                DriveCommands.joystickDrive(drive, () -> .1, () -> 0, () -> 0.0).withTimeout(4.0)
         );
         autoChooser = new LoggedDashboardChooser<>("Auto Choices", AutoBuilder.buildAutoChooser());
+        vision = new VisionIOReal("ShootSideCamera");
+        dashboard = new Dashboard(autoChooser, drive, shooter, feeder, intake, vision);
 
         configureButtonBindings();
     }
 
     // TODO: populate switch statements here
     public Command getEnterCommand(Mode m) {
-        return Commands.none();
+        return none();
     }
 
     public Command getExitCommand(Mode m) {
-        return Commands.none();
+        return none();
     }
 
     /**
      * Use this method to define your button->command mappings. Buttons can be created by
      * instantiating a {@link GenericHID} or one of its subclasses ({@link
-     * edu.wpi.first.wpilibj.Joystick} or {@link XboxController}), and then passing it to a {@link
-     * edu.wpi.first.wpilibj2.command.button.JoystickButton}.
+     * Joystick} or {@link XboxController}), and then passing it to a {@link
+     * JoystickButton}.
      */
     private void configureButtonBindings() {
         switch (sysIDMode) {
@@ -232,7 +237,7 @@ private final CommandXboxController driverController = new CommandXboxController
                 ));
 
                 // ---- DRIVETRAIN COMMANDS ----
-                driverController.x().whileTrue(Commands.runOnce(drive::stopWithX, drive));
+                driverController.x().whileTrue(runOnce(drive::stopWithX, drive));
 
 
                 var command =
@@ -305,7 +310,7 @@ private final CommandXboxController driverController = new CommandXboxController
                         .rightTrigger()
                         .whileTrue(
                                 sequence(
-                                        Commands.waitUntil(() -> (shooter.allAtSetpoint() && (shooter.getShooterVelocityRPM() > 1000) && command.getReadySupplier().getAsBoolean())),
+                                        waitUntil(() -> (shooter.allAtSetpoint() && (shooter.getShooterVelocityRPM() > 1000) && command.getReadySupplier().getAsBoolean())),
                                         feedToShooter(feeder)
                                                 .until(() -> !feeder.getBeamBroken()),
                                         feedToShooter(feeder)
@@ -342,19 +347,19 @@ private final CommandXboxController driverController = new CommandXboxController
                 driverController
                         .x()
                         .whileTrue(drivetrainDriveSysID.dynamic(Direction.kForward))
-                        .onFalse(Commands.runOnce(drive::stopWithX, drive));
+                        .onFalse(runOnce(drive::stopWithX, drive));
                 driverController
                         .y()
                         .whileTrue(drivetrainDriveSysID.dynamic(Direction.kReverse))
-                        .onFalse(Commands.runOnce(drive::stopWithX, drive));
+                        .onFalse(runOnce(drive::stopWithX, drive));
                 driverController
                         .a()
                         .whileTrue(drivetrainDriveSysID.quasistatic(Direction.kForward).withTimeout(2.0))
-                        .onFalse(Commands.runOnce(drive::stopWithX, drive));
+                        .onFalse(runOnce(drive::stopWithX, drive));
                 driverController
                         .b()
                         .whileTrue(drivetrainDriveSysID.quasistatic(Direction.kReverse).withTimeout(2.0))
-                        .onFalse(Commands.runOnce(drive::stopWithX, drive));
+                        .onFalse(runOnce(drive::stopWithX, drive));
                 driverController
                         .rightTrigger()
                         .whileTrue(
