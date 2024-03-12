@@ -30,7 +30,7 @@ public class Dashboard {
                 .withWidget(BuiltInWidgets.kComboBoxChooser)
                 .withSize(2, 1)
                 .withPosition(2, 0);
-        main.addCamera("Camera feed", "ShootSideCamera");
+//        main.addCamera("Camera feed", "ShootSideCamera");
         SmartDashboard.putData("Swerve Drive", builder -> {
             builder.setSmartDashboardType("SwerveDrive");
             builder.addDoubleProperty("Front Left Angle", () -> drive.shuffleboardMethod()[0].getAngle().getRadians(), null);
