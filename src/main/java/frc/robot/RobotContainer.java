@@ -213,7 +213,11 @@ private final CommandXboxController driverController = new CommandXboxController
                                 driverController::getRightX));
                 intake.setDefaultCommand(IntakeCommands.idleCommand(intake));
                 feeder.setDefaultCommand(new RunCommand(() -> feeder.runVolts(0.0), feeder));
-                shooter.setDefaultCommand(ShooterCommands.shooterIdle(shooter));
+                shooter.setDefaultCommand(sequence(
+                        ShooterCommands.shooterIdle(shooter).until(shooter::hoodAtSetpoint),
+                        ShooterCommands.simpleHoodZero(shooter),
+                        ShooterCommands.shooterIdle(shooter)
+                ));
                 // CLIMB DEFAULT COMMAND
                 climb.setDefaultCommand(sequence(
                         ClimbCommands.zero(climb, 10.0).withTimeout(5),

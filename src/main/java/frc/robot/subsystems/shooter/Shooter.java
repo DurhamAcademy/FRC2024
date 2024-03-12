@@ -48,7 +48,14 @@ public class Shooter extends SubsystemBase {
     MechanismRoot2d root = mech1.getRoot("shooter", 0, 0);
     MechanismLigament2d sState = root.append(new MechanismLigament2d("shooter", 0.14, -90.0));
 
+    private Rotation2d hoodOffsetAngle = new Rotation2d();
+
     private boolean hasReset = false;
+    private boolean hoodPIDEnabled = true;
+
+    public void setHoodPIDEnabled(boolean hoodPIDEnabled) {
+        this.hoodPIDEnabled = hoodPIDEnabled;
+    }
 
     double previousAnglularVelocity = 0.0;
 
@@ -110,21 +117,24 @@ public class Shooter extends SubsystemBase {
         }
         Logger.recordOutput("Shooter/ShooterSpeed", setpointRadPS);
         Logger.recordOutput("Shooter/TargetHoodAngle", targetHoodAngleRad);
-        Logger.recordOutput("Shooter/HoodInputs/MotorPositionRad", hoodInputs.motorPositionRad);
+        Logger.recordOutput("Shooter/HoodInputs/OffsetMotorPositionRad", hoodInputs.motorPositionRad - hoodOffsetAngle.getRadians());
 
         previousAnglularVelocity = hoodInputs.hoodVelocityRadPerSec;
         if (previousAnglularVelocity != 0.0)
             Logger.recordOutput(
                     "Shooter/HoodAcceleration",
                     RadiansPerSecond.of(previousAnglularVelocity - hoodInputs.hoodVelocityRadPerSec).per(Seconds.of(0.02)));
-        hoodIO.setVoltage(
-                hoodFB.calculate(hoodInputs.motorPositionRad, targetHoodAngleRad)
-                /*+ hoodFF.calcula te(hoodFB.getSetpoint().position, hoodFB.getSetpoint().velocity)*/);
-//        targetHoodAngleRad =
-//                hoodInputs.hoodPositionRad * HOOD_ENCODER_ANGLE_TO_REAL_ANGLE_RATIO
-//                        + HOOD_ENCODER_ANGLE_TO_REAL_ANGLE_OFFSET;
+        if (hoodPIDEnabled) {
+            hoodIO.setVoltage(
+                    hoodFB.calculate(hoodInputs.motorPositionRad - hoodOffsetAngle.getRadians(), targetHoodAngleRad)
+            );
+        }
         sState.setAngle(hoodInputs.hoodPositionRad);
         Logger.recordOutput("shooter", mech1);
+    }
+
+    public void resetToStartingAngle() {
+        hoodOffsetAngle = new Rotation2d(hoodInputs.motorPositionRad - 1.98542);
     }
 
     @AutoLogOutput
@@ -132,13 +142,13 @@ public class Shooter extends SubsystemBase {
         return this.shooterVelocityFB.atSetpoint();
     }
 
-    public boolean armAtSetpoint() {
+    public boolean hoodAtSetpoint() {
         return this.hoodFB.atGoal();
     }
 
     @AutoLogOutput
     public boolean allAtSetpoint() {
-        return flywheelAtSetpoint() && armAtSetpoint();
+        return flywheelAtSetpoint() && hoodAtSetpoint();
     }
 
     public void setCharacterizeMode(boolean on) {
