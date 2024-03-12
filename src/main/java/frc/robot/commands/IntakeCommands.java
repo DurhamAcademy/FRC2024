@@ -9,7 +9,7 @@ public class IntakeCommands {
     public static Command intakeCommand(Intake intake) {
         return new RunCommand(
                 () -> {
-                    intake.setIntakePosition(Rotation2d.fromDegrees(-7));
+                    intake.setIntakePosition(Rotation2d.fromDegrees(-10));
                     intake.setRollerVoltage(9.0);
                 },
                 intake);
@@ -28,6 +28,15 @@ public class IntakeCommands {
         return new RunCommand(
                 () -> {
                     intake.setIntakePosition(Rotation2d.fromRadians(-2.15));
+                    intake.setRollerVoltage(0.0);
+                },
+                intake);
+    }
+
+    public static Command setAngle(Intake intake, double angle) {
+        return new RunCommand(
+                () -> {
+                    intake.setIntakePosition(Rotation2d.fromRadians(angle));
                     intake.setRollerVoltage(0.0);
                 },
                 intake);

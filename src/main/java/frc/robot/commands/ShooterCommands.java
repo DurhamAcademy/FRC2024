@@ -1,16 +1,19 @@
 package frc.robot.commands;
 
 
+import edu.wpi.first.math.filter.Debouncer;
 import edu.wpi.first.math.geometry.*;
 import edu.wpi.first.math.interpolation.InterpolatingDoubleTreeMap;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj2.command.Command;
-import edu.wpi.first.wpilibj2.command.Commands;
 import frc.robot.subsystems.drive.Drive;
 import frc.robot.subsystems.shooter.Shooter;
 import org.littletonrobotics.junction.Logger;
 
+import static edu.wpi.first.units.Units.RadiansPerSecond;
 import static edu.wpi.first.wpilibj.DriverStation.Alliance.Blue;
+import static edu.wpi.first.wpilibj2.command.Commands.*;
+import static java.lang.Math.abs;
 import static java.lang.Math.atan;
 
 
@@ -47,7 +50,7 @@ public class ShooterCommands {
     public static Command autoAim(Shooter shooter, Drive drive) {
         populateITM();
         //the parameter is the robot, idk how to declare it, also this returns the angle
-        return Commands.run(() -> {
+        return run(() -> {
             // Calcaulate new linear velocity
             // Get the angle to point at the goal
             var goalAngle =
@@ -64,46 +67,88 @@ public class ShooterCommands {
             double atan = atan(pose3d.getZ() / distance);
             shooter.setTargetShooterAngle(Rotation2d.fromRadians(atan + distanceToAngle.get(distance)));
             shooter.shooterRunVelocity(distanceToRPM.get(distance));
-        }, shooter);
+        }, shooter)
+                .withName("Auto Aim");
     }
 
     public static Command JustShoot(Shooter shooter) {
         //the parameter is the robot, idk how to declare it, also this returns the angle
-        return Commands.run(() -> {
+        return run(() -> {
             shooter.setTargetShooterAngle(Rotation2d.fromRadians(.8));
             shooter.shooterRunVelocity(3500);
-        }, shooter);
+        }, shooter)
+                .withName("Just Shoot");
     }
 
     public static Command shooterIdle(Shooter shooter) {
-        return Commands.run(() -> {
+        return run(() -> {
             shooter.shooterRunVelocity(0.0);
             shooter.setTargetShooterAngle(Rotation2d.fromRadians(1.5));
-        }, shooter);
+        }, shooter)
+                .withName("Shooter Idle");
+    }
+
+    public static Command simpleHoodZero(Shooter shooter) {
+        Debouncer zeroStateDetection = new Debouncer(.25, Debouncer.DebounceType.kRising);
+        return race(
+                run(() -> {
+                    shooter.setHoodPIDEnabled(false);
+                    shooter.hoodRunVolts(2);
+                }, shooter),
+                sequence(
+                        waitUntil(() -> !zeroStateDetection.calculate(
+                                shooter.isStalled()
+                                        || (abs(
+                                        shooter.getHoodCharacterizationVelocity()
+                                                .in(RadiansPerSecond)) > 1))),
+                        runOnce(shooter::resetWhileZeroing),
+                        runOnce(() -> shooter.setHasZeroed(true))
+                )
+        )
+                .beforeStarting(print("Starting Hood Zero Sequence"))
+                .withTimeout(1.5)
+                .finallyDo(() -> {
+                    System.out.println("Finished Hood Zero Sequence");
+                    shooter.setHoodPIDEnabled(true);
+                })
+                .handleInterrupt(() -> shooter.setHoodPIDEnabled(true))
+                .withName("Simple Hood Zero");
     }
 
     public static Command shooterSetZero(Shooter shooter) {
-        return Commands.run(() -> {
+        return run(() -> {
             shooter.shooterRunVelocity(0.0);
             shooter.setTargetShooterAngle(Rotation2d.fromRadians(0));
-        }, shooter);
+        }, shooter)
+                .withName("shooterSetZero");
     }
 
     public static Command ampShoot(Shooter shooter) {
-        return Commands.run(() -> {
-            shooter.shooterRunVelocity(500.0);
-            shooter.setTargetShooterAngle(Rotation2d.fromRadians(-0.17));
-        }, shooter);
+        return run(() -> {
+            shooter.shooterRunVelocity(1500.0);
+            shooter.setTargetShooterAngle(Rotation2d.fromRadians(0.5166099131107331));
+        }, shooter)
+                .withName("Amp Shoot");
     }
 
-    public static Command addToOffsett(){
+    public static Command pushIntoAmp(Shooter shooter) {
+        return run(() -> {
+            shooter.shooterRunVelocity(100.0);
+            shooter.setTargetShooterAngle(Rotation2d.fromRadians(-.76));
+        }, shooter)
+                .withName("Push note into amp");
+    }
+
+    public static Command addToOffset() {
         shooterAngleAdjustment += 0.017;
-        return Commands.runOnce(() -> shooterAngleAdjustment += 0.017);
+        return runOnce(() -> shooterAngleAdjustment += 0.017)
+                .withName("Add to Offset");
     }
 
-    public static Command removeFromoOffset(){
+    public static Command removeFromOffset() {
         shooterAngleAdjustment -= 0.017;
-        return Commands.runOnce(() -> shooterAngleAdjustment += 0.017);
+        return runOnce(() -> shooterAngleAdjustment += 0.017)
+                .withName("Subtract from Offset");
     }
 
     private static class Result {

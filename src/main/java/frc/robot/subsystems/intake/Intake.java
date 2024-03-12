@@ -10,6 +10,7 @@ import edu.wpi.first.units.*;
 import edu.wpi.first.wpilibj.RobotController;
 import edu.wpi.first.wpilibj.smartdashboard.Mechanism2d;
 import edu.wpi.first.wpilibj.smartdashboard.MechanismLigament2d;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj.util.Color8Bit;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants;
@@ -43,7 +44,7 @@ public class Intake extends SubsystemBase {
         switch (Constants.currentMode) {
             case REAL:
                 armFF = new ArmFeedforward(0.0, 0.21, 0.195, 0.0);
-                armFB = new ProfiledPIDController(7.0, 0.0, 0.0, new Constraints(RadiansPerSecond.of(6), RadiansPerSecond.per(Second).of(12)));
+                armFB = new ProfiledPIDController(7.0, 0.0, 0.0, new Constraints(RadiansPerSecond.of(18), RadiansPerSecond.per(Second).of(240)));
                 break;
             case REPLAY:
                 armFF = new ArmFeedforward(0.1, .15, 1.95);
@@ -68,6 +69,9 @@ public class Intake extends SubsystemBase {
         ligament2A = new MechanismLigament2d("Intake2", 0.232983, off2A.minus(quarterTurn).getDegrees(), .5, new Color8Bit(1, 1, 1));
         root.append(ligament1).append(ligament1A);
         root.append(ligament2).append(ligament2A);
+
+        SmartDashboard.putNumber("IntakePIDD", armFB.getD());
+        SmartDashboard.putNumber("IntakePIDP", armFB.getP());
     }
 
 

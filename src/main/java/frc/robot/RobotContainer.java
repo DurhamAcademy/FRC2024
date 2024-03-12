@@ -218,7 +218,18 @@ private final CommandXboxController driverController = new CommandXboxController
                                 driverController::getRightX));
                 intake.setDefaultCommand(IntakeCommands.idleCommand(intake));
                 feeder.setDefaultCommand(new RunCommand(() -> feeder.runVolts(0.0), feeder));
-                shooter.setDefaultCommand(ShooterCommands.shooterIdle(shooter));
+                shooter.setDefaultCommand(
+                        Commands.either(
+                                ShooterCommands.shooterIdle(shooter),
+                                sequence(
+                                        ShooterCommands.shooterIdle(shooter).until(shooter::hoodAtSetpoint),
+                                        ShooterCommands.simpleHoodZero(shooter),
+                                        ShooterCommands.shooterIdle(shooter)
+                                ).withName("Default Command"),
+                                shooter::hasZeroed
+                        )
+
+                );
                 // CLIMB DEFAULT COMMAND
                 climb.setDefaultCommand(sequence(
                         ClimbCommands.zero(climb, 10.0).withTimeout(5),
@@ -242,15 +253,15 @@ private final CommandXboxController driverController = new CommandXboxController
                         .leftTrigger()
                         .whileTrue(
                                 IntakeCommands.intakeCommand(intake)
-                                        .alongWith(FeederCommands.feedToBeamBreak(feeder, intake)))
-                        .onFalse(FeederCommands.feedToBeamBreak(feeder, intake).withTimeout(5));
+                                        .alongWith(FeederCommands.feedToBeamBreak(feeder)))
+                        .onFalse(FeederCommands.feedToBeamBreak(feeder).withTimeout(5));
                 driverController.rightBumper().whileTrue(IntakeCommands.idleCommand(intake));
 
                 operatorController
                         .povDown()
                         .whileTrue(
                                 IntakeCommands.flushIntake(intake)
-                                        .alongWith(FeederCommands.flushFeeder(feeder, intake))
+                                        .alongWith(FeederCommands.flushFeeder(feeder))
                         );
 
                 // ---- SHOOTER COMMANDS ----
@@ -275,19 +286,25 @@ private final CommandXboxController driverController = new CommandXboxController
                         );
                 operatorController
                         .a()
-                        .onTrue(
+                        .whileTrue(
                                 parallel(
-                                        ShooterCommands.ampShoot(shooter),
+                                        sequence(
+                                                ShooterCommands.ampShoot(shooter).until(() -> !feeder.getBeamBroken()),
+                                                ShooterCommands.pushIntoAmp(shooter)
+                                        ),
                                         sequence(
                                                 waitSeconds(0.5),
-                                                feedToShooter(feeder)
+                                                waitUntil(shooter::allAtSetpoint),
+                                                FeederCommands.feedToShooter(feeder)
+                                                        .until(() -> !feeder.getBeamBroken())
                                         )
-                                ).withTimeout(1.0)
+
+                                )
                         );
                 operatorController
                         .leftBumper()
                         .whileTrue(
-                                FeederCommands.feedToBeamBreak(feeder, intake)
+                                FeederCommands.feedToBeamBreak(feeder)
                         );
                 driverController
                         .rightTrigger()
@@ -303,12 +320,12 @@ private final CommandXboxController driverController = new CommandXboxController
                 operatorController
                         .start()
                         .onTrue(
-                                ShooterCommands.addToOffsett()
+                                ShooterCommands.addToOffset()
                         );
                 operatorController
                         .back()
                         .onTrue(
-                                ShooterCommands.removeFromoOffset()
+                                ShooterCommands.removeFromOffset()
                         );
 
                 break;
@@ -316,9 +333,9 @@ private final CommandXboxController driverController = new CommandXboxController
                 drive.setDefaultCommand(
                         DriveCommands.joystickDrive(
                                 drive,
-                                () -> -driverController.getLeftY(),
-                                () -> -driverController.getLeftX(),
-                                () -> -driverController.getRightX()));
+                                driverController::getLeftY,
+                                driverController::getLeftX,
+                                driverController::getRightX));
                 var drivetrainDriveSysID =
                         new SysIdRoutine(
                                 new Config(Voltage.per(Units.Second).of(.5), Voltage.of(8.0), Seconds.of(12.0)),
