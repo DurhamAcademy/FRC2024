@@ -82,7 +82,7 @@ public class Shooter extends SubsystemBase {
         // separate robot with different tuning)
         switch (Constants.currentMode) {
             case REAL:
-                hoodFB = new ProfiledPIDController(6.0, 0.0, .25, new TrapezoidProfile.Constraints(1912, 7600.0 / 32.0));
+                hoodFB = new ProfiledPIDController(6.0, 0.0, .25, new TrapezoidProfile.Constraints(1000.0 / 8.0, 7600.0 / 128.0));
                 hoodFB.setTolerance(0.1);
                 shooterVelocityFB =
                         new PIDController(0.0079065, 0.0, 0.0);
@@ -153,10 +153,12 @@ public class Shooter extends SubsystemBase {
 
     public void resetToStartingAngle() {
         hoodOffsetAngle = new Rotation2d(hoodInputs.motorPositionRad - 1.98542);
+        hoodFB.reset(hoodInputs.motorPositionRad - hoodOffsetAngle.getRadians());
     }
 
     public void resetWhileZeroing() {
         hoodOffsetAngle = new Rotation2d(hoodInputs.motorPositionRad - 2.225);
+        hoodFB.reset(hoodInputs.motorPositionRad - hoodOffsetAngle.getRadians());
     }
 
     public boolean isStalled() {

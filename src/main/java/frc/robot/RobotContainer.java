@@ -248,15 +248,15 @@ private final CommandXboxController driverController = new CommandXboxController
                         .leftTrigger()
                         .whileTrue(
                                 IntakeCommands.intakeCommand(intake)
-                                        .alongWith(FeederCommands.feedToBeamBreak(feeder, intake)))
-                        .onFalse(FeederCommands.feedToBeamBreak(feeder, intake).withTimeout(5));
+                                        .alongWith(FeederCommands.feedToBeamBreak(feeder)))
+                        .onFalse(FeederCommands.feedToBeamBreak(feeder).withTimeout(5));
                 driverController.rightBumper().whileTrue(IntakeCommands.idleCommand(intake));
 
                 operatorController
                         .povDown()
                         .whileTrue(
                                 IntakeCommands.flushIntake(intake)
-                                        .alongWith(FeederCommands.flushFeeder(feeder, intake))
+                                        .alongWith(FeederCommands.flushFeeder(feeder))
                         );
 
                 // ---- SHOOTER COMMANDS ----
@@ -281,14 +281,17 @@ private final CommandXboxController driverController = new CommandXboxController
                         );
                 operatorController
                         .a()
-                        .onTrue(
-                                race(
-                                        ShooterCommands.ampShoot(shooter),
+                        .whileTrue(
+                                parallel(
+                                        sequence(
+                                                ShooterCommands.ampShoot(shooter).until(() -> !feeder.getBeamBroken()),
+                                                ShooterCommands.pushIntoAmp(shooter)
+                                        ),
                                         sequence(
                                                 waitSeconds(0.5),
                                                 waitUntil(shooter::allAtSetpoint),
                                                 FeederCommands.feedToShooter(feeder)
-                                                        .withTimeout(1.0)
+                                                        .until(() -> !feeder.getBeamBroken())
                                         )
 
                                 )
@@ -296,7 +299,7 @@ private final CommandXboxController driverController = new CommandXboxController
                 operatorController
                         .leftBumper()
                         .whileTrue(
-                                FeederCommands.feedToBeamBreak(feeder, intake)
+                                FeederCommands.feedToBeamBreak(feeder)
                         );
                 driverController
                         .rightTrigger()
@@ -325,9 +328,9 @@ private final CommandXboxController driverController = new CommandXboxController
                 drive.setDefaultCommand(
                         DriveCommands.joystickDrive(
                                 drive,
-                                () -> -driverController.getLeftY(),
-                                () -> -driverController.getLeftX(),
-                                () -> -driverController.getRightX()));
+                                driverController::getLeftY,
+                                driverController::getLeftX,
+                                driverController::getRightX));
                 var drivetrainDriveSysID =
                         new SysIdRoutine(
                                 new Config(Voltage.per(Units.Second).of(.5), Voltage.of(8.0), Seconds.of(12.0)),

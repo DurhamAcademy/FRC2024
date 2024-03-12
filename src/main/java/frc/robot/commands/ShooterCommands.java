@@ -125,10 +125,18 @@ public class ShooterCommands {
 
     public static Command ampShoot(Shooter shooter) {
         return run(() -> {
-            shooter.shooterRunVelocity(2000.0);
+            shooter.shooterRunVelocity(1500.0);
             shooter.setTargetShooterAngle(Rotation2d.fromRadians(0.5166099131107331));
         }, shooter)
                 .withName("Amp Shoot");
+    }
+
+    public static Command pushIntoAmp(Shooter shooter) {
+        return run(() -> {
+            shooter.shooterRunVelocity(100.0);
+            shooter.setTargetShooterAngle(Rotation2d.fromRadians(-.76));
+        }, shooter)
+                .withName("Push note into amp");
     }
 
     public static Command addToOffset() {
