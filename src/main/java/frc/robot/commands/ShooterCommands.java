@@ -13,6 +13,7 @@ import org.littletonrobotics.junction.Logger;
 import static edu.wpi.first.units.Units.RadiansPerSecond;
 import static edu.wpi.first.wpilibj.DriverStation.Alliance.Blue;
 import static edu.wpi.first.wpilibj2.command.Commands.*;
+import static java.lang.Math.abs;
 import static java.lang.Math.atan;
 
 
@@ -66,7 +67,8 @@ public class ShooterCommands {
             double atan = atan(pose3d.getZ() / distance);
             shooter.setTargetShooterAngle(Rotation2d.fromRadians(atan + distanceToAngle.get(distance)));
             shooter.shooterRunVelocity(distanceToRPM.get(distance));
-        }, shooter);
+        }, shooter)
+                .withName("Auto Aim");
     }
 
     public static Command JustShoot(Shooter shooter) {
@@ -74,53 +76,71 @@ public class ShooterCommands {
         return run(() -> {
             shooter.setTargetShooterAngle(Rotation2d.fromRadians(.8));
             shooter.shooterRunVelocity(3500);
-        }, shooter);
+        }, shooter)
+                .withName("Just Shoot");
     }
 
     public static Command shooterIdle(Shooter shooter) {
         return run(() -> {
             shooter.shooterRunVelocity(0.0);
             shooter.setTargetShooterAngle(Rotation2d.fromRadians(1.5));
-        }, shooter);
+        }, shooter)
+                .withName("Shooter Idle");
     }
 
     public static Command simpleHoodZero(Shooter shooter) {
-        Debouncer zeroStateDetection = new Debouncer(.1, Debouncer.DebounceType.kRising);
-        return race(run(() -> {
+        Debouncer zeroStateDetection = new Debouncer(.25, Debouncer.DebounceType.kRising);
+        return race(
+                run(() -> {
                     shooter.setHoodPIDEnabled(false);
                     shooter.hoodRunVolts(2);
                 }, shooter),
                 sequence(
-                        waitUntil(() -> !zeroStateDetection.calculate(Math.abs(shooter.getHoodCharacterizationVelocity().in(RadiansPerSecond)) > 0.01)),
-                        runOnce(shooter::resetToStartingAngle)
+                        waitUntil(() -> !zeroStateDetection.calculate(
+                                shooter.isStalled()
+                                        || (abs(
+                                        shooter.getHoodCharacterizationVelocity()
+                                                .in(RadiansPerSecond)) > 1))),
+                        runOnce(shooter::resetWhileZeroing),
+                        runOnce(() -> shooter.setHasZeroed(true))
                 )
         )
-                .withTimeout(1.0)
-                .handleInterrupt(() -> shooter.setHoodPIDEnabled(true));
+                .beforeStarting(print("Starting Hood Zero Sequence"))
+                .withTimeout(1.5)
+                .finallyDo(() -> {
+                    System.out.println("Finished Hood Zero Sequence");
+                    shooter.setHoodPIDEnabled(true);
+                })
+                .handleInterrupt(() -> shooter.setHoodPIDEnabled(true))
+                .withName("Simple Hood Zero");
     }
 
     public static Command shooterSetZero(Shooter shooter) {
         return run(() -> {
             shooter.shooterRunVelocity(0.0);
             shooter.setTargetShooterAngle(Rotation2d.fromRadians(0));
-        }, shooter);
+        }, shooter)
+                .withName("shooterSetZero");
     }
 
     public static Command ampShoot(Shooter shooter) {
         return run(() -> {
-            shooter.shooterRunVelocity(500.0);
-            shooter.setTargetShooterAngle(Rotation2d.fromRadians(-0.17));
-        }, shooter);
+            shooter.shooterRunVelocity(2000.0);
+            shooter.setTargetShooterAngle(Rotation2d.fromRadians(0.5166099131107331));
+        }, shooter)
+                .withName("Amp Shoot");
     }
 
-    public static Command addToOffsett(){
+    public static Command addToOffset() {
         shooterAngleAdjustment += 0.017;
-        return runOnce(() -> shooterAngleAdjustment += 0.017);
+        return runOnce(() -> shooterAngleAdjustment += 0.017)
+                .withName("Add to Offset");
     }
 
-    public static Command removeFromoOffset(){
+    public static Command removeFromOffset() {
         shooterAngleAdjustment -= 0.017;
-        return runOnce(() -> shooterAngleAdjustment += 0.017);
+        return runOnce(() -> shooterAngleAdjustment += 0.017)
+                .withName("Subtract from Offset");
     }
 
     private static class Result {

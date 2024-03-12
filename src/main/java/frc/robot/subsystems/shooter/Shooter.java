@@ -24,6 +24,7 @@ import edu.wpi.first.units.*;
 import edu.wpi.first.wpilibj.smartdashboard.Mechanism2d;
 import edu.wpi.first.wpilibj.smartdashboard.MechanismLigament2d;
 import edu.wpi.first.wpilibj.smartdashboard.MechanismRoot2d;
+import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants;
 import org.littletonrobotics.junction.AutoLogOutput;
@@ -49,6 +50,16 @@ public class Shooter extends SubsystemBase {
     MechanismLigament2d sState = root.append(new MechanismLigament2d("shooter", 0.14, -90.0));
 
     private Rotation2d hoodOffsetAngle = new Rotation2d();
+
+    private boolean hasZeroed = false;
+
+    public boolean hasZeroed() {
+        return hasZeroed;
+    }
+
+    public void setHasZeroed(boolean hasZeroed) {
+        this.hasZeroed = hasZeroed;
+    }
 
     private boolean hasReset = false;
     private boolean hoodPIDEnabled = true;
@@ -100,13 +111,14 @@ public class Shooter extends SubsystemBase {
     @Override
     public void periodic() {
         shooterIO.updateInputs(shooterInputs);
-        Logger.processInputs("Shooter", shooterInputs);
+        Logger.processInputs("Shooter/Flywheel", shooterInputs);
 
         hoodIO.updateInputs(hoodInputs);
-        Logger.processInputs("Hood", hoodInputs);
+        Logger.processInputs("Shooter/Hood", hoodInputs);
 
         if (!hasReset) {
-            hoodFB.reset(hoodInputs.motorPositionRad);
+            resetToStartingAngle();
+            hoodFB.reset(hoodInputs.motorPositionRad - hoodOffsetAngle.getRadians());
             hasReset = true;
         }
 
@@ -115,14 +127,19 @@ public class Shooter extends SubsystemBase {
                     shooterVelocityFB.calculate(shooterInputs.flywheelVelocityRadPerSec, setpointRadPS)
                             + this.shooterVelocityFF.calculate(shooterVelocityFB.getSetpoint()));
         }
-        Logger.recordOutput("Shooter/ShooterSpeed", setpointRadPS);
-        Logger.recordOutput("Shooter/TargetHoodAngle", targetHoodAngleRad);
-        Logger.recordOutput("Shooter/HoodInputs/OffsetMotorPositionRad", hoodInputs.motorPositionRad - hoodOffsetAngle.getRadians());
+        Command currentCommand = getCurrentCommand();
+        if (currentCommand != null)
+            Logger.recordOutput("Shooter/Current Command", currentCommand.getName());
+        else Logger.recordOutput("Shooter/Current Command", "null");
+        Logger.recordOutput("Shooter/Shooter Speed", setpointRadPS);
+        Logger.recordOutput("Shooter/Hood/Target Hood Angle", targetHoodAngleRad);
+        Logger.recordOutput("Shooter/Hood/Inputs/Offset Motor Position Radians", hoodInputs.motorPositionRad - hoodOffsetAngle.getRadians());
+        Logger.recordOutput("Shooter/Hood/Offset Radians", hoodOffsetAngle.getRadians());
 
         previousAnglularVelocity = hoodInputs.hoodVelocityRadPerSec;
         if (previousAnglularVelocity != 0.0)
             Logger.recordOutput(
-                    "Shooter/HoodAcceleration",
+                    "Shooter/Hood Acceleration",
                     RadiansPerSecond.of(previousAnglularVelocity - hoodInputs.hoodVelocityRadPerSec).per(Seconds.of(0.02)));
         if (hoodPIDEnabled) {
             hoodIO.setVoltage(
@@ -130,11 +147,20 @@ public class Shooter extends SubsystemBase {
             );
         }
         sState.setAngle(hoodInputs.hoodPositionRad);
-        Logger.recordOutput("shooter", mech1);
+        Logger.recordOutput("Shooter/Mechanism", mech1);
     }
+
 
     public void resetToStartingAngle() {
         hoodOffsetAngle = new Rotation2d(hoodInputs.motorPositionRad - 1.98542);
+    }
+
+    public void resetWhileZeroing() {
+        hoodOffsetAngle = new Rotation2d(hoodInputs.motorPositionRad - 2.225);
+    }
+
+    public boolean isStalled() {
+        return hoodInputs.isStalled;
     }
 
     @AutoLogOutput

@@ -64,6 +64,7 @@ public class HoodIOSparkMax implements HoodIO {
     }
 
     public void updateInputs(HoodIOInputs inputs) {
+        inputs.isStalled = leader.getFault(CANSparkBase.FaultID.kStall);
         inputs.hoodPositionRad = /*MathUtil.angleModulus(*/(absoluteEncoder.getAbsolutePosition() * Math.PI * 2) / GEAR_RATIO;
         inputs.motorPositionRad = motorEncoder.getPosition();
         inputs.hoodAppliedVolts = leader.getBusVoltage() * leader.getAppliedOutput();

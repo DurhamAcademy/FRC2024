@@ -15,6 +15,7 @@ public interface HoodIO {
     public double hoodAppliedVolts = 0.0;
     public double[] hoodCurrentAmps = new double[] {};
     public double[] hoodTemperature = new double[] {};
+    public boolean isStalled = false;
   }
 
   /** Run open loop at the specified voltage. */
