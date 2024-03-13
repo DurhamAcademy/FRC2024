@@ -2,7 +2,6 @@ package frc.robot.subsystems.shooter;
 
 import com.revrobotics.*;
 import edu.wpi.first.math.MathUtil;
-import edu.wpi.first.wpilibj.DigitalInput;
 import edu.wpi.first.wpilibj.DutyCycleEncoder;
 import org.littletonrobotics.junction.Logger;
 
@@ -20,8 +19,7 @@ public class HoodIOSparkMax implements HoodIO {
     private final DutyCycleEncoder absoluteEncoder = new DutyCycleEncoder(0);
 
     private final RelativeEncoder motorEncoder = leader.getEncoder();
-    boolean hasReset = false;
-    DigitalInput hoodLimitSwitch = new DigitalInput(0);
+
 
     public HoodIOSparkMax() {
         REVLibError[] codes = new REVLibError[11];
@@ -67,7 +65,7 @@ public class HoodIOSparkMax implements HoodIO {
 
     public void updateInputs(HoodIOInputs inputs) {
         inputs.isStalled = leader.getFault(CANSparkBase.FaultID.kStall);
-        inputs.hoodPositionRad = hoodLimitSwitch.get() ? 1.9985 : (absoluteEncoder.getAbsolutePosition() * Math.PI * 2) / GEAR_RATIO;
+        inputs.hoodPositionRad = (absoluteEncoder.getAbsolutePosition() * Math.PI * 2) / GEAR_RATIO;
         inputs.motorPositionRad = motorEncoder.getPosition();
         inputs.hoodAppliedVolts = leader.getBusVoltage() * leader.getAppliedOutput();
         inputs.hoodCurrentAmps = new double[]{leader.getOutputCurrent()};
