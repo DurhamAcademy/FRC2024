@@ -6,6 +6,7 @@ import org.photonvision.simulation.SimCameraProperties;
 public class VisionIOReal implements VisionIO {
 
   private final PhotonCamera cam;
+  private final PhotonCamera sideCam;
   SimCameraProperties cameraProp = new SimCameraProperties();
   //  VisionSystemSim cameraSystem = new VisionSystemSim("main");
   /*Pose3d targetPose = new Pose3d(16, 4, 2, new Rotation3d(0, 0, Math.PI));
@@ -15,10 +16,11 @@ public class VisionIOReal implements VisionIO {
   // Add this vision target to the vision system simulation to make it visible
   cameraSystem.addVisionTargets(visionTarget);*/
 
-  public VisionIOReal(String cameraName) {
+  public VisionIOReal(String cameraName, String sideCameraName) {
 
     // Update with camera name
     cam = new PhotonCamera(cameraName);
+    sideCam = new PhotonCamera(sideCameraName);
 
     //    // A 640 x 480 camera with a 0 degree diagonal FOV.
     //    cameraProp.setCalibration(1280, 720, Rotation2d.fromDegrees(0)); // rotation not updated

@@ -94,7 +94,7 @@ private final CommandXboxController driverController = new CommandXboxController
                 drive =
                         new Drive(
                                 new GyroIOPigeon2(),
-                                new VisionIOReal("ShootSideCamera"),
+                                new VisionIOReal("ShootSideCamera", "RightSideCamera"),
                                 new ModuleIOSparkMax(0),
                                 new ModuleIOSparkMax(1),
                                 new ModuleIOSparkMax(2),
@@ -185,7 +185,7 @@ private final CommandXboxController driverController = new CommandXboxController
 //                DriveCommands.joystickDrive(drive, () -> .1, () -> 0, () -> 0.0).withTimeout(4.0)
         );
         autoChooser = new LoggedDashboardChooser<>("Auto Choices", AutoBuilder.buildAutoChooser());
-        vision = new VisionIOReal("ShootSideCamera");
+        vision = new VisionIOReal("ShootSideCamera", "RightSideCamera");
         dashboard = new Dashboard(autoChooser, drive, shooter, feeder, intake, vision);
 
         configureButtonBindings();
