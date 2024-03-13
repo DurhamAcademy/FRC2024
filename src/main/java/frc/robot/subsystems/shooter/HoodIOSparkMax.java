@@ -73,7 +73,7 @@ public class HoodIOSparkMax implements HoodIO {
         inputs.hoodCurrentAmps = new double[]{leader.getOutputCurrent()};
         inputs.hoodVelocityRadPerSec = (motorEncoder.getVelocity() * Math.PI * 2) / GEAR_RATIO;
         inputs.hoodTemperature = new double[]{leader.getMotorTemperature()};
-        inputs.haslimitSwitchPressed = hoodLimitSwitch.get();
+        inputs.islimitSwitchPressed = hoodLimitSwitch.get();
     }
 
     public void setBrakeMode(boolean enable) {
