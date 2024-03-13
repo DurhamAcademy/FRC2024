@@ -21,7 +21,6 @@ public class HoodIOSparkMax implements HoodIO {
 
     private final RelativeEncoder motorEncoder = leader.getEncoder();
     boolean hasReset = false;
-    boolean haslimitSwitchPressed = false;
     DigitalInput hoodLimitSwitch = new DigitalInput(1);
 
     public HoodIOSparkMax() {
