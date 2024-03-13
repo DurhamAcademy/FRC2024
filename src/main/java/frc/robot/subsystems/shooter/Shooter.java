@@ -148,8 +148,18 @@ public class Shooter extends SubsystemBase {
         }
         sState.setAngle(hoodInputs.hoodPositionRad);
         Logger.recordOutput("Shooter/Mechanism", mech1);
+
+        boolean lastLimitSwitch = true;
+        if (hoodInputs.haslimitSwitchPressed != lastLimitSwitch) {
+            hoodOffsetAngle = new Rotation2d(hoodInputs.motorPositionRad - 1.98875);
+            resetToLimitAngle();
+        }
+        lastLimitSwitch = hoodInputs.haslimitSwitchPressed;
     }
 
+    public void resetToLimitAngle(){
+        hoodFB.reset(hoodInputs.motorPositionRad - 1.98875);
+    }
 
     public void resetToStartingAngle() {
         hoodOffsetAngle = new Rotation2d(hoodInputs.motorPositionRad - 1.98542);
