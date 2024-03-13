@@ -70,6 +70,8 @@ public class Shooter extends SubsystemBase {
 
     double previousAnglularVelocity = 0.0;
 
+    private boolean lastLimitSwitch = true;
+
     /**
      * Creates a new Shooter.
      */
@@ -149,7 +151,6 @@ public class Shooter extends SubsystemBase {
         sState.setAngle(hoodInputs.hoodPositionRad);
         Logger.recordOutput("Shooter/Mechanism", mech1);
 
-        boolean lastLimitSwitch = true;
         if (hoodInputs.haslimitSwitchPressed != lastLimitSwitch) {
             hoodOffsetAngle = new Rotation2d(hoodInputs.motorPositionRad - 1.98875);
             resetToLimitAngle();
