@@ -22,6 +22,8 @@ public class VisionIOReal implements VisionIO {
     cam = new PhotonCamera(cameraName);
     sideCam = new PhotonCamera(sideCameraName);
 
+    PhotonCamera[] camList = {cam, sideCam};
+
     //    // A 640 x 480 camera with a 0 degree diagonal FOV.
     //    cameraProp.setCalibration(1280, 720, Rotation2d.fromDegrees(0)); // rotation not updated
     //    // Approximate detection noise with average and standard deviation error in pixels.
