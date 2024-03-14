@@ -379,6 +379,22 @@ private final CommandXboxController driverController = new CommandXboxController
                                                         () -> shooter.shooterRunVelocity(5000), //THIS NUMBER NEEDS TO BE CALIBRATED
 
                                                         intake))));
+                operatorController
+                        .povUp()
+                        .whileTrue(
+                                sequence(
+                                    parallel(
+                                            ShooterCommands.humanPlayerIntake(shooter),
+                                            FeederCommands.humanPlayerIntake(feeder)
+                                    )
+                                            .until(() -> feeder.getBeamBroken()),
+                                        parallel(
+                                                ShooterCommands.humanPlayerIntake(shooter),
+                                                FeederCommands.humanPlayerIntake(feeder)
+                                        )
+                                                .until(() -> !feeder.getBeamBroken())
+                                )
+                        );
                 break;
             case TurnMotors:
                 break;
