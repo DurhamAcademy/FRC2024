@@ -24,5 +24,6 @@ public interface FeederIO {
     public double appliedVolts = 0.0;
     public double[] currentAmps = new double[] {};
     public double[] temperature = new double[] {};
+    public boolean intakebeamUnobstructed;
   }
 }

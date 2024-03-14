@@ -252,9 +252,19 @@ private final CommandXboxController driverController = new CommandXboxController
                 driverController
                         .leftTrigger()
                         .whileTrue(
-                                IntakeCommands.intakeCommand(intake)
-                                        .alongWith(FeederCommands.feedToBeamBreak(feeder)))
-                        .onFalse(FeederCommands.feedToBeamBreak(feeder).withTimeout(5));
+                                parallel(
+                                        sequence(
+                                                IntakeCommands.intakeCommand(intake).until(feeder::getIntakeBeamBroken),
+                                                IntakeCommands.flushIntake(intake)
+                                        ),
+                                        FeederCommands.feedToBeamBreak(feeder)
+                                ))
+                        .onFalse(
+                                race(
+                                        FeederCommands.feedToBeamBreak(feeder).withTimeout(5),
+                                        IntakeCommands.flushIntakeWithoutTheArmExtendedOutward(intake)
+                                )
+                        );
                 driverController.rightBumper().whileTrue(IntakeCommands.idleCommand(intake));
 
                 operatorController

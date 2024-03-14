@@ -14,10 +14,8 @@ public class FeederIOTalonFX implements FeederIO {
 
     private static final int conveyorSensorNum = 9;
     private DigitalInput conveyorSensor;
-
-
-
-
+    private static final int intakeSensorNum = 7;
+    private DigitalInput intakeSensor;
     private final TalonFX feedMotor = new TalonFX(43);
     private final StatusSignal<Double> feedMotorPosition = feedMotor.getPosition();
     private final StatusSignal<Double> feedMotorVelocity = feedMotor.getVelocity();
@@ -27,6 +25,7 @@ public class FeederIOTalonFX implements FeederIO {
 
     public FeederIOTalonFX() {
         conveyorSensor = new DigitalInput(conveyorSensorNum);
+        intakeSensor = new DigitalInput(intakeSensorNum);
         var config = new TalonFXConfiguration();
         config.CurrentLimits.StatorCurrentLimit = 30.0;
         config.CurrentLimits.StatorCurrentLimitEnable = true;
@@ -57,8 +56,8 @@ public class FeederIOTalonFX implements FeederIO {
         inputs.appliedVolts = feedMotorAppliedVolts.getValueAsDouble();
         inputs.currentAmps = new double[]{feedMotorCurrent.getValueAsDouble()};
         inputs.temperature = new double[]{feedMotorTemperature.getValueAsDouble()};
-
         inputs.beamUnobstructed = conveyorSensor.get();
+        inputs.intakebeamUnobstructed = intakeSensor.get();
     }
 
     @Override

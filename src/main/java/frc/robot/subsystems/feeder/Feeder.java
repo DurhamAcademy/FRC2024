@@ -22,9 +22,16 @@ public class Feeder extends SubsystemBase {
   double offset = 0.0;
 
   Debouncer debouncer = new Debouncer(.05, kBoth);
+  Debouncer debouncer2 = new Debouncer(.05, kBoth);
 
+  @AutoLogOutput
   public boolean getBeamBroken() {
     return !debouncer.calculate(inputs.beamUnobstructed);
+  }
+
+  @AutoLogOutput
+  public boolean getIntakeBeamBroken(){
+    return !debouncer2.calculate(inputs.intakebeamUnobstructed);
   }
 
   public Feeder(FeederIO io) {
