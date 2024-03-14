@@ -70,6 +70,8 @@ public class Shooter extends SubsystemBase {
 
     double previousAnglularVelocity = 0.0;
 
+    private boolean lastLimitSwitch = true;
+
     /**
      * Creates a new Shooter.
      */
@@ -116,17 +118,18 @@ public class Shooter extends SubsystemBase {
         hoodIO.updateInputs(hoodInputs);
         Logger.processInputs("Shooter/Hood", hoodInputs);
 
+
         if (!hasReset) {
             resetToStartingAngle();
             hoodFB.reset(hoodInputs.motorPositionRad - hoodOffsetAngle.getRadians());
             hasReset = true;
         }
 
-        if (!characterizeMode) {
+        if (!characterizeMode || setpointRadPS != 0.0) {
             shooterIO.setFlywheelVoltage(
                     shooterVelocityFB.calculate(shooterInputs.flywheelVelocityRadPerSec, setpointRadPS)
                             + this.shooterVelocityFF.calculate(shooterVelocityFB.getSetpoint()));
-        }
+        } else if (setpointRadPS == 0.0) shooterIO.setFlywheelVoltage(0.0);
         Command currentCommand = getCurrentCommand();
         if (currentCommand != null)
             Logger.recordOutput("Shooter/Current Command", currentCommand.getName());
@@ -135,6 +138,7 @@ public class Shooter extends SubsystemBase {
         Logger.recordOutput("Shooter/Hood/Target Hood Angle", targetHoodAngleRad);
         Logger.recordOutput("Shooter/Hood/Inputs/Offset Motor Position Radians", hoodInputs.motorPositionRad - hoodOffsetAngle.getRadians());
         Logger.recordOutput("Shooter/Hood/Offset Radians", hoodOffsetAngle.getRadians());
+        Logger.recordOutput("Shooter/Hood/Beam Break Status", hoodInputs.islimitSwitchPressed);
 
         previousAnglularVelocity = hoodInputs.hoodVelocityRadPerSec;
         if (previousAnglularVelocity != 0.0)
@@ -148,8 +152,17 @@ public class Shooter extends SubsystemBase {
         }
         sState.setAngle(hoodInputs.hoodPositionRad);
         Logger.recordOutput("Shooter/Mechanism", mech1);
+
+        if (hoodInputs.islimitSwitchPressed != lastLimitSwitch) {
+            resetToLimitAngle();
+        }
+        lastLimitSwitch = hoodInputs.islimitSwitchPressed;
     }
 
+    public void resetToLimitAngle(){
+        hoodOffsetAngle = new Rotation2d(hoodInputs.motorPositionRad - 1.98875);
+        hoodFB.reset(hoodInputs.motorPositionRad - 1.98875);
+    }
 
     public void resetToStartingAngle() {
         hoodOffsetAngle = new Rotation2d(hoodInputs.motorPositionRad - 1.98542);

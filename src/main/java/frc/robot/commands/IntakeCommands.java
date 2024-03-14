@@ -24,6 +24,14 @@ public class IntakeCommands {
                 intake);
     }
 
+    public static Command flushIntakeWithoutTheArmExtendedOutward(Intake intake){
+        return new RunCommand(
+                () -> {
+                    intake.setIntakePosition(Rotation2d.fromRadians(-2.15));
+                    intake.setRollerVoltage(6.0);
+                }, intake);
+    }
+
     public static Command idleCommand(Intake intake) {
         return new RunCommand(
                 () -> {

@@ -16,6 +16,7 @@ public interface HoodIO {
     public double[] hoodCurrentAmps = new double[] {};
     public double[] hoodTemperature = new double[] {};
     public boolean isStalled = false;
+    public boolean islimitSwitchPressed;
   }
 
   /** Run open loop at the specified voltage. */
