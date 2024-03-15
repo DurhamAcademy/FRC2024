@@ -171,6 +171,13 @@ public class ShooterCommands {
                 .withName("Subtract from Offset");
     }
 
+    public static Command humanPlayerIntake(Shooter shooter){
+        return run(() -> {
+            shooter.setTargetShooterAngle(Rotation2d.fromRadians(1.214));
+            shooter.shooterRunVelocity(-100);
+        });
+    }
+
     private static class Result {
         public final Pose3d pose3d;
         public final double distance;
