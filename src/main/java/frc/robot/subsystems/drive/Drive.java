@@ -43,6 +43,7 @@ import org.littletonrobotics.junction.Logger;
 import org.photonvision.EstimatedRobotPose;
 import org.photonvision.PhotonPoseEstimator;
 import org.photonvision.targeting.PhotonTrackedTarget;
+import org.photonvision.targeting.TargetCorner;
 
 import java.util.List;
 import java.util.Optional;
@@ -226,16 +227,18 @@ public class Drive extends SubsystemBase {
             estimatedRobotPose -> {
               Logger.recordOutput("estRoPose", estimatedRobotPose.estimatedPose);
               Pose2d pose2d = estimatedRobotPose.estimatedPose.toPose2d();
-              var distance = pose2d.getTranslation().getDistance(pose.getTranslation());
-
+              var shouldUse = true;
+              for (PhotonTrackedTarget tag : estimatedRobotPose.targetsUsed) {
+                if (tag.getPoseAmbiguity() == -1) shouldUse = false;
+              }
               if (
-                      (!DriverStation.isFMSAttached()) ||
+                      shouldUse && ((!DriverStation.isFMSAttached()) ||
                               ((estimatedRobotPose.estimatedPose.getX() <= 16.5) &&
                               (estimatedRobotPose.estimatedPose.getX() > 0) &&
                                       (estimatedRobotPose.estimatedPose.getZ() <= 1) &&
                                       (estimatedRobotPose.estimatedPose.getZ() > -1) &&
                               (estimatedRobotPose.estimatedPose.getY() <= 8.2) &&
-                                      (estimatedRobotPose.estimatedPose.getY() > 0))
+                                      (estimatedRobotPose.estimatedPose.getY() > 0)))
               ) // only add it if it's less than 1 meter and in the field
               {
                 Matrix<N3, N1> visionMatrix;
@@ -243,15 +246,14 @@ public class Drive extends SubsystemBase {
                   case 0:
                     visionMatrix = new Matrix<>(Nat.N3(), Nat.N1(), new double[]{16, 16, 32});
                   case 1:
-                    var mult = estimatedRobotPose.targetsUsed.get(0).getPoseAmbiguity() * 10;
+
+                    var mult = estimatedRobotPose.targetsUsed.get(0).getPoseAmbiguity() * 25;
                     if (
                             (pose.getX() <= 16.5) &&
                                     (pose.getX() > 0) &&
                                     (pose.getY() <= 8.2) &&
                                     (pose.getY() > 0)
-                    ) {
-                      mult /= 4;
-                    }
+                    ) mult = mult / 4;
                     visionMatrix = new Matrix<>(Nat.N3(), Nat.N1(), new double[]{8 * mult, 8 * mult, 12 * mult});
                     break;
                   case 2:
@@ -372,14 +374,54 @@ public class Drive extends SubsystemBase {
   /**
    * Returns all currently visable apriltags.
    */
-  @AutoLogOutput(key = "Vision/Tags")
+  @AutoLogOutput(key = "Vision/Tags 3D")
   private Pose3d[] getVisionTags() {
     List<PhotonTrackedTarget> targets = visionInputs.cameraResult.getTargets();
     var out = new Pose3d[targets.size()];
-    for (int i = 0; i < targets.size(); i++) {
+    for (int i = 0; i < targets.size(); i++)
       out[i] = new Pose3d(pose).plus(robotToCam.plus(targets.get(i).getBestCameraToTarget()));
+    return out;
+  }
+
+  @AutoLogOutput(key = "Vision/Tags 2D")
+  private Pose2d[] getVision2dTags() {
+    List<PhotonTrackedTarget> targets = visionInputs.cameraResult.getTargets();
+    var out = new Pose2d[targets.size()];
+    for (int i = 0; i < targets.size(); i++) {
+      var b = robotToCam.plus(targets.get(i).getBestCameraToTarget());
+      out[i] = pose.plus(new Transform2d(b.getTranslation().toTranslation2d(), b.getRotation().toRotation2d()));
     }
-    ;
+    return out;
+  }
+
+  @AutoLogOutput(key = "Vision/Tag Ambiguities")
+  private double[] getVisionTagAmbiguities() {
+    List<PhotonTrackedTarget> targets = visionInputs.cameraResult.getTargets();
+    var out = new double[targets.size()];
+    for (int i = 0, targetsSize = targets.size(); i < targetsSize; i++) {
+      PhotonTrackedTarget target = targets.get(i);
+      out[i] = target.getPoseAmbiguity();
+    }
+    return out;
+  }
+
+  @AutoLogOutput(key = "Vision/Corners")
+  private Translation2d[] getVisionCorners() {
+    List<PhotonTrackedTarget> targets = visionInputs.cameraResult.getTargets();
+    var out = new Translation2d[targets.size() * 4];
+    for (int i = 0; i < targets.size(); i++) {
+      var corners = targets.get(i).getDetectedCorners();
+      for (int j = 0; j < corners.size(); j++) {
+        TargetCorner corner = corners.get(j);
+        out[i + j] = new Translation2d(
+                corner.x,
+                corner.y);
+      }
+    }
+    for (int i = 0; i < out.length; i++) {
+      Translation2d translation2d = out[i];
+      if (translation2d == null) out[i] = new Translation2d();
+    }
     return out;
   }
 

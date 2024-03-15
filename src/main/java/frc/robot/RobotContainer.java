@@ -44,6 +44,7 @@ import frc.robot.subsystems.intake.Intake;
 import frc.robot.subsystems.intake.IntakeIO;
 import frc.robot.subsystems.intake.IntakeIOSim;
 import frc.robot.subsystems.intake.IntakeIOSparkMax;
+import frc.robot.subsystems.lights.LEDs;
 import frc.robot.subsystems.shooter.*;
 import frc.robot.util.Dashboard;
 import frc.robot.util.Mode;
@@ -70,6 +71,7 @@ public class RobotContainer {
     private final Climb climb;
     private final VisionIOReal vision;
     private final Dashboard dashboard;
+    private final LEDs leds;
 
 //  private final ModeHelper modeHelper = new ModeHelper(this);
 // Controller
@@ -87,7 +89,7 @@ private final CommandXboxController driverController = new CommandXboxController
      * The container for the robot. Contains subsystems, IO devices, and commands.
      */
     public RobotContainer() {
-
+        leds = new LEDs();
         switch (Constants.currentMode) {
             case REAL:
                 // Real robot, instantiate hardware IO implementations
@@ -155,9 +157,9 @@ private final CommandXboxController driverController = new CommandXboxController
         var command =
                 DriveCommands.aimAtSpeakerCommand(
                         drive,
-                        driverController::getLeftY,
-                        driverController::getLeftX,
-                        driverController::getRightX);
+                        () -> driverController.getLeftY(),
+                        () -> driverController.getLeftX(),
+                        () -> driverController.getRightX());
         NamedCommands.registerCommand(
                 "AutoShoot", none()
 //                ShooterCommands.autoAim(shooter, drive).alongWith(
@@ -213,9 +215,9 @@ private final CommandXboxController driverController = new CommandXboxController
                 drive.setDefaultCommand(
                         DriveCommands.joystickDrive(
                                 drive,
-                                () -> -driverController.getLeftY(),
-                                () -> -driverController.getLeftX(),
-                                () -> -driverController.getRightX()));
+                                () -> driverController.getLeftY(),
+                                () -> driverController.getLeftX(),
+                                () -> driverController.getRightX()));
                 intake.setDefaultCommand(IntakeCommands.idleCommand(intake));
                 feeder.setDefaultCommand(new RunCommand(() -> feeder.runVolts(0.0), feeder));
                 shooter.setDefaultCommand(
@@ -246,7 +248,7 @@ private final CommandXboxController driverController = new CommandXboxController
                                 driverController::getLeftY,
                                 driverController::getLeftX,
                                 driverController::getRightX);
-                driverController.leftBumper().onTrue(command.getCommand());
+                driverController.leftBumper().whileTrue(command.getCommand());
 
                 // ---- INTAKE COMMANDS ----
                 driverController

@@ -17,9 +17,16 @@ import com.ctre.phoenix6.BaseStatusSignal;
 import com.ctre.phoenix6.StatusSignal;
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
 import com.ctre.phoenix6.controls.Follower;
+import com.ctre.phoenix6.controls.MusicTone;
 import com.ctre.phoenix6.hardware.TalonFX;
 import com.ctre.phoenix6.signals.NeutralModeValue;
 import edu.wpi.first.math.util.Units;
+import edu.wpi.first.units.Dimensionless;
+import edu.wpi.first.units.Measure;
+import edu.wpi.first.units.Velocity;
+
+import static edu.wpi.first.units.Units.Second;
+import static edu.wpi.first.units.Units.Value;
 
 public class ShooterIOTalonFX implements ShooterIO {
   private static final double GEAR_RATIO = 1.5;
@@ -42,6 +49,9 @@ public class ShooterIOTalonFX implements ShooterIO {
 
   public ShooterIOTalonFX() {
     var config = new TalonFXConfiguration();
+    config.Audio.AllowMusicDurDisable = true;
+    config.Audio.BeepOnConfig = false;
+    config.Audio.BeepOnBoot = false;
     config.CurrentLimits.StatorCurrentLimit = 60.0;
     config.CurrentLimits.StatorCurrentLimitEnable = true;
     config.MotorOutput.NeutralMode = NeutralModeValue.Coast;
@@ -81,6 +91,11 @@ public class ShooterIOTalonFX implements ShooterIO {
             = new double[]{leaderAncillaryDeviceTemp.getValueAsDouble(), followerAncillaryDeviceTemp.getValueAsDouble()};
     inputs.flywheelProcessorTemperature
             = new double[]{leaderProcessorTemp.getValueAsDouble(), followerProcessorTemp.getValueAsDouble()};
+  }
+
+  public void playTone(Measure<Velocity<Dimensionless>> tone) {
+    var musicTone = new MusicTone(tone.in(Value.per(Second)));
+    leader.setControl(musicTone);
   }
 
   @Override

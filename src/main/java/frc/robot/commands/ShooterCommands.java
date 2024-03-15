@@ -4,6 +4,7 @@ package frc.robot.commands;
 import edu.wpi.first.math.filter.Debouncer;
 import edu.wpi.first.math.geometry.*;
 import edu.wpi.first.math.interpolation.InterpolatingDoubleTreeMap;
+import edu.wpi.first.math.interpolation.InterpolatingTreeMap;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj2.command.Command;
 import frc.robot.subsystems.drive.Drive;
@@ -20,27 +21,42 @@ import static java.lang.Math.atan;
 public class ShooterCommands {
     static double shooterAngleAdjustment = 0.0;
 
-    static InterpolatingDoubleTreeMap distanceToAngle = new InterpolatingDoubleTreeMap();
+    static InterpolatingTreeMap<Double, Double> distanceToAngle = new InterpolatingDoubleTreeMap();
     static InterpolatingDoubleTreeMap distanceToRPM = new InterpolatingDoubleTreeMap();
+    static Transform3d shooterOffset = new Transform3d(new Translation3d(0.0, 0.239, .669), new Rotation3d());
+
+    public static double inverseInterpolate(Double startValue, Double endValue, Double q) {
+        double totalRange = endValue - startValue;
+        if (totalRange <= 0) {
+            return 0.0;
+        }
+        double queryToStart = q - startValue;
+        if (queryToStart <= 0) {
+            return 0.0;
+        }
+        return queryToStart / totalRange;
+    }
 
     public static Pose3d getSpeakerPos() {
         return (DriverStation.getAlliance().orElse(Blue).equals(Blue)) ?
                 new Pose3d(0.24, 5.50, 2.13, new Rotation3d()) :
                 new Pose3d(16.27, 5.50, 2.13, new Rotation3d());
     }
-    static Transform3d shooterOffset = new Transform3d(new Translation3d(0.0, 0.239, .669), new Rotation3d());
 
     private static double getDistance(Pose3d pose3d) {
         return pose3d.toPose2d().getTranslation().getNorm();
     }
 
-    private static void populateITM() { //im making separate methods for this because I am not sure how much adjustments you would have to make
+    public static void construct() {
+        distanceToAngle.clear();
         distanceToAngle.put(0.0, 0.0);
-        distanceToAngle.put(1.1, -0.2941);
-        distanceToAngle.put(1.7, -0.3472);
-        distanceToAngle.put(2.52, -0.1700); //GOOD VALUES
-        distanceToAngle.put(4.235, 0.0150);
+//        distanceToAngle.put(1.1, -0.2941);
+//        distanceToAngle.put(1.7, -0.3472);
+//        distanceToAngle.put(2.52, -0.1700); //GOOD VALUES
+//        distanceToAngle.put(4.235, 0.0150);
         distanceToAngle.put(1000.0, 0.0);
+
+        distanceToRPM.clear();
         distanceToRPM.put(0.0, 3500.0);
         distanceToRPM.put(0.894, 3500.0);
         distanceToRPM.put(3.506, 5000.0);
@@ -50,7 +66,7 @@ public class ShooterCommands {
     }
 
     public static Command autoAim(Shooter shooter, Drive drive) {
-        populateITM();
+        construct();
         //the parameter is the robot, idk how to declare it, also this returns the angle
         return run(() -> {
             // Calcaulate new linear velocity
@@ -62,12 +78,12 @@ public class ShooterCommands {
                             .getAngle();
             Pose3d targetPose = ShooterCommands.getSpeakerPos();
             targetPose = targetPose.plus(new Transform3d(0.0, goalAngle.getSin() * 0.5, 0.0, new Rotation3d()));
-            Pose3d shooter1 = new Pose3d(drive.getPose()).plus(shooterOffset);
-            Pose3d pose3d = targetPose.relativeTo(shooter1);
-            double distance = getDistance(pose3d);
+            Pose3d shooterLocation = new Pose3d(drive.getPose()).plus(shooterOffset);
+            Pose3d targetRelativeToShooter = targetPose.relativeTo(shooterLocation);
+            double distance = getDistance(targetRelativeToShooter);
+            double atan = atan(targetRelativeToShooter.getZ() / distance);
             Logger.recordOutput("distanceFromGoal", distance);
-            double atan = atan(pose3d.getZ() / distance);
-            Logger.recordOutput("Aim/getZ", pose3d.getZ());
+            Logger.recordOutput("Aim/getZ", targetRelativeToShooter.getZ());
             Logger.recordOutput("Aim/atan", atan);
             shooter.setTargetShooterAngle(Rotation2d.fromRadians(atan + distanceToAngle.get(distance)));
             shooter.shooterRunVelocity(distanceToRPM.get(distance));

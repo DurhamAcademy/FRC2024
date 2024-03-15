@@ -126,9 +126,11 @@ public class Shooter extends SubsystemBase {
         }
 
         if (!characterizeMode || setpointRadPS != 0.0) {
-            shooterIO.setFlywheelVoltage(
-                    shooterVelocityFB.calculate(shooterInputs.flywheelVelocityRadPerSec, setpointRadPS)
-                            + this.shooterVelocityFF.calculate(shooterVelocityFB.getSetpoint()));
+            if (setpointRadPS == 0.0) shooterIO.setFlywheelVoltage(0.0);
+            else
+                shooterIO.setFlywheelVoltage(
+                        shooterVelocityFB.calculate(shooterInputs.flywheelVelocityRadPerSec, setpointRadPS)
+                                + this.shooterVelocityFF.calculate(shooterVelocityFB.getSetpoint()));
         } else if (setpointRadPS == 0.0) shooterIO.setFlywheelVoltage(0.0);
         Command currentCommand = getCurrentCommand();
         if (currentCommand != null)
@@ -183,6 +185,7 @@ public class Shooter extends SubsystemBase {
         return this.shooterVelocityFB.atSetpoint();
     }
 
+    @AutoLogOutput
     public boolean hoodAtSetpoint() {
         return this.hoodFB.atGoal();
     }
