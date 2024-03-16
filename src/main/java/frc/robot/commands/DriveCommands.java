@@ -241,7 +241,7 @@ public class DriveCommands {
                                     ChassisSpeeds.fromFieldRelativeSpeeds(
                                             linearVelocity.getX() * drive.getMaxLinearSpeedMetersPerSec(),
                                             linearVelocity.getY() * drive.getMaxLinearSpeedMetersPerSec(),
-                                            -value*6.28,
+                                            (filterCalc + (-value))*6.28,
                                             drive.getRotation().rotateBy(
                                                     getAllianceRotation())));
                             previousPose[0] = drive.getPose();
