@@ -151,7 +151,7 @@ public class DriveCommands {
 
         final Pose2d[] previousPose = {null};
         ProfiledPIDController rotationController =
-                new ProfiledPIDController(.5, 0, .01, new TrapezoidProfile.Constraints(1, 2));
+                new ProfiledPIDController(.5, 0, .01, new TrapezoidProfile.Constraints(1.4440, 6.2635427854));
 
         LoggedDashboardBoolean invertVelocity = new LoggedDashboardBoolean("Disable Velocity", false);
 
@@ -241,7 +241,6 @@ public class DriveCommands {
                                     ChassisSpeeds.fromFieldRelativeSpeeds(
                                             linearVelocity.getX() * drive.getMaxLinearSpeedMetersPerSec(),
                                             linearVelocity.getY() * drive.getMaxLinearSpeedMetersPerSec(),
-
                                             -value*6.28,
                                             drive.getRotation().rotateBy(
                                                     getAllianceRotation())));
