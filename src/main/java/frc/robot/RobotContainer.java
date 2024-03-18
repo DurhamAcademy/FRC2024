@@ -21,16 +21,19 @@ import edu.wpi.first.units.Units;
 import edu.wpi.first.wpilibj.GenericHID;
 import edu.wpi.first.wpilibj.Joystick;
 import edu.wpi.first.wpilibj.XboxController;
+import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.RunCommand;
 import edu.wpi.first.wpilibj2.command.WaitCommand;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.button.JoystickButton;
+import edu.wpi.first.wpilibj2.command.button.Trigger;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine.Config;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine.Direction;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine.Mechanism;
 import frc.robot.commands.*;
+import frc.robot.subsystems.ControllerRumble;
 import frc.robot.subsystems.climb.Climb;
 import frc.robot.subsystems.climb.ClimbIO;
 import frc.robot.subsystems.climb.ClimbIOSim;
@@ -55,7 +58,12 @@ import static edu.wpi.first.units.BaseUnits.Voltage;
 import static edu.wpi.first.units.Units.Radians;
 import static edu.wpi.first.units.Units.Seconds;
 import static edu.wpi.first.wpilibj2.command.Commands.*;
+import static frc.robot.commands.FeederCommands.feedToBeamBreak;
 import static frc.robot.commands.FeederCommands.feedToShooter;
+import static frc.robot.commands.IntakeCommands.intakeCommand;
+import static frc.robot.commands.IntakeCommands.smartIntakeCommand;
+import static frc.robot.commands.RumbleCommands.*;
+import static frc.robot.commands.ShooterCommands.autoAim;
 
 /**
  * This class is where the bulk of the robot should be declared. Since Command-based is a
@@ -72,6 +80,8 @@ public class RobotContainer {
     private final VisionIOReal vision;
     private final Dashboard dashboard;
     private final LEDs leds;
+    private final ControllerRumble driverRumble = new ControllerRumble(0);
+    private final ControllerRumble operatorRumble = new ControllerRumble(1);
 
 //  private final ModeHelper modeHelper = new ModeHelper(this);
 // Controller
@@ -79,8 +89,11 @@ private final CommandXboxController driverController = new CommandXboxController
     private final CommandXboxController operatorController = new CommandXboxController(1);
     // Dashboard inputs
     private final LoggedDashboardChooser<Command> autoChooser;
+    private final LoggedDashboardChooser<SmartCommandsMode> smartCommandsMode =
+            new LoggedDashboardChooser<>("Use Smart Commands", new SendableChooser<>());
     private final LoggedDashboardNumber flywheelSpeedInput =
             new LoggedDashboardNumber("Flywheel Speed", 1500.0);
+    private final ReactionObject reactions;
     LoggedDashboardNumber angleOffsetInput = new LoggedDashboardNumber("Angle Offset", 0.0);
     // Subsystems
     private Drive drive;
@@ -157,30 +170,42 @@ private final CommandXboxController driverController = new CommandXboxController
         var command =
                 DriveCommands.aimAtSpeakerCommand(
                         drive,
-                        () -> driverController.getLeftY(),
-                        () -> driverController.getLeftX(),
-                        () -> driverController.getRightX());
+                        driverController::getLeftY,
+                        driverController::getLeftX,
+                        driverController::getRightX);
         NamedCommands.registerCommand(
-                "AutoShoot", none()
-//                ShooterCommands.autoAim(shooter, drive).alongWith(
-//                        sequence(
-//                                Commands.waitUntil(shooter::allAtSetpoint),
-//                                FeederCommands.feedToShooter(feeder)
+                "AutoShoot",
+                parallel(
+                        ShooterCommands.autoAim(shooter, drive),
+                        sequence(
+                                waitUntil(shooter::allAtSetpoint),
+                                feedToShooter(feeder)
+                        )
+                )
         );
-        // Set up auto routines
         NamedCommands.registerCommand(
-                "Shoot", none()
-//                sequence(
-//                        FeederCommands.feedToBeamBreak(feeder, intake),
-//                        Commands.waitUntil(() -> (shooter.allAtSetpoint() && (shooter.getShooterVelocityRPM() > 1000))),
-//                        FeederCommands.feedToShooter(feeder)
+                "Ready Shooter",
+                autoAim(shooter, drive)
         );
-//                        .deadlineWith(ShooterCommands.JustShoot(shooter))
-//                        .withTimeout(8.0));
         NamedCommands.registerCommand(
-                "Intake", none()
-//                IntakeCommands.intakeCommand(intake).withTimeout(4.0)
-//                        .until(feeder::getBeamBroken)
+                "Shoot When Ready",
+                sequence(
+                        waitUntil(() -> (shooter.allAtSetpoint() && (shooter.getShooterVelocityRPM() > 1000))),
+                        feedToShooter(feeder)
+                )
+        );
+        NamedCommands.registerCommand(
+                "Shoot",
+                sequence(
+                        feedToBeamBreak(feeder),
+                        waitUntil(() -> (shooter.allAtSetpoint() && (shooter.getShooterVelocityRPM() > 1000))),
+                        feedToShooter(feeder)
+                )
+                        .deadlineWith(ShooterCommands.JustShoot(shooter))
+                        .withTimeout(8.0));
+        NamedCommands.registerCommand(
+                "Intake",
+                smartIntakeCommand(intake, feeder)
         );
         NamedCommands.registerCommand(
                 "Drive Backwards", none()
@@ -190,16 +215,15 @@ private final CommandXboxController driverController = new CommandXboxController
         vision = new VisionIOReal("ShootSideCamera");
         dashboard = new Dashboard(autoChooser, drive, shooter, feeder, intake, vision);
 
+        this.reactions = new ReactionObject(
+                new Trigger(feeder::getIntakeBeamBroken),
+                new Trigger(feeder::getBeamBroken),
+                new Trigger(shooter::allAtSetpoint),
+                new Trigger(shooter::hoodAtSetpoint),
+                new Trigger(shooter::flywheelAtSetpoint)
+        );
+
         configureButtonBindings();
-    }
-
-    // TODO: populate switch statements here
-    public Command getEnterCommand(Mode m) {
-        return none();
-    }
-
-    public Command getExitCommand(Mode m) {
-        return none();
     }
 
     /**
@@ -215,9 +239,9 @@ private final CommandXboxController driverController = new CommandXboxController
                 drive.setDefaultCommand(
                         DriveCommands.joystickDrive(
                                 drive,
-                                () -> driverController.getLeftY(),
-                                () -> driverController.getLeftX(),
-                                () -> driverController.getRightX()));
+                                driverController::getLeftY,
+                                driverController::getLeftX,
+                                driverController::getRightX));
                 intake.setDefaultCommand(IntakeCommands.idleCommand(intake));
                 feeder.setDefaultCommand(new RunCommand(() -> feeder.runVolts(0.0), feeder));
                 shooter.setDefaultCommand(
@@ -256,14 +280,14 @@ private final CommandXboxController driverController = new CommandXboxController
                         .whileTrue(
                                 parallel(
                                         sequence(
-                                                IntakeCommands.intakeCommand(intake).until(feeder::getIntakeBeamBroken),
+                                                intakeCommand(intake).until(feeder::getIntakeBeamBroken),
                                                 IntakeCommands.flushIntake(intake)
                                         ),
-                                        FeederCommands.feedToBeamBreak(feeder)
+                                        feedToBeamBreak(feeder)
                                 ))
                         .onFalse(
                                 race(
-                                        FeederCommands.feedToBeamBreak(feeder).withTimeout(5),
+                                        feedToBeamBreak(feeder).withTimeout(5),
                                         IntakeCommands.flushIntakeWithoutTheArmExtendedOutward(intake)
                                 )
                         );
@@ -279,18 +303,7 @@ private final CommandXboxController driverController = new CommandXboxController
                 // ---- SHOOTER COMMANDS ----
                 operatorController
                         .y()
-                        .whileTrue(
-//                        either(
-//                                sequence(
-//                                        ShooterCommands.autoAim(shooter, drive)
-//                                                .until(() -> !feeder.getBeamBroken()),
-//                                        ShooterCommands.autoAim(shooter, drive)
-//                                                .withTimeout(0.25)
-//                                ),
-                                ShooterCommands.autoAim(shooter, drive)//,
-//                                () -> !feeder.getBeamBroken()
-//                        )
-                        );
+                        .whileTrue(autoAim(shooter, drive));
                 operatorController
                         .x()
                         .whileTrue(
@@ -307,7 +320,7 @@ private final CommandXboxController driverController = new CommandXboxController
                                         sequence(
                                                 waitSeconds(0.5),
                                                 waitUntil(shooter::allAtSetpoint),
-                                                FeederCommands.feedToShooter(feeder)
+                                                feedToShooter(feeder)
                                                         .until(() -> !feeder.getBeamBroken())
                                         )
 
@@ -315,8 +328,9 @@ private final CommandXboxController driverController = new CommandXboxController
                         );
                 operatorController
                         .leftBumper()
-                        .whileTrue(
-                                FeederCommands.feedToBeamBreak(feeder)
+                        .onTrue(
+                                feedToBeamBreak(feeder)
+                                        .withTimeout(2)
                         );
                 driverController
                         .rightTrigger()
@@ -339,7 +353,6 @@ private final CommandXboxController driverController = new CommandXboxController
                         .onTrue(
                                 ShooterCommands.removeFromOffset()
                         );
-
                 break;
             case DriveMotors:
                 drive.setDefaultCommand(
@@ -477,6 +490,36 @@ private final CommandXboxController driverController = new CommandXboxController
         }
     }
 
+    // TODO: populate switch statements here
+    public Command getEnterCommand(Mode m) {
+        return none();
+    }
+
+    public Command getExitCommand(Mode m) {
+        return none();
+    }
+
+    public void configureReactions() {
+        driverRumble.setDefaultCommand(noRumble(driverRumble));
+        reactions.intakeBeamBroken
+                .and(reactions.shooterBeamBroken.negate())
+                .whileTrue(
+                        parallel(
+                                rumbleLight(driverRumble)
+                                        .withTimeout(0.1),
+                                waitSeconds(0.2)
+                                        .andThen(rumbleLightWithFalloff(operatorRumble))
+                        )
+                );
+    }
+
+
+    enum SmartCommandsMode {
+        Smart,
+        Safe,
+        Disabled
+    }
+
     /**
      * Use this to pass the autonomous command to the main {@link Robot} class.
      *
@@ -492,5 +535,21 @@ private final CommandXboxController driverController = new CommandXboxController
         TurnMotors,
         Shooter,
         AllElse
+    }
+
+    private class ReactionObject {
+        Trigger intakeBeamBroken;
+        Trigger shooterBeamBroken;
+        Trigger shooterAllAtSetpoint;
+        Trigger shooterHoodAtSetpoint;
+        Trigger shooterRpmAtSetpoint;
+
+        public ReactionObject(Trigger intakeBeamBroken, Trigger shooterBeamBroken, Trigger shooterAllAtSetpoint, Trigger shooterHoodAtSetpoint, Trigger shooterRpmAtSetpoint) {
+            this.intakeBeamBroken = intakeBeamBroken;
+            this.shooterBeamBroken = shooterBeamBroken;
+            this.shooterAllAtSetpoint = shooterAllAtSetpoint;
+            this.shooterHoodAtSetpoint = shooterHoodAtSetpoint;
+            this.shooterRpmAtSetpoint = shooterRpmAtSetpoint;
+        }
     }
 }

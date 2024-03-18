@@ -1,7 +1,6 @@
 package frc.robot.commands;
 
 import edu.wpi.first.wpilibj2.command.Command;
-import edu.wpi.first.wpilibj2.command.ParallelRaceGroup;
 import edu.wpi.first.wpilibj2.command.RunCommand;
 import frc.robot.subsystems.feeder.Feeder;
 
@@ -44,19 +43,23 @@ public class FeederCommands {
         return either(
                 zeroToBeamBreak(feeder),
                 sequence(
-                        run(() -> feeder.runVolts(6), feeder)
-                                .onlyWhile(() -> !feeder.getBeamBroken() && !feeder.getIntakeBeamBroken())
+                        sequence(
+                                run(() -> feeder.runVolts(6), feeder)
+                                        .onlyWhile(() -> !feeder.getIntakeBeamBroken()),
+                                run(() -> feeder.runVolts(6), feeder)
+                                        .onlyWhile(feeder::getIntakeBeamBroken)
+                        )
                                 .onlyWhile(() -> !feeder.getBeamBroken()),
-                        run(() -> feeder.runVolts(6), feeder)
-                                .onlyWhile(() -> !feeder.getBeamBroken() && feeder.getIntakeBeamBroken())
-                                .onlyWhile(() -> !feeder.getBeamBroken())
-                                .withTimeout(0.1),
-                        slowToBeam(feeder)
+                        either(
+                                zeroToBeamBreak(feeder),
+                                slowToBeam(feeder),
+                                feeder::getBeamBroken
+                        )
                 ),
                 feeder::getBeamBroken);
     }
 
-    private static ParallelRaceGroup slowToBeam(Feeder feeder) {
+    private static Command slowToBeam(Feeder feeder) {
         return run(() -> feeder.runVolts(2), feeder)
                 .onlyWhile(() -> !feeder.getBeamBroken());
     }

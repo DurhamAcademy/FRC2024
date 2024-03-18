@@ -31,6 +31,7 @@ import org.littletonrobotics.junction.AutoLogOutput;
 import org.littletonrobotics.junction.Logger;
 
 import static edu.wpi.first.units.Units.*;
+import static edu.wpi.first.wpilibj.RobotState.isDisabled;
 
 public class Shooter extends SubsystemBase {
     // the ratio for turning the shooter
@@ -110,6 +111,8 @@ public class Shooter extends SubsystemBase {
         }
     }
 
+    public boolean zeroMode = false;
+
     @Override
     public void periodic() {
         shooterIO.updateInputs(shooterInputs);
@@ -156,9 +159,11 @@ public class Shooter extends SubsystemBase {
         Logger.recordOutput("Shooter/Mechanism", mech1);
 
         if (hoodInputs.islimitSwitchPressed != lastLimitSwitch) {
-            resetToLimitAngle();
+            lastLimitSwitch = hoodInputs.islimitSwitchPressed;
+            // only do it during these times to prevent arbitrary zero events
+            if (zeroMode || isDisabled())
+                resetToLimitAngle();
         }
-        lastLimitSwitch = hoodInputs.islimitSwitchPressed;
     }
 
     public void resetToLimitAngle(){

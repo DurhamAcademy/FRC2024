@@ -3,7 +3,10 @@ package frc.robot.commands;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.RunCommand;
+import frc.robot.subsystems.feeder.Feeder;
 import frc.robot.subsystems.intake.Intake;
+
+import static edu.wpi.first.wpilibj2.command.Commands.sequence;
 
 public class IntakeCommands {
     public static Command intakeCommand(Intake intake) {
@@ -13,6 +16,20 @@ public class IntakeCommands {
                     intake.setRollerVoltage(9.0);
                 },
                 intake);
+    }
+
+    public static Command safeIntakeCommand(Intake intake, Feeder feeder) {
+        return intakeCommand(intake)
+                .onlyWhile(() -> !feeder.getBeamBroken());
+    }
+
+    public static Command smartIntakeCommand(Intake intake, Feeder feeder) {
+        return sequence(
+                safeIntakeCommand(intake, feeder)
+                        .until(feeder::getIntakeBeamBroken),
+                intakeCommand(intake)
+                        .onlyWhile(feeder::getIntakeBeamBroken)
+        );
     }
 
     public static Command flushIntake(Intake intake){

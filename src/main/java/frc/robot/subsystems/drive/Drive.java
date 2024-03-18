@@ -261,8 +261,8 @@ public class Drive extends SubsystemBase {
                   default:
                     visionMatrix = new Matrix<>(Nat.N3(), Nat.N1(), new double[]{0.05, 0.05, 0.2});
                 }
-                poseEstimator.addVisionMeasurement(
-                        pose2d, estimatedRobotPose.timestampSeconds, visionMatrix);
+                poseEstimator.addVisionMeasurement(pose2d, estimatedRobotPose.timestampSeconds, visionMatrix);
+                noGyroPoseEstimation.addVisionMeasurement(pose2d, estimatedRobotPose.timestampSeconds, visionMatrix);
               }
             });
     getTwistPerDt();
