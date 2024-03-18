@@ -13,8 +13,6 @@
 
 package frc.robot.subsystems.drive;
 
-import static java.lang.Double.NaN;
-
 import com.ctre.phoenix6.BaseStatusSignal;
 import com.ctre.phoenix6.StatusSignal;
 import com.ctre.phoenix6.configs.CANcoderConfiguration;
@@ -25,6 +23,8 @@ import com.revrobotics.CANSparkMax;
 import com.revrobotics.RelativeEncoder;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.util.Units;
+
+import static java.lang.Double.NaN;
 
 /**
  * Module IO implementation for SparkMax drive motor controller, SparkMax turn motor controller (NEO
@@ -77,7 +77,7 @@ public class ModuleIOSparkMax implements ModuleIO {
         cancoder = new CANcoder(2);
         absoluteEncoderOffset =
             new Rotation2d(
-                -2.350058567040802 + -0.023009711818284883 + .00153398078); // MUST BE CALIBRATED
+                -2.350058567040802 + -0.023009711818284883 + .00153398078 + 0.3896); // MUST BE CALIBRATED
         break;
       case 3:
         driveSparkMax = new CANSparkMax(7, MotorType.kBrushless);
@@ -104,6 +104,7 @@ public class ModuleIOSparkMax implements ModuleIO {
     turnSparkMax.setSmartCurrentLimit(30);
     driveSparkMax.enableVoltageCompensation(12.0);
     turnSparkMax.enableVoltageCompensation(12.0);
+    driveSparkMax.setInverted(false);
 
     driveEncoder.setPosition(0.0);
     driveEncoder.setMeasurementPeriod(10);

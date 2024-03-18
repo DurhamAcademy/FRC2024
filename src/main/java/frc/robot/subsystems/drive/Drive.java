@@ -13,32 +13,49 @@
 
 package frc.robot.subsystems.drive;
 
-import static edu.wpi.first.units.Units.*;
-
 import com.pathplanner.lib.auto.AutoBuilder;
-import com.pathplanner.lib.pathfinding.Pathfinding;
 import com.pathplanner.lib.util.HolonomicPathFollowerConfig;
+import com.pathplanner.lib.util.PIDConstants;
 import com.pathplanner.lib.util.PathPlannerLogging;
 import com.pathplanner.lib.util.ReplanningConfig;
+import edu.wpi.first.apriltag.AprilTagFieldLayout;
+import edu.wpi.first.apriltag.AprilTagFields;
+import edu.wpi.first.math.Matrix;
+import edu.wpi.first.math.Nat;
 import edu.wpi.first.math.estimator.SwerveDrivePoseEstimator;
-import edu.wpi.first.math.geometry.Pose2d;
-import edu.wpi.first.math.geometry.Rotation2d;
-import edu.wpi.first.math.geometry.Translation2d;
-import edu.wpi.first.math.kinematics.*;
-import edu.wpi.first.math.util.Units;
-import edu.wpi.first.units.*;
+import edu.wpi.first.math.geometry.*;
+import edu.wpi.first.math.kinematics.ChassisSpeeds;
+import edu.wpi.first.math.kinematics.SwerveDriveKinematics;
+import edu.wpi.first.math.kinematics.SwerveModulePosition;
+import edu.wpi.first.math.kinematics.SwerveModuleState;
+import edu.wpi.first.math.numbers.N1;
+import edu.wpi.first.math.numbers.N3;
+import edu.wpi.first.units.Angle;
+import edu.wpi.first.units.Measure;
+import edu.wpi.first.units.Velocity;
+import edu.wpi.first.units.Voltage;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.DriverStation.Alliance;
 import edu.wpi.first.wpilibj.sysid.SysIdRoutineLog;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
-import frc.robot.util.LocalADStarAK;
 import org.littletonrobotics.junction.AutoLogOutput;
 import org.littletonrobotics.junction.Logger;
+import org.photonvision.EstimatedRobotPose;
+import org.photonvision.PhotonPoseEstimator;
+import org.photonvision.targeting.PhotonTrackedTarget;
+import org.photonvision.targeting.TargetCorner;
+
+import java.util.List;
+import java.util.Optional;
+
+import static edu.wpi.first.math.util.Units.inchesToMeters;
+import static edu.wpi.first.units.Units.*;
+import static frc.robot.Constants.robotToCam;
 
 public class Drive extends SubsystemBase {
-  private static final double MAX_LINEAR_SPEED = Units.feetToMeters(14.5);
-  private static final double TRACK_WIDTH_X = Units.inchesToMeters(20.75);
-  private static final double TRACK_WIDTH_Y = Units.inchesToMeters(20.75);
+  private static final double MAX_LINEAR_SPEED = 4.5;
+  private static final double TRACK_WIDTH_X = inchesToMeters(20.75);
+  private static final double TRACK_WIDTH_Y = inchesToMeters(20.75);
   private static final double DRIVE_BASE_RADIUS =
       Math.hypot(TRACK_WIDTH_X / 2.0, TRACK_WIDTH_Y / 2.0);
   private static final double MAX_ANGULAR_SPEED = MAX_LINEAR_SPEED / DRIVE_BASE_RADIUS;
@@ -47,46 +64,58 @@ public class Drive extends SubsystemBase {
   private final GyroIOInputsAutoLogged gyroInputs = new GyroIOInputsAutoLogged();
   private final Module[] modules = new Module[4]; // FL, FR, BL, BR
   private final SwerveModulePosition[] swerveModulePositions;
+  private final VisionIO visionIO;
+  private final VisionIO.VisionIOInputs visionInputs = new VisionIO.VisionIOInputs();
+
+  //  private final
 
   private SwerveDriveKinematics kinematics = new SwerveDriveKinematics(getModuleTranslations());
   private SwerveDrivePoseEstimator poseEstimator;
   private Pose2d pose = new Pose2d();
+  PIDConstants positionPID = new PIDConstants(5.0, .01);
+  private Measure<Velocity<Angle>> angularVelocity = RadiansPerSecond.zero();
   private Rotation2d lastGyroRotation = new Rotation2d();
 
+  AprilTagFieldLayout aprilTagFieldLayout = AprilTagFields.k2024Crescendo.loadAprilTagLayoutField();
+
+  // from center.
+  private final PhotonPoseEstimator photonPoseEstimator =
+      new PhotonPoseEstimator(
+          aprilTagFieldLayout,
+              PhotonPoseEstimator.PoseStrategy.MULTI_TAG_PNP_ON_COPROCESSOR,
+          robotToCam);
   SwerveDrivePoseEstimator noGyroPoseEstimation;
   Rotation2d noGyroRotation;
-
+  PIDConstants rotationPID = new PIDConstants(0.5, .01);
+  private Pose2d previousPose = new Pose2d();
   public Drive(
       GyroIO gyroIO,
+      VisionIO visionIO,
       ModuleIO flModuleIO,
       ModuleIO frModuleIO,
       ModuleIO blModuleIO,
       ModuleIO brModuleIO) {
+    this.visionIO = visionIO;
     this.gyroIO = gyroIO;
-    modules[0] = new Module(flModuleIO, 0);
-    modules[1] = new Module(frModuleIO, 1);
-    modules[2] = new Module(blModuleIO, 2);
-    modules[3] = new Module(brModuleIO, 3);
+
+    modules[3] = new Module(flModuleIO, 0);
+    modules[2] = new Module(frModuleIO, 1);
+    modules[1] = new Module(blModuleIO, 2);
+    modules[0] = new Module(brModuleIO, 3);
 
     // Configure AutoBuilder for PathPlanner
     AutoBuilder.configureHolonomic(
         this::getPose,
-        pose1 -> {
-          try {
-            setPose(pose1);
-          } catch (GyroConnectionException e) {
-            throw new RuntimeException(e);
-          }
-        },
+            this::setPose,
         () -> kinematics.toChassisSpeeds(getModuleStates()),
         this::runVelocity,
-        new HolonomicPathFollowerConfig(
-            MAX_LINEAR_SPEED, DRIVE_BASE_RADIUS, new ReplanningConfig()),
+            new HolonomicPathFollowerConfig(positionPID, rotationPID,
+                    MAX_LINEAR_SPEED, DRIVE_BASE_RADIUS, new ReplanningConfig(true, true)),
         () ->
             DriverStation.getAlliance().isPresent()
                 && DriverStation.getAlliance().get() == Alliance.Red,
         this);
-    Pathfinding.setPathfinder(new LocalADStarAK());
+//    Pathfinding.setPathfinder(new LocalADStarAK());
     //noinspection ToArrayCallWithZeroLengthArrayArgument
     PathPlannerLogging.setLogActivePathCallback(
         (activePath) ->
@@ -106,6 +135,7 @@ public class Drive extends SubsystemBase {
               modules[3].getPosition()
             },
             new Pose2d(3.0, 5.0, new Rotation2d(3.0)));
+    poseEstimator.setVisionMeasurementStdDevs(new Matrix<>(Nat.N3(), Nat.N1(), new double[]{4, 4, 8}));
 
     swerveModulePositions = new SwerveModulePosition[modules.length];
     noGyroPoseEstimation = null;
@@ -115,8 +145,15 @@ public class Drive extends SubsystemBase {
 
 
   public void periodic() {
+    previousPose = pose;
+
+
     gyroIO.updateInputs(gyroInputs);
     Logger.processInputs("Drive/Gyro", gyroInputs);
+
+    visionIO.updateInputs(visionInputs);
+    Logger.processInputs("Drive/Vision", visionInputs);
+
     for (var module : modules) {
       module.periodic();
     }
@@ -158,6 +195,7 @@ public class Drive extends SubsystemBase {
 
       // update the pose estimator
       pose = poseEstimator.update(gyroInputs.yawPosition, swerveModulePositions);
+      angularVelocity = RadiansPerSecond.of(gyroInputs.yawVelocityRadPerSec);
 
     } else {
       if (noGyroPoseEstimation == null) {
@@ -171,7 +209,64 @@ public class Drive extends SubsystemBase {
       noGyroRotation =
           pose.rotateBy(noGyroRotation.minus(pose.getRotation())).exp(twist).getRotation();
       pose = noGyroPoseEstimation.update(noGyroRotation, swerveModulePositions);
+      angularVelocity = RadiansPerSecond.of(twist.dtheta / .02);
     }
+
+    Logger.recordOutput("pose", pose);
+    /*
+    _____ R: <-x  y^
+    | ^ | G: \|/x ->y
+    |___|
+    */
+//    new UnscentedKalmanFilter<>()
+//    Transform2d twistPerDt = getTwistPerDt();
+//    poseEstimator.addVisionMeasurement(pose.minus(new Transform2d(gyroInputs.accelY * 0.02 * 0.02 - twistPerDt.getX() * .02, gyroInputs.accelX * 0.02 * 0.02 - twistPerDt.getY() * .02, Rotation2d.fromDegrees(0.0))), new Matrix<N3, N1>(Nat.N3(), Nat.N1(), new double[]{0.075, .075, 100.0}));// fixme: add acceleration from gyro
+
+    Optional<EstimatedRobotPose> estPose = photonPoseEstimator.update(visionInputs.cameraResult);
+    estPose.ifPresent(
+            estimatedRobotPose -> {
+              Logger.recordOutput("estRoPose", estimatedRobotPose.estimatedPose);
+              Pose2d pose2d = estimatedRobotPose.estimatedPose.toPose2d();
+              var shouldUse = true;
+              for (PhotonTrackedTarget tag : estimatedRobotPose.targetsUsed) {
+                if (tag.getPoseAmbiguity() == -1) shouldUse = false;
+              }
+              if (
+                      shouldUse && ((!DriverStation.isFMSAttached()) ||
+                              ((estimatedRobotPose.estimatedPose.getX() <= 16.5) &&
+                              (estimatedRobotPose.estimatedPose.getX() > 0) &&
+                                      (estimatedRobotPose.estimatedPose.getZ() <= 1) &&
+                                      (estimatedRobotPose.estimatedPose.getZ() > -1) &&
+                              (estimatedRobotPose.estimatedPose.getY() <= 8.2) &&
+                                      (estimatedRobotPose.estimatedPose.getY() > 0)))
+              ) // only add it if it's less than 1 meter and in the field
+              {
+                Matrix<N3, N1> visionMatrix;
+                switch (estimatedRobotPose.targetsUsed.size()) {
+                  case 0:
+                    visionMatrix = new Matrix<>(Nat.N3(), Nat.N1(), new double[]{16, 16, 32});
+                  case 1:
+
+                    var mult = estimatedRobotPose.targetsUsed.get(0).getPoseAmbiguity() * 25;
+                    if (
+                            (pose.getX() <= 16.5) &&
+                                    (pose.getX() > 0) &&
+                                    (pose.getY() <= 8.2) &&
+                                    (pose.getY() > 0)
+                    ) mult = mult / 4;
+                    visionMatrix = new Matrix<>(Nat.N3(), Nat.N1(), new double[]{8 * mult, 8 * mult, 12 * mult});
+                    break;
+                  case 2:
+                    visionMatrix = new Matrix<>(Nat.N3(), Nat.N1(), new double[]{.75, .75, 2});
+                  default:
+                    visionMatrix = new Matrix<>(Nat.N3(), Nat.N1(), new double[]{0.05, 0.05, 0.2});
+                }
+                poseEstimator.addVisionMeasurement(
+                        pose2d, estimatedRobotPose.timestampSeconds, visionMatrix);
+              }
+            });
+    getTwistPerDt();
+    getTagCount();
   }
 
   private void updateSwerveModulePositions() {
@@ -273,6 +368,61 @@ public class Drive extends SubsystemBase {
     var averageDriveMotor = routineLog.motor("Average TurnMotor");
     averageDriveMotor.angularVelocity(driveVelocityAverage.divide(4.0));
     averageDriveMotor.angularPosition(drivePositionAverage.divide(4.0));
+    getVisionTags();
+  }
+
+  /**
+   * Returns all currently visable apriltags.
+   */
+  @AutoLogOutput(key = "Vision/Tags 3D")
+  private Pose3d[] getVisionTags() {
+    List<PhotonTrackedTarget> targets = visionInputs.cameraResult.getTargets();
+    var out = new Pose3d[targets.size()];
+    for (int i = 0; i < targets.size(); i++)
+      out[i] = new Pose3d(pose).plus(robotToCam.plus(targets.get(i).getBestCameraToTarget()));
+    return out;
+  }
+
+  @AutoLogOutput(key = "Vision/Tags 2D")
+  private Pose2d[] getVision2dTags() {
+    List<PhotonTrackedTarget> targets = visionInputs.cameraResult.getTargets();
+    var out = new Pose2d[targets.size()];
+    for (int i = 0; i < targets.size(); i++) {
+      var b = robotToCam.plus(targets.get(i).getBestCameraToTarget());
+      out[i] = pose.plus(new Transform2d(b.getTranslation().toTranslation2d(), b.getRotation().toRotation2d()));
+    }
+    return out;
+  }
+
+  @AutoLogOutput(key = "Vision/Tag Ambiguities")
+  private double[] getVisionTagAmbiguities() {
+    List<PhotonTrackedTarget> targets = visionInputs.cameraResult.getTargets();
+    var out = new double[targets.size()];
+    for (int i = 0, targetsSize = targets.size(); i < targetsSize; i++) {
+      PhotonTrackedTarget target = targets.get(i);
+      out[i] = target.getPoseAmbiguity();
+    }
+    return out;
+  }
+
+  @AutoLogOutput(key = "Vision/Corners")
+  private Translation2d[] getVisionCorners() {
+    List<PhotonTrackedTarget> targets = visionInputs.cameraResult.getTargets();
+    var out = new Translation2d[targets.size() * 4];
+    for (int i = 0; i < targets.size(); i++) {
+      var corners = targets.get(i).getDetectedCorners();
+      for (int j = 0; j < corners.size(); j++) {
+        TargetCorner corner = corners.get(j);
+        out[i + j] = new Translation2d(
+                corner.x,
+                corner.y);
+      }
+    }
+    for (int i = 0; i < out.length; i++) {
+      Translation2d translation2d = out[i];
+      if (translation2d == null) out[i] = new Translation2d();
+    }
+    return out;
   }
 
   /** Returns the module states (turn angles and drive velocities) for all of the modules. */
@@ -285,10 +435,26 @@ public class Drive extends SubsystemBase {
     return states;
   }
 
+  /**
+   * Returns the amount of tags visible from the vision system
+   */
+  @AutoLogOutput(key = "Vision/Tag Count")
+  private int getTagCount() {
+    return visionInputs.cameraResult.getTargets().size();
+  }
+
   /** Returns the current odometry pose. */
   @AutoLogOutput(key = "Odometry/Robot")
   public Pose2d getPose() {
     return pose;
+  }
+
+  /**
+   * Returns the current odometry pose.
+   */
+  @AutoLogOutput(key = "Odometry/Pose Per Delta Time")
+  public Transform2d getTwistPerDt() {
+    return previousPose.minus(pose).div(.02);
   }
 
   /** Returns the current odometry rotation. */
@@ -297,64 +463,11 @@ public class Drive extends SubsystemBase {
   }
 
   /** Resets the current odometry pose. */
-  public void setPose(Pose2d pose) throws GyroConnectionException {
+  public void setPose(Pose2d pose) {
     this.pose = pose;
     if (gyroInputs.connected)
       this.poseEstimator.resetPosition(gyroInputs.yawPosition, swerveModulePositions, pose);
     else this.noGyroPoseEstimation.resetPosition(noGyroRotation, swerveModulePositions, pose);
-    //    throw new GyroConnectionException(
-    //        "Pose estimator was written to without gyroscope data (idk what"
-    //            + " will happen after this because now if the gyroscope comes back online pose may
-    // act weird");
-  }
-
-  /**
-   * An exception that describes any problem that happens due to a disconnect from the gyroscope.
-   */
-  public static class GyroConnectionException extends Exception {
-    /**
-     * Constructs a new exception with the specified detail message. The cause is not initialized,
-     * and may subsequently be initialized by a call to {@link #initCause}.
-     *
-     * @param message the detail message. The detail message is saved for later retrieval by the
-     *     {@link #getMessage()} method.
-     */
-    public GyroConnectionException(String message) {
-      super(message);
-    }
-
-    /**
-     * Constructs a new exception with the specified detail message and cause.
-     *
-     * <p>Note that the detail message associated with {@code cause} is <i>not</i> automatically
-     * incorporated in this exception's detail message.
-     *
-     * @param message the detail message (which is saved for later retrieval by the {@link
-     *     #getMessage()} method).
-     * @param cause the cause (which is saved for later retrieval by the {@link #getCause()}
-     *     method). (A {@code null} value is permitted, and indicates that the cause is nonexistent
-     *     or unknown.)
-     * @since 1.4
-     */
-    public GyroConnectionException(String message, Throwable cause) {
-      super(message, cause);
-    }
-
-    /**
-     * Constructs a new exception with the specified detail message, cause, suppression enabled or
-     * disabled, and writable stack trace enabled or disabled.
-     *
-     * @param message the detail message.
-     * @param cause the cause. (A {@code null} value is permitted, and indicates that the cause is
-     *     nonexistent or unknown.)
-     * @param enableSuppression whether or not suppression is enabled or disabled
-     * @param writableStackTrace whether or not the stack trace should be writable
-     * @since 1.7
-     */
-    public GyroConnectionException(
-        String message, Throwable cause, boolean enableSuppression, boolean writableStackTrace) {
-      super(message, cause, enableSuppression, writableStackTrace);
-    }
   }
 
   /** Returns the maximum linear speed in meters per sec. */
@@ -370,10 +483,19 @@ public class Drive extends SubsystemBase {
   /** Returns an array of module translations. */
   public static Translation2d[] getModuleTranslations() {
     return new Translation2d[] {
-      new Translation2d(TRACK_WIDTH_X / 2.0, TRACK_WIDTH_Y / 2.0),
-      new Translation2d(TRACK_WIDTH_X / 2.0, -TRACK_WIDTH_Y / 2.0),
-      new Translation2d(-TRACK_WIDTH_X / 2.0, TRACK_WIDTH_Y / 2.0),
-      new Translation2d(-TRACK_WIDTH_X / 2.0, -TRACK_WIDTH_Y / 2.0)
+            new Translation2d(-TRACK_WIDTH_X / 2.0, -TRACK_WIDTH_Y / 2.0),//br
+            new Translation2d(-TRACK_WIDTH_X / 2.0, TRACK_WIDTH_Y / 2.0),//bl
+            new Translation2d(TRACK_WIDTH_X / 2.0, -TRACK_WIDTH_Y / 2.0),//fr
+            new Translation2d(TRACK_WIDTH_X / 2.0, TRACK_WIDTH_Y / 2.0),//fl
     };
+  }
+
+  @AutoLogOutput
+  public Measure<Velocity<Angle>> getAnglularVelocity() {
+    return this.angularVelocity.negate();
+  }
+
+  public Module[] shuffleboardMethod(){
+    return modules;
   }
 }

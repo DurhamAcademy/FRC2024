@@ -17,12 +17,19 @@ import com.ctre.phoenix6.BaseStatusSignal;
 import com.ctre.phoenix6.StatusSignal;
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
 import com.ctre.phoenix6.controls.Follower;
+import com.ctre.phoenix6.controls.MusicTone;
 import com.ctre.phoenix6.hardware.TalonFX;
 import com.ctre.phoenix6.signals.NeutralModeValue;
 import edu.wpi.first.math.util.Units;
+import edu.wpi.first.units.Dimensionless;
+import edu.wpi.first.units.Measure;
+import edu.wpi.first.units.Velocity;
+
+import static edu.wpi.first.units.Units.Second;
+import static edu.wpi.first.units.Units.Value;
 
 public class ShooterIOTalonFX implements ShooterIO {
-  private static final double GEAR_RATIO = 1.0;
+  private static final double GEAR_RATIO = 1.5;
 
   private final TalonFX leader = new TalonFX(40);
   private final TalonFX follower = new TalonFX(41);
@@ -34,6 +41,7 @@ public class ShooterIOTalonFX implements ShooterIO {
   private final StatusSignal<Double> leaderDeviceTemp = leader.getDeviceTemp();
   private final StatusSignal<Double> leaderAncillaryDeviceTemp = leader.getAncillaryDeviceTemp();
   private final StatusSignal<Double> leaderProcessorTemp = leader.getProcessorTemp();
+  private final StatusSignal<Double> followerAppliedVolts = follower.getMotorVoltage();
   private final StatusSignal<Double> followerCurrent = follower.getStatorCurrent();
   private final StatusSignal<Double> followerDeviceTemp = follower.getDeviceTemp();
   private final StatusSignal<Double> followerAncillaryDeviceTemp = follower.getAncillaryDeviceTemp();
@@ -41,7 +49,10 @@ public class ShooterIOTalonFX implements ShooterIO {
 
   public ShooterIOTalonFX() {
     var config = new TalonFXConfiguration();
-    config.CurrentLimits.StatorCurrentLimit = 50.0;
+    config.Audio.AllowMusicDurDisable = true;
+    config.Audio.BeepOnConfig = false;
+    config.Audio.BeepOnBoot = false;
+    config.CurrentLimits.StatorCurrentLimit = 60.0;
     config.CurrentLimits.StatorCurrentLimitEnable = true;
     config.MotorOutput.NeutralMode = NeutralModeValue.Coast;
     leader.getConfigurator().apply(config);
@@ -67,10 +78,11 @@ public class ShooterIOTalonFX implements ShooterIO {
             leaderPosition, leaderVelocity, leaderAppliedVolts, leaderCurrent, followerCurrent, leaderDeviceTemp,
             leaderAncillaryDeviceTemp, leaderProcessorTemp, followerDeviceTemp, followerAncillaryDeviceTemp,
             followerProcessorTemp);
-    inputs.flywheelPositionRad = leaderPosition.getValueAsDouble();
+    inputs.flywheelPositionRad = leaderPosition.getValueAsDouble() * GEAR_RATIO;
     inputs.flywheelVelocityRadPerSec =
-        Units.rotationsToRadians(leaderVelocity.getValueAsDouble()) / GEAR_RATIO;
+        Units.rotationsToRadians(leaderVelocity.getValueAsDouble()) * GEAR_RATIO;
     inputs.flywheelAppliedVolts = leaderAppliedVolts.getValueAsDouble();
+    inputs.flywheelVoltages = new double[]{leaderAppliedVolts.getValueAsDouble(), followerAppliedVolts.getValueAsDouble()};
     inputs.flywheelCurrentAmps =
         new double[] {leaderCurrent.getValueAsDouble(), followerCurrent.getValueAsDouble()};
     inputs.flywheelTemperature
@@ -79,6 +91,11 @@ public class ShooterIOTalonFX implements ShooterIO {
             = new double[]{leaderAncillaryDeviceTemp.getValueAsDouble(), followerAncillaryDeviceTemp.getValueAsDouble()};
     inputs.flywheelProcessorTemperature
             = new double[]{leaderProcessorTemp.getValueAsDouble(), followerProcessorTemp.getValueAsDouble()};
+  }
+
+  public void playTone(Measure<Velocity<Dimensionless>> tone) {
+    var musicTone = new MusicTone(tone.in(Value.per(Second)));
+    leader.setControl(musicTone);
   }
 
   @Override

@@ -26,7 +26,7 @@ import frc.robot.Constants;
 import org.littletonrobotics.junction.Logger;
 
 public class Module {
-  private static final double WHEEL_RADIUS = Units.inchesToMeters(2.0);
+    private static final double WHEEL_RADIUS = Units.inchesToMeters(2.0) * 1.01105;
 
   private final ModuleIO io;
   private final ModuleIOInputsAutoLogged inputs = new ModuleIOInputsAutoLogged();
@@ -52,22 +52,22 @@ public class Module {
             //          case 0:
             //            driveFeedforward = new SimpleMotorFeedforward(0.01626, 0.82954, 0.14095);
             //            driveFeedback = new PIDController(0.21268, 0.0, 0.0);
-            //            break;
+            //            //            break;
             //          case 1:
             //            driveFeedforward = new SimpleMotorFeedforward(0.081671, 0.82741,
             // 0.081036);
-            //            driveFeedback = new PIDController(.09, 0.0, 0.0);
-            //            break;
+            //            driveFeedback = new PIDController(0.75099, 0.0, 0.0);
+            //            //            brea/**/k;
             //          case 2:
             //            driveFeedforward = new SimpleMotorFeedforward(0.082023, 0.81434, 0.12098);
             //            driveFeedback = new PIDController(0.096474, 0.0, 0.0);
-            //            break;
+            //            //            break;
             //          case 3:
             //            driveFeedforward = new SimpleMotorFeedforward(0.040377, 0.84332, 0.13969);
             //            driveFeedback = new PIDController(0.015087, 0.0, 0.0);
             //            break;
           default:
-            driveFeedforward = new SimpleMotorFeedforward(0.1, .83);
+            driveFeedforward = new SimpleMotorFeedforward(0.05, 0.8, .13);
             driveFeedback = new PIDController(0.05, 0.0, 0.0);
             break;
         }
@@ -108,7 +108,7 @@ public class Module {
     // Run closed loop turn control
     if (angleSetpoint != null) {
       io.setTurnVoltage(
-          turnFeedback.calculate(getAngle().getRadians(), angleSetpoint.getRadians()));
+              turnFeedback.calculate(inputs.turnAbsolutePosition.getRadians(), angleSetpoint.getRadians()));
 
       // Run closed loop drive control
       // Only allowed if closed loop turn control is running

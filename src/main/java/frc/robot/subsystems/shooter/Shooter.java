@@ -14,7 +14,6 @@
 package frc.robot.subsystems.shooter;
 
 import edu.wpi.first.math.MathUtil;
-import edu.wpi.first.math.controller.ArmFeedforward;
 import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.controller.ProfiledPIDController;
 import edu.wpi.first.math.controller.SimpleMotorFeedforward;
@@ -25,6 +24,7 @@ import edu.wpi.first.units.*;
 import edu.wpi.first.wpilibj.smartdashboard.Mechanism2d;
 import edu.wpi.first.wpilibj.smartdashboard.MechanismLigament2d;
 import edu.wpi.first.wpilibj.smartdashboard.MechanismRoot2d;
+import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants;
 import org.littletonrobotics.junction.AutoLogOutput;
@@ -33,8 +33,6 @@ import org.littletonrobotics.junction.Logger;
 import static edu.wpi.first.units.Units.*;
 
 public class Shooter extends SubsystemBase {
-    private static final double HOOD_ENCODER_ANGLE_TO_REAL_ANGLE_RATIO = 1.0;
-    private static final double HOOD_ENCODER_ANGLE_TO_REAL_ANGLE_OFFSET = 0.0;
     // the ratio for turning the shooter
 //    private static final double TURN_SHOOTER_RATIO = 5.4;
     private static double targetHoodAngleRad = 0.0;
@@ -42,16 +40,37 @@ public class Shooter extends SubsystemBase {
     private final HoodIO hoodIO;
     private final ShooterIOInputsAutoLogged shooterInputs = new ShooterIOInputsAutoLogged();
     private final HoodIOInputsAutoLogged hoodInputs = new HoodIOInputsAutoLogged();
-    private final ArmFeedforward hoodFF;
     private PIDController shooterVelocityFB;
-    private ProfiledPIDController shooterPositionFB;
-    private SimpleMotorFeedforward shooterVelocityFF;
+    double setpointRadPS = 0;
     private ProfiledPIDController hoodFB;
-    private boolean characterizeMode;
-    Mechanism2d mech1 = new Mechanism2d(3,3);
-    MechanismRoot2d root = mech1.getRoot("shooter", 0 ,0);
+    private SimpleMotorFeedforward shooterVelocityFF;
+    private boolean characterizeMode = false;
+    Mechanism2d mech1 = new Mechanism2d(3, 3);
+    MechanismRoot2d root = mech1.getRoot("shooter", 0, 0);
     MechanismLigament2d sState = root.append(new MechanismLigament2d("shooter", 0.14, -90.0));
 
+    private Rotation2d hoodOffsetAngle = new Rotation2d();
+
+    private boolean hasZeroed = false;
+
+    public boolean hasZeroed() {
+        return hasZeroed;
+    }
+
+    public void setHasZeroed(boolean hasZeroed) {
+        this.hasZeroed = hasZeroed;
+    }
+
+    private boolean hasReset = false;
+    private boolean hoodPIDEnabled = true;
+
+    public void setHoodPIDEnabled(boolean hoodPIDEnabled) {
+        this.hoodPIDEnabled = hoodPIDEnabled;
+    }
+
+    double previousAnglularVelocity = 0.0;
+
+    private boolean lastLimitSwitch = true;
 
     /**
      * Creates a new Shooter.
@@ -65,68 +84,115 @@ public class Shooter extends SubsystemBase {
         // separate robot with different tuning)
         switch (Constants.currentMode) {
             case REAL:
-                hoodFB = new ProfiledPIDController(2.0, 0.0, 0.0, new TrapezoidProfile.Constraints(1, 2));
-                if (shooterIO instanceof ShooterIOTalonFX) {
-                    shooterVelocityFB =
-                            new PIDController(0.0050812, 0.0, 0.0 /*, new TrapezoidProfile.Constraints(0.5, 99)*/);
-                    shooterVelocityFB.setTolerance(25);
-                    shooterPositionFB =
-                            new ProfiledPIDController(20.817, 0.0, 1.7743, new TrapezoidProfile.Constraints(RadiansPerSecond.of(90), RadiansPerSecond.per(Second).of(27.8736842105)));
-                    shooterPositionFB.setTolerance(0.26, 5);
-                    shooterVelocityFF = new SimpleMotorFeedforward(0.10548, 0.11959, 0.066251);
-                }
-                // FIXME: characterize real robot
-
-                hoodFF = new ArmFeedforward(0.0, 0.0, 0);
+                hoodFB = new ProfiledPIDController(6.0, 0.0, .25, new TrapezoidProfile.Constraints(1000.0 / 8.0, 7600.0 / 128.0));
+                hoodFB.setTolerance(0.1);
+                shooterVelocityFB =
+                        new PIDController(0.0079065 * 5, 0.0, 0.0);
+                shooterVelocityFB.setTolerance(218.69 * .25); // this is the pid max velocity error (rad/sec)
+                shooterVelocityFF = new SimpleMotorFeedforward(.58287, .013052, .0038592);
                 break;
             case REPLAY:
-                hoodFF = new ArmFeedforward(0.10548, 0.05, 0);
                 hoodFB = new ProfiledPIDController(4.0, 0.0, 0.0, new TrapezoidProfile.Constraints(1, 2));
 
                 shooterVelocityFB =
                         new PIDController(0.0050812, 0.0, 0.0 /*, new TrapezoidProfile.Constraints(0.5, 99)*/);
                 shooterVelocityFB.setTolerance(25);
-                shooterPositionFB =
-                        new ProfiledPIDController(20.817, 0.0, 1.7743, new TrapezoidProfile.Constraints(RadiansPerSecond.of(90), RadiansPerSecond.per(Second).of(27.8736842105)));
-                shooterPositionFB.setTolerance(0.26, 5);
                 shooterVelocityFF = new SimpleMotorFeedforward(0.10548, 0.11959, 0.066251);
                 break;
             case SIM:
-                hoodFF = new ArmFeedforward(0.0, 0.0, 0.03);
                 shooterVelocityFB =
                         new PIDController(0.5, 0.0, 0.0 /*, new TrapezoidProfile.Constraints(0.5, 99)*/);
                 hoodFB = new ProfiledPIDController(4.0, 0.0, 0.0, new TrapezoidProfile.Constraints(1, 2));
                 shooterVelocityFF = new SimpleMotorFeedforward(0, 0);
                 break;
             default:
-                hoodFF = new ArmFeedforward(0.0, 0.0, 0);
                 break;
         }
-
     }
 
     @Override
     public void periodic() {
         shooterIO.updateInputs(shooterInputs);
+        Logger.processInputs("Shooter/Flywheel", shooterInputs);
+
         hoodIO.updateInputs(hoodInputs);
-        if (characterizeMode) {
-            shooterIO.setFlywheelVoltage(
-                    shooterVelocityFB.calculate(shooterInputs.flywheelVelocityRadPerSec)
-                            + this.shooterVelocityFF.calculate(shooterInputs.flywheelVelocityRadPerSec));
+        Logger.processInputs("Shooter/Hood", hoodInputs);
+
+
+        if (!hasReset) {
+            resetToStartingAngle();
+            hoodFB.reset(hoodInputs.motorPositionRad - hoodOffsetAngle.getRadians());
+            hasReset = true;
         }
-        Logger.recordOutput("targetHoodAngle", targetHoodAngleRad);
-        Logger.recordOutput("hoodInputs.hoodPositionRad", hoodInputs.hoodPositionRad);
-        Logger.recordOutput("pidStuff", "" + hoodFB.getD() + " " + hoodFB.getI() + " " + hoodFB.getP());
-        hoodIO.setVoltage(
-                hoodFB.calculate(hoodInputs.hoodPositionRad, targetHoodAngleRad)
-                /*+ hoodFF.calcula te(hoodFB.getSetpoint().position, hoodFB.getSetpoint().velocity)*/);
-//        targetHoodAngleRad =
-//                hoodInputs.hoodPositionRad * HOOD_ENCODER_ANGLE_TO_REAL_ANGLE_RATIO
-//                        + HOOD_ENCODER_ANGLE_TO_REAL_ANGLE_OFFSET;
+
+        if (!characterizeMode || setpointRadPS != 0.0) {
+            if (setpointRadPS == 0.0) shooterIO.setFlywheelVoltage(0.0);
+            else
+                shooterIO.setFlywheelVoltage(
+                        shooterVelocityFB.calculate(shooterInputs.flywheelVelocityRadPerSec, setpointRadPS)
+                                + this.shooterVelocityFF.calculate(shooterVelocityFB.getSetpoint()));
+        } else if (setpointRadPS == 0.0) shooterIO.setFlywheelVoltage(0.0);
+        Command currentCommand = getCurrentCommand();
+        if (currentCommand != null)
+            Logger.recordOutput("Shooter/Current Command", currentCommand.getName());
+        else Logger.recordOutput("Shooter/Current Command", "null");
+        Logger.recordOutput("Shooter/Shooter Speed", setpointRadPS);
+        Logger.recordOutput("Shooter/Hood/Target Hood Angle", targetHoodAngleRad);
+        Logger.recordOutput("Shooter/Hood/Inputs/Offset Motor Position Radians", hoodInputs.motorPositionRad - hoodOffsetAngle.getRadians());
+        Logger.recordOutput("Shooter/Hood/Offset Radians", hoodOffsetAngle.getRadians());
+        Logger.recordOutput("Shooter/Hood/Beam Break Status", hoodInputs.islimitSwitchPressed);
+
+        previousAnglularVelocity = hoodInputs.hoodVelocityRadPerSec;
+        if (previousAnglularVelocity != 0.0)
+            Logger.recordOutput(
+                    "Shooter/Hood Acceleration",
+                    RadiansPerSecond.of(previousAnglularVelocity - hoodInputs.hoodVelocityRadPerSec).per(Seconds.of(0.02)));
+        if (hoodPIDEnabled) {
+            hoodIO.setVoltage(
+                    hoodFB.calculate(hoodInputs.motorPositionRad - hoodOffsetAngle.getRadians(), targetHoodAngleRad)
+            );
+        }
         sState.setAngle(hoodInputs.hoodPositionRad);
-        Logger.processInputs("Shooter", shooterInputs);
-        Logger.processInputs("Hood", hoodInputs);
-        Logger.recordOutput("shooter", mech1);
+        Logger.recordOutput("Shooter/Mechanism", mech1);
+
+        if (hoodInputs.islimitSwitchPressed != lastLimitSwitch) {
+            resetToLimitAngle();
+        }
+        lastLimitSwitch = hoodInputs.islimitSwitchPressed;
+    }
+
+    public void resetToLimitAngle(){
+        hoodOffsetAngle = new Rotation2d(hoodInputs.motorPositionRad - 1.98875);
+        hoodFB.reset(hoodInputs.motorPositionRad - 1.98875);
+    }
+
+    public void resetToStartingAngle() {
+        hoodOffsetAngle = new Rotation2d(hoodInputs.motorPositionRad - 1.98542);
+        hoodFB.reset(hoodInputs.motorPositionRad - hoodOffsetAngle.getRadians());
+    }
+
+    public void resetWhileZeroing() {
+        hoodOffsetAngle = new Rotation2d(hoodInputs.motorPositionRad - 2.225);
+        hoodFB.reset(hoodInputs.motorPositionRad - hoodOffsetAngle.getRadians());
+    }
+
+    public boolean isStalled() {
+        return hoodInputs.isStalled;
+    }
+
+    @AutoLogOutput
+    public boolean flywheelAtSetpoint() {
+        return this.shooterVelocityFB.atSetpoint();
+    }
+
+    @AutoLogOutput
+    public boolean hoodAtSetpoint() {
+        return this.hoodFB.atGoal();
+    }
+
+    @AutoLogOutput
+    public boolean allAtSetpoint() {
+        return flywheelAtSetpoint() && hoodAtSetpoint();
     }
 
     public void setCharacterizeMode(boolean on) {
@@ -138,25 +204,6 @@ public class Shooter extends SubsystemBase {
      */
     public void shooterRunVolts(Measure<Voltage> voltage) {
         shooterIO.setFlywheelVoltage(voltage.in(Volts));
-    }
-
-    /**
-     * Run open loop at the specified voltage.
-     */
-    public void shooterRunVolts(double volts) {
-        shooterIO.setFlywheelVoltage(volts);
-    }
-
-    public Measure<Angle> getCharacterizationPosition() {
-        return Radians.of(this.shooterInputs.flywheelPositionRad);
-    }
-
-    public Measure<Velocity<Angle>> getCharacterizationVelocity() {
-        return RadiansPerSecond.of(this.shooterInputs.flywheelVelocityRadPerSec);
-    }
-
-    public Measure<Current> getCharacterizationCurrent() {
-        return Amps.of(this.shooterInputs.flywheelCurrentAmps[0]);
     }
 
     public Measure<Voltage> getCharacterizationAppliedVolts() {
@@ -173,7 +220,7 @@ public class Shooter extends SubsystemBase {
     public void shooterRunVelocity(double velocityRPM) {
         var velocityRadPerSec = Units.rotationsPerMinuteToRadiansPerSecond(velocityRPM);
 
-        shooterVelocityFB.setSetpoint(velocityRadPerSec);
+        setpointRadPS = velocityRadPerSec;
 
         // Log flywheel setpoint
         Logger.recordOutput("Shooter/SetpointRPM", velocityRPM);
@@ -201,11 +248,45 @@ public class Shooter extends SubsystemBase {
     /**
      * Returns the current velocity in radians per second.
      */
-    public double getShooterCharacterizationVelocity() {
-        return shooterInputs.flywheelVelocityRadPerSec;
+    public Measure<Velocity<Angle>> getCharacterizationVelocity() {
+        return RadiansPerSecond.of(shooterInputs.flywheelVelocityRadPerSec);
     }
 
-    public void setTargetShooterAngleRad(Rotation2d anglediff) {
-        targetHoodAngleRad = MathUtil.clamp(anglediff.getRadians(), -2, 2);
+    /**
+     * Returns the current velocity in radians per second.
+     */
+    public Measure<Angle> getCharacterizationPosition() {
+        return Radians.of(shooterInputs.flywheelPositionRad);
+    }
+
+    /**
+     * Returns the current velocity in radians per second.
+     */
+    public Measure<Current> getCharacterizationCurrent() {
+        var sum = 0.0;
+        for (double flywheelCurrentAmp : shooterInputs.flywheelCurrentAmps) sum += flywheelCurrentAmp;
+
+        sum = (shooterInputs.flywheelCurrentAmps.length > 0) ? sum / shooterInputs.flywheelCurrentAmps.length : 0.0;
+        return Amps.of(sum);
+    }
+
+    public void setTargetShooterAngle(Rotation2d angle) {
+        targetHoodAngleRad = MathUtil.clamp(angle.getRadians(), -2, 2);
+    }
+
+    public Measure<Voltage> getHoodCharacterizationVoltage() {
+        return Volts.of(hoodInputs.hoodAppliedVolts);
+    }
+
+    public Measure<Angle> getHoodCharacterizationPosition() {
+        return Radians.of(hoodInputs.hoodPositionRad);
+    }
+
+    public Measure<Velocity<Angle>> getHoodCharacterizationVelocity() {
+        return RadiansPerSecond.of(hoodInputs.hoodVelocityRadPerSec);
+    }
+
+    public void runHoodVoltage(Measure<Voltage> voltageMeasure) {
+        hoodRunVolts(voltageMeasure.in(Volts));
     }
 }
