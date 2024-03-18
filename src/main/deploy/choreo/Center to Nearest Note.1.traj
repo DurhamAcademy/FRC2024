@@ -1,0 +1,91 @@
+{
+  "samples": [
+    {
+      "x": 1.375,
+      "y": 5.55,
+      "heading": 3.14159,
+      "angularVelocity": -3.33413286990162e-36,
+      "velocityX": 5.3037913697903183e-20,
+      "velocityY": -1.6227512319841133e-41,
+      "timestamp": 0
+    },
+    {
+      "x": 1.472222230722545,
+      "y": 5.55,
+      "heading": 3.14159,
+      "angularVelocity": 1.263722013158536e-24,
+      "velocityX": 1.0600373383103627,
+      "velocityY": 1.3155434926132695e-28,
+      "timestamp": 0.0917158549127256
+    },
+    {
+      "x": 1.6666666836672632,
+      "y": 5.55,
+      "heading": 3.14159,
+      "angularVelocity": -8.992323006725256e-25,
+      "velocityX": 2.1200745839396498,
+      "velocityY": 2.6310994421428404e-28,
+      "timestamp": 0.1834317098254512
+    },
+    {
+      "x": 1.9583333163327452,
+      "y": 5.55,
+      "heading": 3.14159,
+      "angularVelocity": 5.013235623332649e-25,
+      "velocityX": 3.1801113661636378,
+      "velocityY": 3.946623622087604e-28,
+      "timestamp": 0.2751475647381768
+    },
+    {
+      "x": 2.152777769277674,
+      "y": 5.55,
+      "heading": 3.14159,
+      "angularVelocity": 5.718257716053933e-24,
+      "velocityX": 2.1200745839396493,
+      "velocityY": 2.631068437135462e-28,
+      "timestamp": 0.3668634196509024
+    },
+    {
+      "x": 2.25,
+      "y": 5.55,
+      "heading": 3.14159,
+      "angularVelocity": 2.8064674872779512e-24,
+      "velocityX": 1.0600373383103627,
+      "velocityY": 1.3155359987374692e-28,
+      "timestamp": 0.458579274563628
+    },
+    {
+      "x": 2.25,
+      "y": 5.55,
+      "heading": 3.14159,
+      "angularVelocity": 7.691706203470227e-36,
+      "velocityX": -1.3491885687622248e-19,
+      "velocityY": 1.2136452823097147e-40,
+      "timestamp": 0.5502951294763536
+    }
+  ],
+  "eventMarkers": [
+    {
+      "timestamp": 0.20029512947635364,
+      "command": {
+        "type": "parallel",
+        "data": {
+          "commands": [
+            {
+              "type": "named",
+              "data": {
+                "name": "Intake Note"
+              }
+            },
+            {
+              "type": "named",
+              "data": {
+                "name": "Shoot When Ready"
+              }
+            }
+          ]
+        }
+      }
+    }
+  ]
+}

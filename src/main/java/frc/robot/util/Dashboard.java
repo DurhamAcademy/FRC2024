@@ -30,6 +30,7 @@ public class Dashboard {
                 .withWidget(BuiltInWidgets.kComboBoxChooser)
                 .withSize(2, 1)
                 .withPosition(2, 0);
+        main.add("Enable Smart Commands", )
 //        main.addCamera("Camera feed", "ShootSideCamera");
         SmartDashboard.putData("Swerve Drive", builder -> {
             builder.setSmartDashboardType("SwerveDrive");
