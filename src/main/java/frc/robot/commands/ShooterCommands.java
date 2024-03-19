@@ -112,26 +112,31 @@ public class ShooterCommands {
         Debouncer zeroStateDetection = new Debouncer(.25, Debouncer.DebounceType.kRising);
         return race(
                 run(() -> {
+                    shooter.zeroMode = true;
                     shooter.setHoodPIDEnabled(false);
                     shooter.hoodRunVolts(2);
                 }, shooter),
                 sequence(
-                        waitUntil(() -> !zeroStateDetection.calculate(
+                        waitUntil(() -> !(zeroStateDetection.calculate(
                                 shooter.isStalled()
                                         || (abs(
                                         shooter.getHoodCharacterizationVelocity()
-                                                .in(RadiansPerSecond)) > 1))),
+                                                .in(RadiansPerSecond)) > 1)))),
                         runOnce(shooter::resetWhileZeroing),
                         runOnce(() -> shooter.setHasZeroed(true))
                 )
         )
                 .beforeStarting(print("Starting Hood Zero Sequence"))
-                .withTimeout(1.5)
+                .withTimeout(4.0)
                 .finallyDo(() -> {
+                    shooter.zeroMode = false;
                     System.out.println("Finished Hood Zero Sequence");
                     shooter.setHoodPIDEnabled(true);
                 })
-                .handleInterrupt(() -> shooter.setHoodPIDEnabled(true))
+                .handleInterrupt(() -> {
+                    shooter.zeroMode = false;
+                    shooter.setHoodPIDEnabled(true);
+                })
                 .withName("Simple Hood Zero");
     }
 

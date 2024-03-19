@@ -48,11 +48,11 @@ public final class Constants {
                     new Translation3d(
                             inchesToMeters(10.18),
                             inchesToMeters(7.074),
-                            inchesToMeters(8.53) - 0.035
+                            inchesToMeters(8.53 + 2.5)
                     ),
                     new Rotation3d(
                             0,
-                            degreesToRadians(55 - 90),
+                            degreesToRadians(60 - 90),
                             degreesToRadians(3)
                     )
             );

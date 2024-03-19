@@ -14,6 +14,8 @@
 package frc.robot.subsystems.drive;
 
 import com.pathplanner.lib.auto.AutoBuilder;
+import com.pathplanner.lib.pathfinding.LocalADStar;
+import com.pathplanner.lib.pathfinding.Pathfinding;
 import com.pathplanner.lib.util.HolonomicPathFollowerConfig;
 import com.pathplanner.lib.util.PIDConstants;
 import com.pathplanner.lib.util.PathPlannerLogging;
@@ -88,6 +90,8 @@ public class Drive extends SubsystemBase {
   Rotation2d noGyroRotation;
   PIDConstants rotationPID = new PIDConstants(0.5, .01);
   private Pose2d previousPose = new Pose2d();
+  double timestampSeconds = 0.0;
+
   public Drive(
       GyroIO gyroIO,
       VisionIO visionIO,
@@ -115,7 +119,7 @@ public class Drive extends SubsystemBase {
             DriverStation.getAlliance().isPresent()
                 && DriverStation.getAlliance().get() == Alliance.Red,
         this);
-//    Pathfinding.setPathfinder(new LocalADStarAK());
+    Pathfinding.setPathfinder(new LocalADStar());
     //noinspection ToArrayCallWithZeroLengthArrayArgument
     PathPlannerLogging.setLogActivePathCallback(
         (activePath) ->
@@ -141,8 +145,6 @@ public class Drive extends SubsystemBase {
     noGyroPoseEstimation = null;
     noGyroRotation = null;
   }
-
-
 
   public void periodic() {
     previousPose = pose;
@@ -223,48 +225,47 @@ public class Drive extends SubsystemBase {
 //    poseEstimator.addVisionMeasurement(pose.minus(new Transform2d(gyroInputs.accelY * 0.02 * 0.02 - twistPerDt.getX() * .02, gyroInputs.accelX * 0.02 * 0.02 - twistPerDt.getY() * .02, Rotation2d.fromDegrees(0.0))), new Matrix<N3, N1>(Nat.N3(), Nat.N1(), new double[]{0.075, .075, 100.0}));// fixme: add acceleration from gyro
 
     Optional<EstimatedRobotPose> estPose = photonPoseEstimator.update(visionInputs.cameraResult);
-    estPose.ifPresent(
-            estimatedRobotPose -> {
-              Logger.recordOutput("estRoPose", estimatedRobotPose.estimatedPose);
-              Pose2d pose2d = estimatedRobotPose.estimatedPose.toPose2d();
-              var shouldUse = true;
-              for (PhotonTrackedTarget tag : estimatedRobotPose.targetsUsed) {
-                if (tag.getPoseAmbiguity() == -1) shouldUse = false;
-              }
-              if (
-                      shouldUse && ((!DriverStation.isFMSAttached()) ||
-                              ((estimatedRobotPose.estimatedPose.getX() <= 16.5) &&
-                              (estimatedRobotPose.estimatedPose.getX() > 0) &&
-                                      (estimatedRobotPose.estimatedPose.getZ() <= 1) &&
-                                      (estimatedRobotPose.estimatedPose.getZ() > -1) &&
-                              (estimatedRobotPose.estimatedPose.getY() <= 8.2) &&
-                                      (estimatedRobotPose.estimatedPose.getY() > 0)))
-              ) // only add it if it's less than 1 meter and in the field
-              {
-                Matrix<N3, N1> visionMatrix;
-                switch (estimatedRobotPose.targetsUsed.size()) {
-                  case 0:
-                    visionMatrix = new Matrix<>(Nat.N3(), Nat.N1(), new double[]{16, 16, 32});
-                  case 1:
+    if (estPose.isPresent() && (timestampSeconds != estPose.get().timestampSeconds)) {
+      estPose.ifPresent(
+              estimatedRobotPose -> {
+                Logger.recordOutput("estRoPose", estimatedRobotPose.estimatedPose);
+                Pose2d pose2d = estimatedRobotPose.estimatedPose.toPose2d();
+                var shouldUse = true;
+                if (
+                        shouldUse && ((!DriverStation.isFMSAttached()) ||
+                                ((estimatedRobotPose.estimatedPose.getX() <= 16.5) &&
+                                        (estimatedRobotPose.estimatedPose.getX() > 0) &&
+                                        (estimatedRobotPose.estimatedPose.getZ() <= 1) &&
+                                        (estimatedRobotPose.estimatedPose.getZ() > -1) &&
+                                        (estimatedRobotPose.estimatedPose.getY() <= 8.2) &&
+                                        (estimatedRobotPose.estimatedPose.getY() > 0)))
+                ) // only add it if it's less than 1 meter and in the field
+                {
+                  Matrix<N3, N1> visionMatrix;
+                  switch (estimatedRobotPose.targetsUsed.size()) {
+                    case 0:
+                      visionMatrix = new Matrix<>(Nat.N3(), Nat.N1(), new double[]{16, 16, 32});
+                    case 1:
 
-                    var mult = estimatedRobotPose.targetsUsed.get(0).getPoseAmbiguity() * 25;
-                    if (
-                            (pose.getX() <= 16.5) &&
-                                    (pose.getX() > 0) &&
-                                    (pose.getY() <= 8.2) &&
-                                    (pose.getY() > 0)
-                    ) mult = mult / 4;
-                    visionMatrix = new Matrix<>(Nat.N3(), Nat.N1(), new double[]{8 * mult, 8 * mult, 12 * mult});
-                    break;
-                  case 2:
-                    visionMatrix = new Matrix<>(Nat.N3(), Nat.N1(), new double[]{.75, .75, 2});
-                  default:
-                    visionMatrix = new Matrix<>(Nat.N3(), Nat.N1(), new double[]{0.05, 0.05, 0.2});
+                      var mult = estimatedRobotPose.targetsUsed.get(0).getPoseAmbiguity() * 25;
+                      if (
+                              (pose.getX() <= 16.5) &&
+                                      (pose.getX() > 0) &&
+                                      (pose.getY() <= 8.2) &&
+                                      (pose.getY() > 0)
+                      ) mult = mult / 4;
+                      visionMatrix = new Matrix<>(Nat.N3(), Nat.N1(), new double[]{8 * mult, 8 * mult, 12 * mult});
+                      break;
+                    case 2:
+                      visionMatrix = new Matrix<>(Nat.N3(), Nat.N1(), new double[]{1.75, 1.75, 3});
+                    default:
+                      visionMatrix = new Matrix<>(Nat.N3(), Nat.N1(), new double[]{0.05, 0.05, 0.2});
+                  }
+                  poseEstimator.addVisionMeasurement(pose2d, estimatedRobotPose.timestampSeconds, visionMatrix);
+//                noGyroPoseEstimation.addVisionMeasurement(pose2d, estimatedRobotPose.timestampSeconds, visionMatrix);
                 }
-                poseEstimator.addVisionMeasurement(pose2d, estimatedRobotPose.timestampSeconds, visionMatrix);
-                noGyroPoseEstimation.addVisionMeasurement(pose2d, estimatedRobotPose.timestampSeconds, visionMatrix);
-              }
-            });
+              });
+    }
     getTwistPerDt();
     getTagCount();
   }

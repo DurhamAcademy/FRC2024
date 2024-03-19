@@ -62,6 +62,10 @@ public class Shooter extends SubsystemBase {
         this.hasZeroed = hasZeroed;
     }
 
+    public boolean getLimitSwitch() {
+        return hoodInputs.islimitSwitchPressed;
+    }
+
     private boolean hasReset = false;
     private boolean hoodPIDEnabled = true;
 

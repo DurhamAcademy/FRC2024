@@ -78,7 +78,7 @@ public class RobotContainer {
     private final Intake intake;
     private final Climb climb;
     private final VisionIOReal vision;
-    private final Dashboard dashboard;
+    //    private final Dashboard dashboard;
     private final LEDs leds;
     private final ControllerRumble driverRumble = new ControllerRumble(0);
     private final ControllerRumble operatorRumble = new ControllerRumble(1);
@@ -213,7 +213,7 @@ private final CommandXboxController driverController = new CommandXboxController
         );
         autoChooser = new LoggedDashboardChooser<>("Auto Choices", AutoBuilder.buildAutoChooser());
         vision = new VisionIOReal("ShootSideCamera");
-        dashboard = new Dashboard(autoChooser, drive, shooter, feeder, intake, vision);
+//        dashboard = new Dashboard(autoChooser, drive, shooter, feeder, intake, vision, this.smartCommandsMode);
 
         this.reactions = new ReactionObject(
                 new Trigger(feeder::getIntakeBeamBroken),
