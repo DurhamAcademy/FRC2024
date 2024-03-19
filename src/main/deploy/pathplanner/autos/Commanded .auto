@@ -2,10 +2,10 @@
   "version": 1.0,
   "startingPose": {
     "position": {
-      "x": 1.375,
-      "y": 5.55
+      "x": 1.3321385383605957,
+      "y": 5.557341575622559
     },
-    "rotation": 179.99984796050427
+    "rotation": 180.0
   },
   "command": {
     "type": "sequential",
@@ -41,12 +41,6 @@
           "data": {
             "commands": [
               {
-                "type": "path",
-                "data": {
-                  "pathName": "Center to Nearest Note"
-                }
-              },
-              {
                 "type": "named",
                 "data": {
                   "name": "Intake"
@@ -56,6 +50,12 @@
                 "type": "named",
                 "data": {
                   "name": "Ready Shooter"
+                }
+              },
+              {
+                "type": "path",
+                "data": {
+                  "pathName": "ryan_test.1"
                 }
               }
             ]
