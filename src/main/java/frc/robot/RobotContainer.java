@@ -132,8 +132,7 @@ private final CommandXboxController driverController = new CommandXboxController
                                 new ModuleIOSim(),
                                 new ModuleIOSim(),
                                 new ModuleIOSim());
-                shooter = new Shooter(new ShooterIOSim(), new HoodIO() {
-                });
+                shooter = new Shooter(new ShooterIOSim(), new HoodIO() {});
                 feeder = new Feeder(new FeederIOSim());
                 intake = new Intake(new IntakeIOSim());
                 climb = new Climb(new ClimbIOSim());
@@ -173,16 +172,16 @@ private final CommandXboxController driverController = new CommandXboxController
                         driverController::getLeftY,
                         driverController::getLeftX,
                         driverController::getRightX);
-        NamedCommands.registerCommand(
-                "AutoShoot",
-                parallel(
-                        ShooterCommands.autoAim(shooter, drive),
-                        sequence(
-                                waitUntil(shooter::allAtSetpoint),
-                                feedToShooter(feeder)
-                        )
-                )
-        );
+//        NamedCommands.registerCommand(
+//                "AutoShoot",
+//                parallel(
+//                        ShooterCommands.autoAim(shooter, drive),
+//                        sequence(
+//                                waitUntil(shooter::allAtSetpoint),
+//                                feedToShooter(feeder)
+//                        )
+//                )
+//        );
         NamedCommands.registerCommand(
                 "Ready Shooter",
                 autoAim(shooter, drive)
@@ -204,8 +203,12 @@ private final CommandXboxController driverController = new CommandXboxController
                         .deadlineWith(ShooterCommands.JustShoot(shooter))
                         .withTimeout(8.0));
         NamedCommands.registerCommand(
-                "Intake",
+                "Intake Note",
                 smartIntakeCommand(intake, feeder)
+        );
+        NamedCommands.registerCommand(
+                "Intake",
+                intakeCommand(intake)
         );
         NamedCommands.registerCommand(
                 "Drive Backwards", none()
@@ -279,16 +282,17 @@ private final CommandXboxController driverController = new CommandXboxController
                         .leftTrigger()
                         .whileTrue(
                                 parallel(
-                                        sequence(
-                                                intakeCommand(intake).until(feeder::getIntakeBeamBroken),
-                                                IntakeCommands.flushIntake(intake)
-                                        ),
+                                        smartIntakeCommand(intake, feeder),
                                         feedToBeamBreak(feeder)
                                 ))
                         .onFalse(
-                                race(
-                                        feedToBeamBreak(feeder).withTimeout(5),
-                                        IntakeCommands.flushIntakeWithoutTheArmExtendedOutward(intake)
+                                either(
+                                        none(),
+                                        race(
+                                                feedToBeamBreak(feeder).withTimeout(5),
+                                                IntakeCommands.flushIntakeWithoutTheArmExtendedOutward(intake)
+                                        ),
+                                        feeder::getBeamBroken
                                 )
                         );
                 driverController.rightBumper().whileTrue(IntakeCommands.idleCommand(intake));
