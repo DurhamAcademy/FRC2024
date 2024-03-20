@@ -2,10 +2,10 @@
   "version": 1.0,
   "startingPose": {
     "position": {
-      "x": 0.5935385227203369,
-      "y": 6.816552639007568
+      "x": 0.7084318399429321,
+      "y": 6.756027698516846
     },
-    "rotation": -121.75948152100482
+    "rotation": -122.00540420769615
   },
   "command": {
     "type": "sequential",
@@ -20,7 +20,7 @@
         {
           "type": "path",
           "data": {
-            "pathName": "FriendStep1.1"
+            "pathName": "Intake Readying"
           }
         },
         {
