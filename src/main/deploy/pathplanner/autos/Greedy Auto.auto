@@ -2,10 +2,10 @@
   "version": 1.0,
   "startingPose": {
     "position": {
-      "x": 0.7084318399429321,
-      "y": 6.756027698516846
+      "x": 1.3906104564666748,
+      "y": 5.547595977783203
     },
-    "rotation": -122.00540420769615
+    "rotation": -179.65485089877245
   },
   "command": {
     "type": "sequential",
@@ -18,9 +18,34 @@
           }
         },
         {
+          "type": "parallel",
+          "data": {
+            "commands": [
+              {
+                "type": "named",
+                "data": {
+                  "name": "Intake"
+                }
+              },
+              {
+                "type": "path",
+                "data": {
+                  "pathName": "Greedy.1"
+                }
+              }
+            ]
+          }
+        },
+        {
+          "type": "named",
+          "data": {
+            "name": "Shoot"
+          }
+        },
+        {
           "type": "path",
           "data": {
-            "pathName": "Intake Readying"
+            "pathName": "Greedy.2"
           }
         },
         {
@@ -36,7 +61,7 @@
               {
                 "type": "path",
                 "data": {
-                  "pathName": "FriendStep1.2"
+                  "pathName": "Greedy.3"
                 }
               }
             ]
@@ -46,12 +71,6 @@
           "type": "named",
           "data": {
             "name": "Shoot"
-          }
-        },
-        {
-          "type": "path",
-          "data": {
-            "pathName": "FriendStep1.3"
           }
         },
         {
@@ -67,7 +86,7 @@
               {
                 "type": "path",
                 "data": {
-                  "pathName": "FriendStep1.4"
+                  "pathName": "Greedy.4"
                 }
               }
             ]
@@ -77,12 +96,6 @@
           "type": "named",
           "data": {
             "name": "Shoot"
-          }
-        },
-        {
-          "type": "path",
-          "data": {
-            "pathName": "FriendStep1.5"
           }
         }
       ]
