@@ -73,33 +73,5 @@
       "timestamp": 0.6668614295796236
     }
   ],
-  "eventMarkers": [
-    {
-      "timestamp": 0,
-      "command": {
-        "type": "named",
-        "data": {
-          "name": "Intake Note"
-        }
-      }
-    },
-    {
-      "timestamp": 0,
-      "command": {
-        "type": "named",
-        "data": {
-          "name": "Ready Shooter"
-        }
-      }
-    },
-    {
-      "timestamp": 0.6668614295796236,
-      "command": {
-        "type": "named",
-        "data": {
-          "name": "Shoot When Ready"
-        }
-      }
-    }
-  ]
+  "eventMarkers": []
 }
