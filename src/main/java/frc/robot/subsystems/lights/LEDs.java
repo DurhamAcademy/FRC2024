@@ -8,16 +8,20 @@ import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import com.ctre.phoenix.led.Animation;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
+import frc.robot.commands.LEDCommands;
 import frc.robot.subsystems.feeder.Feeder;
 import frc.robot.subsystems.shooter.Shooter;
 import java.util.function.BooleanSupplier;
 
 
 public class LEDs extends SubsystemBase {
-
-    Shooter shooter;
     public static final int stripLength = 16;
     public static final int stripCount = 4;
+    Trigger beamBroken;
+    Trigger maxVel;
+    Trigger startShooter;
+    LEDs led;
+
 
 
 
@@ -48,17 +52,11 @@ public class LEDs extends SubsystemBase {
 
 
 
-
-
-
-
-
-
-
-
     @Override
     public void periodic() {
-
+        beamBroken.and(maxVel).onTrue(LEDCommands.hasNoteCommand(led));
+        maxVel.onTrue(LEDCommands.shooterMaxVel(led));
+        startShooter.onTrue(LEDCommands.shooterVel(led));
     }
 
     public CANdle getCandle() {
