@@ -28,6 +28,9 @@ public class IntakeCommands {
                 safeIntakeCommand(intake, feeder)
                         .until(feeder::getIntakeBeamBroken),
                 intakeCommand(intake)
+                        .withTimeout(0.2)
+                        .onlyWhile(feeder::getIntakeBeamBroken),
+                IntakeCommands.flushIntakeWithoutTheArmExtendedOutward(intake)
                         .onlyWhile(feeder::getIntakeBeamBroken)
         ).onlyIf(()-> !(feeder.getIntakeBeamBroken() || feeder.getBeamBroken()));
     }

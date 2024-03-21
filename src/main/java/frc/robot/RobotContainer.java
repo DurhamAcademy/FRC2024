@@ -185,6 +185,7 @@ private final CommandXboxController driverController = new CommandXboxController
         NamedCommands.registerCommand(
                 "Ready Shooter",
                 autoAim(shooter, drive)
+                        .withTimeout(3.0)
         );
         NamedCommands.registerCommand(
                 "Shoot When Ready",
@@ -192,6 +193,7 @@ private final CommandXboxController driverController = new CommandXboxController
                         waitUntil(() -> (shooter.allAtSetpoint() && (shooter.getShooterVelocityRPM() > 1000))),
                         feedToShooter(feeder)
                 )
+                        .withTimeout(3.0)
         );
         NamedCommands.registerCommand(
                 "Shoot",
@@ -205,10 +207,12 @@ private final CommandXboxController driverController = new CommandXboxController
         NamedCommands.registerCommand(
                 "Intake Note",
                 smartIntakeCommand(intake, feeder)
+                        .withTimeout(1.0)
         );
         NamedCommands.registerCommand(
                 "Intake",
                 intakeCommand(intake)
+                        .withTimeout(1.0)
         );
         NamedCommands.registerCommand(
                 "Drive Backwards", none()
