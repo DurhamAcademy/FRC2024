@@ -1,14 +1,14 @@
 package frc.robot.commands;
 
-import com.ctre.phoenix.led.FireAnimation;
-import com.ctre.phoenix.led.RainbowAnimation;
-import com.ctre.phoenix.led.RgbFadeAnimation;
-import com.ctre.phoenix.led.TwinkleAnimation;
+import com.ctre.phoenix.led.*;
 import edu.wpi.first.wpilibj2.command.Command;
+import edu.wpi.first.wpilibj2.command.button.Trigger;
+import frc.robot.subsystems.feeder.Feeder;
 import frc.robot.subsystems.lights.LEDs;
+import frc.robot.subsystems.shooter.Shooter;
 
 import static com.ctre.phoenix.led.TwinkleAnimation.TwinklePercent.Percent30;
-import static edu.wpi.first.wpilibj2.command.Commands.startEnd;
+import static edu.wpi.first.wpilibj2.command.Commands.*;
 import static frc.robot.subsystems.lights.LEDs.candleLength;
 import static frc.robot.subsystems.lights.LEDs.stripLength;
 
@@ -29,6 +29,26 @@ public class LEDCommands {
                 leds
         );
     }
+
+    public static Command hasNoteCommand(LEDs leds){
+        var candle = leds.getCandle();
+        return runOnce(() -> candle.setLEDs(0, 255, 0));
+    }
+    public static Command shooterMaxVel(LEDs leds){
+        var candle = leds.getCandle();
+        return runOnce(() -> candle.animate(new StrobeAnimation(0, 255, 0 , 100, 1,8,0))); //when the flywheel at max velocity
+    }
+    public static Command shooterVel(LEDs leds){
+        var candle = leds.getCandle();
+        return runOnce(() -> candle.animate(new StrobeAnimation(255,255,0,100,1,8,0))); //when the flywheel is starting to spin to shoot, but not quite ready
+    }
+
+
+
+
+
+
+
 
     public static Command flameCommand(LEDs leds) {
         return flameCommand(leds, 0.25);
