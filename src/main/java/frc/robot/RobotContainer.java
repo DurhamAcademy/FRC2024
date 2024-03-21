@@ -50,7 +50,6 @@ import frc.robot.subsystems.intake.IntakeIOSparkMax;
 import frc.robot.subsystems.lights.LEDSIMs;
 import frc.robot.subsystems.lights.LEDs;
 import frc.robot.subsystems.shooter.*;
-import frc.robot.util.Dashboard;
 import frc.robot.util.Mode;
 import org.littletonrobotics.junction.networktables.LoggedDashboardChooser;
 import org.littletonrobotics.junction.networktables.LoggedDashboardNumber;
@@ -79,7 +78,7 @@ public class RobotContainer {
     private final Intake intake;
     private final Climb climb;
     private final VisionIOReal vision;
-    private final Dashboard dashboard;
+    //private final Dashboard dashboard;
     private final LEDs leds;
 
 
@@ -221,7 +220,7 @@ private final CommandXboxController driverController = new CommandXboxController
         );
         autoChooser = new LoggedDashboardChooser<>("Auto Choices", AutoBuilder.buildAutoChooser());
         vision = new VisionIOReal("ShootSideCamera");
-        dashboard = new Dashboard(autoChooser, drive, shooter, feeder, intake, vision);
+       // dashboard = new Dashboard(autoChooser, drive, shooter, feeder, intake, vision);
 
         this.reactions = new ReactionObject(
                 new Trigger(feeder::getIntakeBeamBroken),

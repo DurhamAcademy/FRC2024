@@ -2,10 +2,7 @@ package frc.robot.commands;
 
 import com.ctre.phoenix.led.*;
 import edu.wpi.first.wpilibj2.command.Command;
-import edu.wpi.first.wpilibj2.command.button.Trigger;
-import frc.robot.subsystems.feeder.Feeder;
 import frc.robot.subsystems.lights.LEDs;
-import frc.robot.subsystems.shooter.Shooter;
 
 import static com.ctre.phoenix.led.TwinkleAnimation.TwinklePercent.Percent30;
 import static edu.wpi.first.wpilibj2.command.Commands.*;

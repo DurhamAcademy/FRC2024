@@ -3,15 +3,9 @@ package frc.robot.subsystems.lights;
 import com.ctre.phoenix.led.CANdle;
 import com.ctre.phoenix.led.CANdleConfiguration;
 import edu.wpi.first.wpilibj.RobotBase;
-import edu.wpi.first.wpilibj.event.BooleanEvent;
-import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
-import com.ctre.phoenix.led.Animation;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
 import frc.robot.commands.LEDCommands;
-import frc.robot.subsystems.feeder.Feeder;
-import frc.robot.subsystems.shooter.Shooter;
-import java.util.function.BooleanSupplier;
 
 
 public class LEDs extends SubsystemBase {
