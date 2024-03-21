@@ -49,16 +49,18 @@ public class LEDs extends SubsystemBase {
     public void Init(){
         candle.setLEDs(255,255,255);//sets it to white
     }
-
-
-
     @Override
     public void periodic() {
-        beamBroken.and(maxVel).onTrue(LEDCommands.hasNoteCommand(led));
-        maxVel.onTrue(LEDCommands.shooterMaxVel(led));
+        beamBroken.onTrue(LEDCommands.hasNoteCommand(led));
+        maxVel
+                .and(beamBroken).onTrue(LEDCommands.shooterMaxVel(led));
         startShooter.onTrue(LEDCommands.shooterVel(led));
-    }
+        startShooter.and(beamBroken).onTrue(LEDCommands.flameCommand(led));
+        startShooter.and(beamBroken.negate()).onTrue(
+                run(() -> candle.setLEDs(255,0,0))
 
+        );
+    }
     public CANdle getCandle() {
         return candle;
     }
