@@ -2,40 +2,15 @@
   "version": 1.0,
   "startingPose": {
     "position": {
-      "x": 1.375,
-      "y": 5.55
+      "x": 1.911725997924805,
+      "y": 5.185716152191162
     },
-    "rotation": 179.99984796050427
+    "rotation": 166.15776058793872
   },
   "command": {
     "type": "sequential",
     "data": {
-      "commands": [
-        {
-          "type": "path",
-          "data": {
-            "pathName": "P1 Center Intake Nearest Far Note"
-          }
-        },
-        {
-          "type": "path",
-          "data": {
-            "pathName": "P2 Center Intake Nearest Far Note"
-          }
-        },
-        {
-          "type": "path",
-          "data": {
-            "pathName": "P3 Center Intake Nearest Far Note"
-          }
-        },
-        {
-          "type": "path",
-          "data": {
-            "pathName": "P4 Center Intake Nearest Far Note (1)"
-          }
-        }
-      ]
+      "commands": []
     }
   },
   "folder": null,

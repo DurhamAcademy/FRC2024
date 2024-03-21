@@ -89,7 +89,7 @@ public class Shooter extends SubsystemBase {
         // separate robot with different tuning)
         switch (Constants.currentMode) {
             case REAL:
-                hoodFB = new ProfiledPIDController(6.0, 0.0, .25, new TrapezoidProfile.Constraints(1000.0 / 8.0, 7600.0 / 128.0));
+                hoodFB = new ProfiledPIDController(6.0, 0.0, .25, new TrapezoidProfile.Constraints(1000.0 / 2.0, 7600.0 / 32.0));
                 hoodFB.setTolerance(0.1);
                 shooterVelocityFB =
                         new PIDController(0.0079065 * 5, 0.0, 0.0);

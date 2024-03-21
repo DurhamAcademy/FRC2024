@@ -10,14 +10,7 @@
   "command": {
     "type": "sequential",
     "data": {
-      "commands": [
-        {
-          "type": "path",
-          "data": {
-            "pathName": "Center to Nearest Note"
-          }
-        }
-      ]
+      "commands": []
     }
   },
   "folder": null,

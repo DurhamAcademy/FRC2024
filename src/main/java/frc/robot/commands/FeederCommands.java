@@ -71,7 +71,7 @@ public class FeederCommands {
         );
     }
 
-    public static Command humanPlayerIntake(Feeder feeder){
+    public static Command humanPlayerIntake(Feeder feeder) {
         return run(() -> {
             feeder.runVolts(-2.0);
         });
