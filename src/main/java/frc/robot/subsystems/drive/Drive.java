@@ -257,7 +257,12 @@ public class Drive extends SubsystemBase {
                       visionMatrix = new Matrix<>(Nat.N3(), Nat.N1(), new double[]{8 * mult, 8 * mult, 12 * mult});
                       break;
                     case 2:
-                      visionMatrix = new Matrix<>(Nat.N3(), Nat.N1(), new double[]{1.75, 1.75, 3});
+                      var avg = 0.0;
+                      for (PhotonTrackedTarget photonTrackedTarget : estimatedRobotPose.targetsUsed) {
+                        Transform3d camttarg = photonTrackedTarget.getBestCameraToTarget();
+                        avg += (Math.pow(camttarg.getX(), 2) +Math.pow(camttarg.getY(), 2) + Math.pow(camttarg.getZ(), 2));
+                      }
+                      visionMatrix = new Matrix<>(Nat.N3(), Nat.N1(), new double[]{1.75 * avg, 1.75 * avg, 3 * avg});
                     default:
                       visionMatrix = new Matrix<>(Nat.N3(), Nat.N1(), new double[]{0.05, 0.05, 0.2});
                   }
