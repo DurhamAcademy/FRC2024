@@ -194,17 +194,17 @@ private final CommandXboxController driverController = new CommandXboxController
         );
         NamedCommands.registerCommand(
                 "Auto Point",
-                command.getCommand().until(
-                        command.getReadySupplier()
-                )
+                ShooterCommands.autoAim(shooter, drive)
         );
         NamedCommands.registerCommand(
                 "Shoot When Ready",
                 sequence(
+                        ShooterCommands.autoAim(shooter, drive),
                         waitUntil(() -> (shooter.allAtSetpoint() && (shooter.getShooterVelocityRPM() > 1000))),
                         feedToShooter(feeder)
                 )
                         .withTimeout(3.0)
+                        .andThen(ShooterCommands.simpleHoodZero(shooter))
         );
         NamedCommands.registerCommand(
                 "Shoot",
