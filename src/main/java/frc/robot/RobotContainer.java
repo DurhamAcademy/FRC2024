@@ -187,6 +187,12 @@ private final CommandXboxController driverController = new CommandXboxController
                 autoAim(shooter, drive)
         );
         NamedCommands.registerCommand(
+                "Auto Point",
+                command.getCommand().until(
+                        command.getReadySupplier()
+                )
+        );
+        NamedCommands.registerCommand(
                 "Shoot When Ready",
                 sequence(
                         waitUntil(() -> (shooter.allAtSetpoint() && (shooter.getShooterVelocityRPM() > 1000))),
@@ -278,6 +284,11 @@ private final CommandXboxController driverController = new CommandXboxController
                 driverController.leftBumper().whileTrue(command.getCommand());
 
                 // ---- INTAKE COMMANDS ----
+//                operatorController
+//                        .povLeft()
+//                        .whileTrue(
+//                                IntakeCommands.intakeBack(intake)
+//                        );
                 driverController
                         .leftTrigger()
                         .whileTrue(
@@ -294,7 +305,8 @@ private final CommandXboxController driverController = new CommandXboxController
                                         ),
                                         feeder::getBeamBroken
                                 )
-                        );
+                        )
+                ;
                 driverController.rightBumper().whileTrue(IntakeCommands.idleCommand(intake));
 
                 operatorController
@@ -302,6 +314,22 @@ private final CommandXboxController driverController = new CommandXboxController
                         .whileTrue(
                                 IntakeCommands.flushIntake(intake)
                                         .alongWith(FeederCommands.flushFeeder(feeder))
+                        );
+                operatorController
+                        .povUp()
+                        .whileTrue(
+                                sequence(
+                                        parallel(
+                                                ShooterCommands.humanPlayerIntake(shooter),
+                                                FeederCommands.humanPlayerIntake(feeder)
+                                        )
+                                                .until(() -> feeder.getBeamBroken()),
+                                        parallel(
+                                                ShooterCommands.humanPlayerIntake(shooter),
+                                                FeederCommands.humanPlayerIntake(feeder)
+                                        )
+                                                .until(() -> !feeder.getBeamBroken())
+                                )
                         );
 
                 // ---- SHOOTER COMMANDS ----
@@ -398,22 +426,8 @@ private final CommandXboxController driverController = new CommandXboxController
                                                         () -> shooter.shooterRunVelocity(5000), //THIS NUMBER NEEDS TO BE CALIBRATED
 
                                                         intake))));
-                operatorController
-                        .povUp()
-                        .whileTrue(
-                                sequence(
-                                    parallel(
-                                            ShooterCommands.humanPlayerIntake(shooter),
-                                            FeederCommands.humanPlayerIntake(feeder)
-                                    )
-                                            .until(() -> feeder.getBeamBroken()),
-                                        parallel(
-                                                ShooterCommands.humanPlayerIntake(shooter),
-                                                FeederCommands.humanPlayerIntake(feeder)
-                                        )
-                                                .until(() -> !feeder.getBeamBroken())
-                                )
-                        );
+
+
                 break;
             case TurnMotors:
                 break;
