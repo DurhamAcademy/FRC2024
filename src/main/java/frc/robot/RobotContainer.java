@@ -47,7 +47,6 @@ import frc.robot.subsystems.intake.Intake;
 import frc.robot.subsystems.intake.IntakeIO;
 import frc.robot.subsystems.intake.IntakeIOSim;
 import frc.robot.subsystems.intake.IntakeIOSparkMax;
-import frc.robot.subsystems.lights.LEDSIMs;
 import frc.robot.subsystems.lights.LEDs;
 import frc.robot.subsystems.shooter.*;
 import frc.robot.util.Mode;
@@ -82,7 +81,7 @@ public class RobotContainer {
     private final LEDs leds;
 
 
-    private final LEDSIMs ledsims = new LEDSIMs(9,60);
+//    private final LEDSIMs ledsims = new LEDSIMs(9,60);
 
     private final ControllerRumble driverRumble = new ControllerRumble(0);
     private final ControllerRumble operatorRumble = new ControllerRumble(1);
