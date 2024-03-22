@@ -946,15 +946,5 @@
       "timestamp": 4.247690703284766
     }
   ],
-  "eventMarkers": [
-    {
-      "timestamp": 1.3200745883507563,
-      "command": {
-        "type": "named",
-        "data": {
-          "name": "Intake Note"
-        }
-      }
-    }
-  ]
+  "eventMarkers": []
 }

@@ -74,7 +74,8 @@ public class Drive extends SubsystemBase {
   private SwerveDriveKinematics kinematics = new SwerveDriveKinematics(getModuleTranslations());
   private SwerveDrivePoseEstimator poseEstimator;
   private Pose2d pose = new Pose2d();
-  PIDConstants positionPID = new PIDConstants(.5, .00);
+  PIDConstants positionPID = new PIDConstants(1.0, .00);
+  PIDConstants rotationPID = new PIDConstants(0.5, .01);
   private Measure<Velocity<Angle>> angularVelocity = RadiansPerSecond.zero();
   private Rotation2d lastGyroRotation = new Rotation2d();
 
@@ -88,7 +89,6 @@ public class Drive extends SubsystemBase {
           robotToCam);
   SwerveDrivePoseEstimator noGyroPoseEstimation;
   Rotation2d noGyroRotation;
-  PIDConstants rotationPID = new PIDConstants(0.5, .01);
   private Pose2d previousPose = new Pose2d();
   double timestampSeconds = 0.0;
 
@@ -185,6 +185,9 @@ public class Drive extends SubsystemBase {
     // loop cycle in x, y, and theta based only on the modules,
     // without the gyro. The gyro is always disconnected in simulation.
     var twist = kinematics.toTwist2d(wheelDeltas);
+    twist.dtheta *= -1;
+    twist.dx *= -1;
+    twist.dy *= -1;
     if (gyroInputs.connected) {
       if (noGyroPoseEstimation != null) {
         // todo: make the next line conditional, only update pose if cameras are

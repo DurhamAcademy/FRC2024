@@ -10,7 +10,7 @@ import static java.lang.Math.pow;
 
 public class RumbleCommands {
     public static Command rumbleLight(ControllerRumble controller) {
-        return run(() -> controller.setRumbleLight(0.5));
+        return run(() -> controller.setRumbleLight(0.5), controller);
     }
 
     public static Command rumbleLightWithFalloff(ControllerRumble controller) {
@@ -26,10 +26,10 @@ public class RumbleCommands {
             var elapsed = timer.get();
             var strength = 1 / (pow(elapsed + offset, n) + 1);
             controller.setRumbleLight(strength);
-        }).beforeStarting(timer::restart);
+        }, controller).beforeStarting(timer::restart);
     }
 
     public static Command noRumble(ControllerRumble controller) {
-        return run(() -> controller.setRumbleLight(0.0));
+        return run(() -> controller.setRumbleLight(0.0), controller);
     }
 }

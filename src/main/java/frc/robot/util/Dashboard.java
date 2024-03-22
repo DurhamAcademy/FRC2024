@@ -1,5 +1,8 @@
 package frc.robot.util;
 
+import edu.wpi.first.cscore.VideoSource;
+import edu.wpi.first.networktables.NetworkTable;
+import edu.wpi.first.util.sendable.SendableRegistry;
 import edu.wpi.first.wpilibj.shuffleboard.BuiltInWidgets;
 import edu.wpi.first.wpilibj.shuffleboard.Shuffleboard;
 import edu.wpi.first.wpilibj.shuffleboard.ShuffleboardTab;
@@ -18,7 +21,6 @@ public class Dashboard {
             Shooter shooter,
             Feeder feeder,
             Intake intake,
-//            HoodIO.HoodIOInputs hood,
             VisionIOReal vision,
             LoggedDashboardChooser smartChooser
     ) {
@@ -31,8 +33,10 @@ public class Dashboard {
                 .withWidget(BuiltInWidgets.kComboBoxChooser)
                 .withSize(2, 1)
                 .withPosition(2, 0);
-        main.add("Enable Smart Commands", smartChooser);
-//        main.addCamera("Camera feed", "ShootSideCamera");
+        main.add("Enable Smart Commands", smartChooser)
+                .withWidget(BuiltInWidgets.kComboBoxChooser)
+                .withSize(3, 1);
+//        main.addCamera("Camera feed", "...");
         SmartDashboard.putData("Swerve Drive", builder -> {
             builder.setSmartDashboardType("SwerveDrive");
             builder.addDoubleProperty("Front Left Angle", () -> drive.shuffleboardMethod()[0].getAngle().getRadians(), null);

@@ -244,6 +244,7 @@ private final CommandXboxController driverController = new CommandXboxController
         );
 
         configureButtonBindings();
+        configureReactions();
     }
 
     /**
