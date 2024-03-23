@@ -20,6 +20,7 @@ import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.units.Units;
 import edu.wpi.first.wpilibj.GenericHID;
 import edu.wpi.first.wpilibj.Joystick;
+import edu.wpi.first.wpilibj.RobotState;
 import edu.wpi.first.wpilibj.XboxController;
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj2.command.Command;
@@ -51,6 +52,7 @@ import frc.robot.subsystems.lights.LEDs;
 import frc.robot.subsystems.shooter.*;
 import frc.robot.util.Dashboard;
 import frc.robot.util.Mode;
+import org.littletonrobotics.junction.networktables.LoggedDashboardBoolean;
 import org.littletonrobotics.junction.networktables.LoggedDashboardChooser;
 import org.littletonrobotics.junction.networktables.LoggedDashboardNumber;
 
@@ -74,13 +76,13 @@ import static frc.robot.commands.ShooterCommands.newAmpShoot;
  */
 public class RobotContainer {
     public static SysIDMode sysIDMode = SysIDMode.Disabled;
-    private final Shooter shooter;
-    private final Feeder feeder;
-    private final Intake intake;
-    private final Climb climb;
-    private final VisionIOReal vision;
+    public final Shooter shooter;
+    public final Feeder feeder;
+    public final Intake intake;
+    public final Climb climb;
+    public final VisionIOReal vision;
     //    private final Dashboard dashboard;
-    private final LEDs leds;
+    public final LEDs leds;
     private final ControllerRumble driverRumble = new ControllerRumble(0);
     private final ControllerRumble operatorRumble = new ControllerRumble(1);
 
@@ -97,7 +99,11 @@ private final CommandXboxController driverController = new CommandXboxController
     private final ReactionObject reactions;
     LoggedDashboardNumber angleOffsetInput = new LoggedDashboardNumber("Angle Offset", 0.0);
     // Subsystems
-    private Drive drive;
+    public Drive drive;
+    LoggedDashboardBoolean invertX = new LoggedDashboardBoolean("Invert X Axis", false);
+    LoggedDashboardBoolean invertY = new LoggedDashboardBoolean("Invert Y Axis", false);
+    LoggedDashboardBoolean invertOmega = new LoggedDashboardBoolean("Invert Omega Axis", false);
+
 
     /**
      * The container for the robot. Contains subsystems, IO devices, and commands.
@@ -198,12 +204,10 @@ private final CommandXboxController driverController = new CommandXboxController
         NamedCommands.registerCommand(
                 "Shoot When Ready",
                 sequence(
-                        ShooterCommands.autoAim(shooter, drive),
                         waitUntil(() -> (shooter.allAtSetpoint() && (shooter.getShooterVelocityRPM() > 1000))),
                         feedToShooter(feeder)
                 )
                         .withTimeout(3.0)
-                        .andThen(ShooterCommands.simpleHoodZero(shooter))
         );
         NamedCommands.registerCommand(
                 "Shoot",
@@ -259,9 +263,9 @@ private final CommandXboxController driverController = new CommandXboxController
                 drive.setDefaultCommand(
                         DriveCommands.joystickDrive(
                                 drive,
-                                driverController::getLeftY,
-                                driverController::getLeftX,
-                                () -> -driverController.getRightX()));
+                                () -> (-driverController.getLeftY() * (invertX.get()?-1:1)),
+                                () -> (-driverController.getLeftX() * (invertY.get()?-1:1)),
+                                () -> (-driverController.getRightX()) * (invertOmega.get()?-1:1)));
                 intake.setDefaultCommand(IntakeCommands.idleCommand(intake));
                 feeder.setDefaultCommand(new RunCommand(() -> feeder.runVolts(0.0), feeder));
                 shooter.setDefaultCommand(
@@ -282,6 +286,10 @@ private final CommandXboxController driverController = new CommandXboxController
                         ClimbCommands.runClimb(climb, operatorController::getLeftY, operatorController::getRightY)
                 ));
 
+                leds.setDefaultCommand(
+                        either(LEDCommands.enabled(leds), LEDCommands.disabled(leds, this), RobotState::isEnabled)
+                        .ignoringDisable(true)); //fixme: MAKE THIS LINE WORK
+
                 // ---- DRIVETRAIN COMMANDS ----
                 driverController.x().whileTrue(runOnce(drive::stopWithX, drive));
 
@@ -289,9 +297,9 @@ private final CommandXboxController driverController = new CommandXboxController
                 var command =
                         DriveCommands.aimAtSpeakerCommand(
                                 drive,
-                                driverController::getLeftY,
-                                driverController::getLeftX,
-                                driverController::getRightX);
+                                () -> (-driverController.getLeftY() * (invertX.get()?-1:1)),
+                                () -> (-driverController.getLeftX() * (invertY.get()?-1:1)),
+                                () -> (-driverController.getRightX()) * (invertOmega.get()?-1:1));
                 driverController.leftBumper().whileTrue(command.getCommand());
 
                 // ---- INTAKE COMMANDS ----
@@ -320,13 +328,13 @@ private final CommandXboxController driverController = new CommandXboxController
                 driverController.rightBumper().whileTrue(IntakeCommands.idleCommand(intake));
 
                 operatorController
-                        .povDown()
+                        .povLeft()
                         .whileTrue(
                                 IntakeCommands.flushIntake(intake)
                                         .alongWith(FeederCommands.flushFeeder(feeder))
                         );
                 operatorController
-                        .povUp()
+                        .povDown()
                         .whileTrue(
                                 sequence(
                                         parallel(
@@ -376,7 +384,7 @@ private final CommandXboxController driverController = new CommandXboxController
                                 )
                         );
                 operatorController
-                        .rightBumper()
+                        .start()
                         .onTrue(
                                 ShooterCommands.simpleHoodZero(shooter)
                                         .withTimeout(4.0)
@@ -529,7 +537,7 @@ private final CommandXboxController driverController = new CommandXboxController
     }
 
     public void configureReactions() {
-        driverRumble.setDefaultCommand(noRumble(driverRumble));
+        driverRumble.setDefaultCommand(noRumble(driverRumble).ignoringDisable(true));
         reactions.intakeBeamBroken
                 .and(reactions.shooterBeamBroken.negate())
                 .whileTrue(
@@ -537,8 +545,8 @@ private final CommandXboxController driverController = new CommandXboxController
                                 rumbleLight(driverRumble)
                                         .withTimeout(0.1),
                                 waitSeconds(0.2)
-                                        .andThen(rumbleLightWithFalloff(operatorRumble))
-                        )
+                                        .andThen(rumbleLightWithFalloff(operatorRumble).withTimeout(10.0))
+                        ).ignoringDisable(true)
                 );
     }
 

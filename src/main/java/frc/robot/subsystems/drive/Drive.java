@@ -14,8 +14,6 @@
 package frc.robot.subsystems.drive;
 
 import com.pathplanner.lib.auto.AutoBuilder;
-import com.pathplanner.lib.pathfinding.LocalADStar;
-import com.pathplanner.lib.pathfinding.Pathfinding;
 import com.pathplanner.lib.util.HolonomicPathFollowerConfig;
 import com.pathplanner.lib.util.PIDConstants;
 import com.pathplanner.lib.util.PathPlannerLogging;
@@ -119,7 +117,7 @@ public class Drive extends SubsystemBase {
             DriverStation.getAlliance().isPresent()
                 && DriverStation.getAlliance().get() == Alliance.Red,
         this);
-    Pathfinding.setPathfinder(new LocalADStar());
+//    Pathfinding.setPathfinder(new LocalADStar());
     //noinspection ToArrayCallWithZeroLengthArrayArgument
     PathPlannerLogging.setLogActivePathCallback(
         (activePath) ->
@@ -283,14 +281,18 @@ public class Drive extends SubsystemBase {
     for (int i = 0; i < modules.length; i++) swerveModulePositions[i] = modules[i].getPosition();
   }
 
+  public boolean isGyroConnected() {
+    return gyroInputs.connected;
+  }
   /**
    * Runs the drive at the desired velocity.
    *
    * @param speeds Speeds in meters/sec
    */
   public void runVelocity(ChassisSpeeds speeds) {
+    ChassisSpeeds flipped = new ChassisSpeeds(-speeds.vxMetersPerSecond, -speeds.vyMetersPerSecond, speeds.omegaRadiansPerSecond);
     // Calculate module setpoints
-    ChassisSpeeds discreteSpeeds = ChassisSpeeds.discretize(speeds, 0.02);
+    ChassisSpeeds discreteSpeeds = ChassisSpeeds.discretize(flipped, 0.02);
     SwerveModuleState[] setpointStates = kinematics.toSwerveModuleStates(discreteSpeeds);
     SwerveDriveKinematics.desaturateWheelSpeeds(setpointStates, MAX_LINEAR_SPEED);
 
@@ -456,6 +458,10 @@ public class Drive extends SubsystemBase {
   @AutoLogOutput(key = "Odometry/Robot")
   public Pose2d getPose() {
     return pose;
+  }
+
+  public boolean cameraConnected() {
+    return visionInputs.connected;
   }
 
   /**
