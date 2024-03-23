@@ -110,7 +110,7 @@ private final CommandXboxController driverController = new CommandXboxController
                 drive =
                         new Drive(
                                 new GyroIOPigeon2(),
-                                new VisionIOReal("ShootSideCamera"),
+                                new VisionIOReal("ShootSideCamera"), //fixme: add second camera logger
                                 new ModuleIOSparkMax(0){},
                                 new ModuleIOSparkMax(1){},
                                 new ModuleIOSparkMax(2){},
@@ -125,8 +125,7 @@ private final CommandXboxController driverController = new CommandXboxController
                 // Sim robot, instantiate physics sim IO implementations
                 drive =
                         new Drive(
-                                new GyroIO() {
-                                },
+                                new GyroIO() {},
                                 new VisionIOSim(
                                         "ShootSideCamera", () -> (drive == null) ? (drive.getPose()) : new Pose2d()),
                                 new ModuleIOSim(),
@@ -360,26 +359,10 @@ private final CommandXboxController driverController = new CommandXboxController
                                 ShooterCommands.JustShoot(shooter)
                         );
                 operatorController
-                        .a()
-                        .whileTrue(
-                                parallel(
-                                        sequence(
-                                                ShooterCommands.ampShoot(shooter).until(() -> !feeder.getBeamBroken()),
-                                                ShooterCommands.pushIntoAmp(shooter)
-                                        ),
-                                        sequence(
-                                                waitSeconds(0.5),
-                                                waitUntil(shooter::allAtSetpoint),
-                                                feedToShooter(feeder)
-                                                        .until(() -> !feeder.getBeamBroken())
-                                        )
-                                )
-                        );
-                operatorController
                         .leftBumper()
                         .onTrue(
                                 feedToBeamBreak(feeder)
-                                        .withTimeout(2)
+                                        .withTimeout(5)
                         );
                 driverController
                         .rightTrigger()
@@ -393,21 +376,26 @@ private final CommandXboxController driverController = new CommandXboxController
                                 )
                         );
                 operatorController
-                        .start()
+                        .rightBumper()
                         .onTrue(
-                                ShooterCommands.addToOffset()
+                                ShooterCommands.simpleHoodZero(shooter)
+                                        .withTimeout(4.0)
                         );
-                operatorController
-                        .back()
-                        .onTrue(
-                                ShooterCommands.removeFromOffset()
-                        );
-                driverController
+                driverController // fixme move to operator controls
                         .povUp()
                         .whileTrue(newAmpShoot(shooter)
                                 .alongWith(feedToShooter(feeder))
                                 .onlyWhile(feeder::getBeamBroken)
                                 .andThen(ShooterCommands.ampAngle(shooter)));
+
+                // NEW OPERATOR CONTROLS
+                // leftbumper zero
+                // x justShoot
+                // y aim
+                // povup humanplayerintake
+                // down flush
+
+                //zero shooter
                 break;
             case DriveMotors:
                 drive.setDefaultCommand(
