@@ -262,7 +262,7 @@ private final CommandXboxController driverController = new CommandXboxController
                                 drive,
                                 driverController::getLeftY,
                                 driverController::getLeftX,
-                                driverController::getRightX));
+                                () -> -driverController.getRightX()));
                 intake.setDefaultCommand(IntakeCommands.idleCommand(intake));
                 feeder.setDefaultCommand(new RunCommand(() -> feeder.runVolts(0.0), feeder));
                 shooter.setDefaultCommand(

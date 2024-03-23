@@ -101,7 +101,6 @@ public class DriveCommands {
                                           DoubleSupplier omegaSupplier) {
         return Commands.run(
                 () -> {
-
                     // Apply deadband
                     double linearMagnitude =
                             MathUtil.applyDeadband(
@@ -128,7 +127,6 @@ public class DriveCommands {
                                     omega * drive.getMaxAngularSpeedRadPerSec(),
                                     drive.getRotation().rotateBy(
                                             getAllianceRotation())));
-
                 },
                 drive);
     }
@@ -250,7 +248,7 @@ public class DriveCommands {
                                             linearVelocity.getX() * drive.getMaxLinearSpeedMetersPerSec(),
                                             linearVelocity.getY() * drive.getMaxLinearSpeedMetersPerSec(),
 
-                                            -value*6.28,
+                                            (rotationController.getSetpoint().velocity+value)*6.28,
                                             drive.getRotation().rotateBy(
                                                     getAllianceRotation())));
                             previousPose[0] = drive.getPose();

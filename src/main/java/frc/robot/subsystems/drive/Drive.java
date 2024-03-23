@@ -189,7 +189,7 @@ public class Drive extends SubsystemBase {
     twist.dx *= -1;
     twist.dy *= -1;
     if (gyroInputs.connected) {
-      if (noGyroPoseEstimation != null) {
+      if (noGyroPoseEstimation != null && visionInputs.connected) {
         // todo: make the next line conditional, only update pose if cameras are
         //  online, otherwise don't do it.
         poseEstimator.resetPosition(gyroInputs.yawPosition, swerveModulePositions, pose);

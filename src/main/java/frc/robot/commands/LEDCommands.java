@@ -1,19 +1,19 @@
 package frc.robot.commands;
 
-import com.ctre.phoenix.led.FireAnimation;
-import com.ctre.phoenix.led.RainbowAnimation;
-import com.ctre.phoenix.led.RgbFadeAnimation;
-import com.ctre.phoenix.led.TwinkleAnimation;
+import com.ctre.phoenix.led.*;
 import edu.wpi.first.wpilibj2.command.Command;
 import frc.robot.subsystems.lights.LEDs;
 
 import static com.ctre.phoenix.led.TwinkleAnimation.TwinklePercent.Percent30;
-import static edu.wpi.first.wpilibj2.command.Commands.startEnd;
+import static edu.wpi.first.wpilibj2.command.Commands.*;
 import static frc.robot.subsystems.lights.LEDs.candleLength;
 import static frc.robot.subsystems.lights.LEDs.stripLength;
 
 public class LEDCommands {
     public static Command flameCommand(LEDs leds, double brightness) {
+        if (leds == null) return none();
+        if (leds == null || leds.getCandle() == null) return idle(leds);
+        if (leds.getCandle() == null) return idle(leds);
         var candle = leds.getCandle();
         return startEnd(
                 () -> {
