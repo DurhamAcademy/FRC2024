@@ -24,9 +24,6 @@ import com.revrobotics.RelativeEncoder;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.util.Units;
 
-import static java.lang.Double.NaN;
-import static java.lang.Math.PI;
-
 /**
  * Module IO implementation for SparkMax drive motor controller, SparkMax turn motor controller (NEO
  * or NEO 550), and analog absolute encoder connected to the RIO
@@ -104,7 +101,7 @@ public class ModuleIOSparkMax implements ModuleIO {
     turnSparkMax.setSmartCurrentLimit(30);
     driveSparkMax.enableVoltageCompensation(12.0);
     turnSparkMax.enableVoltageCompensation(12.0);
-    driveSparkMax.setInverted(false);
+    driveSparkMax.setInverted(true);
 
     driveEncoder.setPosition(0.0);
     driveEncoder.setMeasurementPeriod(10);
