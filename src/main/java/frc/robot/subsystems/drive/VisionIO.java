@@ -18,6 +18,7 @@ public interface VisionIO {
     double latencyMillis = 0;
     double timestampSeconds = 0;
     boolean connected = false;
+    String name = "";
     PhotonPipelineResult cameraResult = new PhotonPipelineResult();
     private PhotonPipelineResult.APacketSerde aPacketSerde;
 
@@ -57,6 +58,7 @@ public interface VisionIO {
     public void toLog(LogTable table) {
       table.put("LatencyMillis", latencyMillis);
       table.put("TimestampSeconds", timestampSeconds);
+      table.put("Name", name);
 
       var packet = new Packet(cameraResult.getPacketSize());
       aPacketSerde = new PhotonPipelineResult.APacketSerde();
@@ -69,6 +71,7 @@ public interface VisionIO {
       //            driverMode = table.getBoolean("DriverMode", driverMode);
       latencyMillis = table.get("LatencyMillis", latencyMillis);
       timestampSeconds = table.get("TimestampSeconds", timestampSeconds);
+      name = table.get("Name", name);
       table.get("CameraResultData").getRaw();
       cameraResult = PhotonPipelineResult.serde.unpack(new Packet(table.get("CameraResultData").getRaw()));
 

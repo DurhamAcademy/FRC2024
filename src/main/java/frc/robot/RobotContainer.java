@@ -80,7 +80,6 @@ public class RobotContainer {
     public final Feeder feeder;
     public final Intake intake;
     public final Climb climb;
-    public final VisionIOReal vision;
     //    private final Dashboard dashboard;
     public final LEDs leds;
     private final ControllerRumble driverRumble = new ControllerRumble(0);
@@ -116,7 +115,8 @@ private final CommandXboxController driverController = new CommandXboxController
                 drive =
                         new Drive(
                                 new GyroIOPigeon2(),
-                                new VisionIOReal("ShootSideCamera"), //fixme: add second camera logger
+                                new VisionIOReal("ShootSideCamera"),
+                                new VisionIOReal("OtherCamera"), //fixme: rename
                                 new ModuleIOSparkMax(0){},
                                 new ModuleIOSparkMax(1){},
                                 new ModuleIOSparkMax(2){},
@@ -234,7 +234,6 @@ private final CommandXboxController driverController = new CommandXboxController
 //                DriveCommands.joystickDrive(drive, () -> .1, () -> 0, () -> 0.0).withTimeout(4.0)
         );
         autoChooser = new LoggedDashboardChooser<>("Auto Choices", AutoBuilder.buildAutoChooser());
-        vision = new VisionIOReal("ShootSideCamera");
 //        dashboard = new Dashboard(autoChooser, drive, shooter, feeder, intake, vision, this.smartCommandsMode);
 
         this.reactions = new ReactionObject(
