@@ -357,13 +357,15 @@ private final CommandXboxController driverController = new CommandXboxController
                                 )
                                         .until(() -> !feeder.getBeamBroken())
                         );
-//                operatorController
-//                        .povRight()
-//                        .onTrue(LEDCommands.setIntakeBoolean())
-//                                .whileTrue(
-//                                                LEDCommands.setIntakeType(leds)
-//                                );
-
+                operatorController
+                        .a()
+                        .toggleOnTrue(LEDCommands.setIntakeBoolean())
+                                .onTrue(
+                                        LEDCommands.setIntakeType(leds).ignoringDisable(true)
+                                );
+                operatorController
+                        .b()
+                            .toggleOnTrue(LEDCommands.dropNoteEmily(leds).ignoringDisable(true));
 
                 // ---- SHOOTER COMMANDS ----
                 operatorController

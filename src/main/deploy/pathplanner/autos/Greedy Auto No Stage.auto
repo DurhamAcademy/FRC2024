@@ -18,9 +18,22 @@
           }
         },
         {
-          "type": "named",
+          "type": "race",
           "data": {
-            "name": "Shoot"
+            "commands": [
+              {
+                "type": "named",
+                "data": {
+                  "name": "Ready Shooter"
+                }
+              },
+              {
+                "type": "named",
+                "data": {
+                  "name": "Shoot When Ready"
+                }
+              }
+            ]
           }
         },
         {
@@ -49,7 +62,7 @@
           }
         },
         {
-          "type": "parallel",
+          "type": "race",
           "data": {
             "commands": [
               {
@@ -71,12 +84,6 @@
           "type": "parallel",
           "data": {
             "commands": [
-              {
-                "type": "named",
-                "data": {
-                  "name": "Intake Note"
-                }
-              },
               {
                 "type": "path",
                 "data": {
@@ -86,41 +93,16 @@
               {
                 "type": "named",
                 "data": {
-                  "name": "Ready Shooter"
-                }
-              }
-            ]
-          }
-        },
-        {
-          "type": "parallel",
-          "data": {
-            "commands": [
-              {
-                "type": "named",
-                "data": {
-                  "name": "Ready Shooter"
-                }
-              },
-              {
-                "type": "named",
-                "data": {
-                  "name": "Shoot When Ready"
-                }
-              }
-            ]
-          }
-        },
-        {
-          "type": "parallel",
-          "data": {
-            "commands": [
-              {
-                "type": "named",
-                "data": {
                   "name": "Intake Note"
                 }
-              },
+              }
+            ]
+          }
+        },
+        {
+          "type": "parallel",
+          "data": {
+            "commands": [
               {
                 "type": "path",
                 "data": {
@@ -137,7 +119,7 @@
           }
         },
         {
-          "type": "parallel",
+          "type": "race",
           "data": {
             "commands": [
               {

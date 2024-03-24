@@ -18,7 +18,7 @@
           }
         },
         {
-          "type": "parallel",
+          "type": "race",
           "data": {
             "commands": [
               {
@@ -50,6 +50,31 @@
                 "type": "path",
                 "data": {
                   "pathName": "Temp Greedy.1"
+                }
+              },
+              {
+                "type": "named",
+                "data": {
+                  "name": "Ready Shooter"
+                }
+              }
+            ]
+          }
+        },
+        {
+          "type": "parallel",
+          "data": {
+            "commands": [
+              {
+                "type": "named",
+                "data": {
+                  "name": "Ready Shooter"
+                }
+              },
+              {
+                "type": "named",
+                "data": {
+                  "name": "Shoot When Ready"
                 }
               }
             ]
