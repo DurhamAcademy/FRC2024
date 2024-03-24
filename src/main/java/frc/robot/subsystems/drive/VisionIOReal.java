@@ -22,5 +22,6 @@ public class VisionIOReal implements VisionIO {
     inputs.driverMode = cam.getDriverMode();
     inputs.timestampSeconds = cam.getLatestResult().getTimestampSeconds();
     inputs.connected = cam.isConnected();
+    inputs.name = cam.getName();
   }
 }

@@ -64,8 +64,8 @@ public class Drive extends SubsystemBase {
   private final GyroIOInputsAutoLogged gyroInputs = new GyroIOInputsAutoLogged();
   private final Module[] modules = new Module[4]; // FL, FR, BL, BR
   private final SwerveModulePosition[] swerveModulePositions;
-  private final VisionIO visionIO;
-  private final VisionIO.VisionIOInputs visionInputs = new VisionIO.VisionIOInputs();
+  private final VisionIO[] visionIO;
+  private final VisionIO.VisionIOInputs[] visionInputs;
 
   //  private final
 
@@ -90,14 +90,29 @@ public class Drive extends SubsystemBase {
   private Pose2d previousPose = new Pose2d();
   double timestampSeconds = 0.0;
 
-  public Drive(
+    public Drive(
+        GyroIO gyroIO,
+        VisionIO visionIO,
+        ModuleIO flModuleIO,
+        ModuleIO frModuleIO,
+        ModuleIO blModuleIO,
+        ModuleIO brModuleIO) {
+        this(gyroIO, flModuleIO, frModuleIO, blModuleIO, brModuleIO, new VisionIO[]{visionIO});
+    }
+
+    public Drive(
       GyroIO gyroIO,
-      VisionIO visionIO,
       ModuleIO flModuleIO,
       ModuleIO frModuleIO,
       ModuleIO blModuleIO,
-      ModuleIO brModuleIO) {
+      ModuleIO brModuleIO,
+      VisionIO[] visionIO) {
     this.visionIO = visionIO;
+    visionInputs = new VisionIO.VisionIOInputs[visionIO.length];
+    for (int i = 0, visionIOLength = visionIO.length; i < visionIOLength; i++) {
+        visionInputs[i] = new VisionIO.VisionIOInputs() {};
+    }
+
     this.gyroIO = gyroIO;
 
     modules[3] = new Module(flModuleIO, 0);
@@ -145,77 +160,90 @@ public class Drive extends SubsystemBase {
   }
 
   public void periodic() {
-    previousPose = pose;
+      previousPose = pose;
 
 
-    gyroIO.updateInputs(gyroInputs);
-    Logger.processInputs("Drive/Gyro", gyroInputs);
+      gyroIO.updateInputs(gyroInputs);
+      Logger.processInputs("Drive/Gyro", gyroInputs);
 
-    visionIO.updateInputs(visionInputs);
-    Logger.processInputs("Drive/Vision", visionInputs);
+      VisionIO vision = null;
+      for (int i = 0, visionIOLength = visionIO.length; i < visionIOLength; i++) {
+          vision = visionIO[i];
+          vision.updateInputs(visionInputs[i]);
+      }
+      for (VisionIO.VisionIOInputs visionInput : visionInputs) {
+          Logger.processInputs("Drive/Vision/" + visionInput.name, visionInput);
+      }
 
-    for (var module : modules) {
-      module.periodic();
-    }
-
-    // Stop moving when disabled
-    if (DriverStation.isDisabled()) {
       for (var module : modules) {
-        module.stop();
-      }
-    }
-    // Log empty setpoint states when disabled
-    if (DriverStation.isDisabled()) {
-      //noinspection RedundantArrayCreation
-      Logger.recordOutput("SwerveStates/Setpoints", new SwerveModuleState[] {});
-      //noinspection RedundantArrayCreation
-      Logger.recordOutput("SwerveStates/SetpointsOptimized", new SwerveModuleState[] {});
-    }
-
-    updateSwerveModulePositions();
-    // Update odometry
-    SwerveModulePosition[] wheelDeltas = new SwerveModulePosition[4];
-    for (int i = 0; i < 4; i++) {
-      wheelDeltas[i] = modules[i].getPositionDelta();
-    }
-
-    // The twist represents the motion of the robot since the last
-    // loop cycle in x, y, and theta based only on the modules,
-    // without the gyro. The gyro is always disconnected in simulation.
-    var twist = kinematics.toTwist2d(wheelDeltas);
-    twist.dtheta *= -1;
-    twist.dx *= -1;
-    twist.dy *= -1;
-    if (gyroInputs.connected) {
-      if (noGyroPoseEstimation != null && visionInputs.connected) {
-        // todo: make the next line conditional, only update pose if cameras are
-        //  online, otherwise don't do it.
-        poseEstimator.resetPosition(gyroInputs.yawPosition, swerveModulePositions, pose);
-        noGyroPoseEstimation = null;
-      }
-      // If the gyro is connected, replace the theta component of the twist
-      // with the change in angle since the last loop cycle.
-
-      // update the pose estimator
-      pose = poseEstimator.update(gyroInputs.yawPosition, swerveModulePositions);
-      angularVelocity = RadiansPerSecond.of(gyroInputs.yawVelocityRadPerSec);
-
-    } else {
-      if (noGyroPoseEstimation == null) {
-        noGyroRotation = pose.getRotation();
-        noGyroPoseEstimation =
-            new SwerveDrivePoseEstimator(
-                kinematics, pose.getRotation(), swerveModulePositions, pose);
+          module.periodic();
       }
 
-      // Apply the twist (change since last loop cycle) to the current pose
-      noGyroRotation =
-          pose.rotateBy(noGyroRotation.minus(pose.getRotation())).exp(twist).getRotation();
-      pose = noGyroPoseEstimation.update(noGyroRotation, swerveModulePositions);
-      angularVelocity = RadiansPerSecond.of(twist.dtheta / .02);
-    }
+      // Stop moving when disabled
+      if (DriverStation.isDisabled()) {
+          for (var module : modules) {
+              module.stop();
+          }
+      }
+      // Log empty setpoint states when disabled
+      if (DriverStation.isDisabled()) {
+          //noinspection RedundantArrayCreation
+          Logger.recordOutput("SwerveStates/Setpoints", new SwerveModuleState[]{});
+          //noinspection RedundantArrayCreation
+          Logger.recordOutput("SwerveStates/SetpointsOptimized", new SwerveModuleState[]{});
+      }
 
-    Logger.recordOutput("pose", pose);
+      updateSwerveModulePositions();
+      // Update odometry
+      SwerveModulePosition[] wheelDeltas = new SwerveModulePosition[4];
+      for (int i = 0; i < 4; i++) {
+          wheelDeltas[i] = modules[i].getPositionDelta();
+      }
+
+      // The twist represents the motion of the robot since the last
+      // loop cycle in x, y, and theta based only on the modules,
+      // without the gyro. The gyro is always disconnected in simulation.
+      var twist = kinematics.toTwist2d(wheelDeltas);
+      twist.dtheta *= -1;
+      twist.dx *= -1;
+      twist.dy *= -1;
+      if (gyroInputs.connected) {
+        boolean isAnyCameraConnected = false;
+        for (VisionIO.VisionIOInputs visionInput : visionInputs) {
+          if (visionInput.connected) {
+            isAnyCameraConnected = true;
+            break;
+          }
+        }
+          if (noGyroPoseEstimation != null && isAnyCameraConnected) {
+              // todo: make the next line conditional, only update pose if cameras are
+              //  online, otherwise don't do it.
+              poseEstimator.resetPosition(gyroInputs.yawPosition, swerveModulePositions, pose);
+              noGyroPoseEstimation = null;
+          }
+          // If the gyro is connected, replace the theta component of the twist
+          // with the change in angle since the last loop cycle.
+
+          // update the pose estimator
+          pose = poseEstimator.update(gyroInputs.yawPosition, swerveModulePositions);
+          angularVelocity = RadiansPerSecond.of(gyroInputs.yawVelocityRadPerSec);
+
+      } else {
+          if (noGyroPoseEstimation == null) {
+              noGyroRotation = pose.getRotation();
+              noGyroPoseEstimation =
+                      new SwerveDrivePoseEstimator(
+                              kinematics, pose.getRotation(), swerveModulePositions, pose);
+          }
+
+          // Apply the twist (change since last loop cycle) to the current pose
+          noGyroRotation =
+                  pose.rotateBy(noGyroRotation.minus(pose.getRotation())).exp(twist).getRotation();
+          pose = noGyroPoseEstimation.update(noGyroRotation, swerveModulePositions);
+          angularVelocity = RadiansPerSecond.of(twist.dtheta / .02);
+      }
+
+      Logger.recordOutput("pose", pose);
     /*
     _____ R: <-x  y^
     | ^ | G: \|/x ->y
@@ -224,56 +252,58 @@ public class Drive extends SubsystemBase {
 //    new UnscentedKalmanFilter<>()
 //    Transform2d twistPerDt = getTwistPerDt();
 //    poseEstimator.addVisionMeasurement(pose.minus(new Transform2d(gyroInputs.accelY * 0.02 * 0.02 - twistPerDt.getX() * .02, gyroInputs.accelX * 0.02 * 0.02 - twistPerDt.getY() * .02, Rotation2d.fromDegrees(0.0))), new Matrix<N3, N1>(Nat.N3(), Nat.N1(), new double[]{0.075, .075, 100.0}));// fixme: add acceleration from gyro
+    var visionInput = visionInputs[0];
+//
+//    for (VisionIO.VisionIOInputs visionInput : visionInputs) {
+      Optional<EstimatedRobotPose> estPose = photonPoseEstimator.update(visionInput.cameraResult);
+      if (estPose.isPresent() && (timestampSeconds != estPose.get().timestampSeconds)) {
+        estPose.ifPresent(
+                estimatedRobotPose -> {
+                  Logger.recordOutput("estRoPose", estimatedRobotPose.estimatedPose);
+                  Pose2d pose2d = estimatedRobotPose.estimatedPose.toPose2d();
+                  var shouldUse = true;
+                  if (
+                          shouldUse && ((!DriverStation.isFMSAttached()) ||
+                                  ((estimatedRobotPose.estimatedPose.getX() <= 16.5) &&
+                                          (estimatedRobotPose.estimatedPose.getX() > 0) &&
+                                          (estimatedRobotPose.estimatedPose.getZ() <= 1) &&
+                                          (estimatedRobotPose.estimatedPose.getZ() > -1) &&
+                                          (estimatedRobotPose.estimatedPose.getY() <= 8.2) &&
+                                          (estimatedRobotPose.estimatedPose.getY() > 0)))
+                  ) // only add it if it's less than 1 meter and in the field
+                  {
+                    Matrix<N3, N1> visionMatrix;
+                    switch (estimatedRobotPose.targetsUsed.size()) {
+                      case 0:
+                        visionMatrix = new Matrix<>(Nat.N3(), Nat.N1(), new double[]{16, 16, 32});
+                      case 1:
 
-    Optional<EstimatedRobotPose> estPose = photonPoseEstimator.update(visionInputs.cameraResult);
-    if (estPose.isPresent() && (timestampSeconds != estPose.get().timestampSeconds)) {
-      estPose.ifPresent(
-              estimatedRobotPose -> {
-                Logger.recordOutput("estRoPose", estimatedRobotPose.estimatedPose);
-                Pose2d pose2d = estimatedRobotPose.estimatedPose.toPose2d();
-                var shouldUse = true;
-                if (
-                        shouldUse && ((!DriverStation.isFMSAttached()) ||
-                                ((estimatedRobotPose.estimatedPose.getX() <= 16.5) &&
-                                        (estimatedRobotPose.estimatedPose.getX() > 0) &&
-                                        (estimatedRobotPose.estimatedPose.getZ() <= 1) &&
-                                        (estimatedRobotPose.estimatedPose.getZ() > -1) &&
-                                        (estimatedRobotPose.estimatedPose.getY() <= 8.2) &&
-                                        (estimatedRobotPose.estimatedPose.getY() > 0)))
-                ) // only add it if it's less than 1 meter and in the field
-                {
-                  Matrix<N3, N1> visionMatrix;
-                  switch (estimatedRobotPose.targetsUsed.size()) {
-                    case 0:
-                      visionMatrix = new Matrix<>(Nat.N3(), Nat.N1(), new double[]{16, 16, 32});
-                    case 1:
-
-                      var mult = estimatedRobotPose.targetsUsed.get(0).getPoseAmbiguity() * 25;
-                      if (
-                              (pose.getX() <= 16.5) &&
-                                      (pose.getX() > 0) &&
-                                      (pose.getY() <= 8.2) &&
-                                      (pose.getY() > 0)
-                      ) mult = mult / 4;
-                      visionMatrix = new Matrix<>(Nat.N3(), Nat.N1(), new double[]{8 * mult, 8 * mult, 12 * mult});
-                      break;
-                    case 2:
-                      var avg = 0.0;
-                      for (PhotonTrackedTarget photonTrackedTarget : estimatedRobotPose.targetsUsed) {
-                        Transform3d camttarg = photonTrackedTarget.getBestCameraToTarget();
-                        avg += (Math.pow(camttarg.getX(), 2) +Math.pow(camttarg.getY(), 2) + Math.pow(camttarg.getZ(), 2));
-                      }
-                      visionMatrix = new Matrix<>(Nat.N3(), Nat.N1(), new double[]{1.75 * avg, 1.75 * avg, 3 * avg});
-                    default:
-                      visionMatrix = new Matrix<>(Nat.N3(), Nat.N1(), new double[]{0.05, 0.05, 0.2});
+                        var mult = estimatedRobotPose.targetsUsed.get(0).getPoseAmbiguity() * 25;
+                        if (
+                                (pose.getX() <= 16.5) &&
+                                        (pose.getX() > 0) &&
+                                        (pose.getY() <= 8.2) &&
+                                        (pose.getY() > 0)
+                        ) mult = mult / 4;
+                        visionMatrix = new Matrix<>(Nat.N3(), Nat.N1(), new double[]{8 * mult, 8 * mult, 12 * mult});
+                        break;
+                      case 2:
+                        var avg = 0.0;
+                        for (PhotonTrackedTarget photonTrackedTarget : estimatedRobotPose.targetsUsed) {
+                          Transform3d camttarg = photonTrackedTarget.getBestCameraToTarget();
+                          avg += (Math.pow(camttarg.getX(), 2) + Math.pow(camttarg.getY(), 2) + Math.pow(camttarg.getZ(), 2));
+                        }
+                        visionMatrix = new Matrix<>(Nat.N3(), Nat.N1(), new double[]{1.75 * avg, 1.75 * avg, 3 * avg});
+                      default:
+                        visionMatrix = new Matrix<>(Nat.N3(), Nat.N1(), new double[]{0.05, 0.05, 0.2});
+                    }
+                    poseEstimator.addVisionMeasurement(pose2d, estimatedRobotPose.timestampSeconds, visionMatrix);
                   }
-                  poseEstimator.addVisionMeasurement(pose2d, estimatedRobotPose.timestampSeconds, visionMatrix);
-//                noGyroPoseEstimation.addVisionMeasurement(pose2d, estimatedRobotPose.timestampSeconds, visionMatrix);
-                }
-              });
+                });
+//      }
     }
     getTwistPerDt();
-    getTagCount();
+      logCameraData();
   }
 
   private void updateSwerveModulePositions() {
@@ -379,79 +409,61 @@ public class Drive extends SubsystemBase {
     var averageDriveMotor = routineLog.motor("Average TurnMotor");
     averageDriveMotor.angularVelocity(driveVelocityAverage.divide(4.0));
     averageDriveMotor.angularPosition(drivePositionAverage.divide(4.0));
-    getVisionTags();
   }
 
-  /**
-   * Returns all currently visable apriltags.
-   */
-  @AutoLogOutput(key = "Vision/Tags 3D")
-  private Pose3d[] getVisionTags() {
-    List<PhotonTrackedTarget> targets = visionInputs.cameraResult.getTargets();
-    var out = new Pose3d[targets.size()];
-    for (int i = 0; i < targets.size(); i++)
-      out[i] = new Pose3d(pose).plus(robotToCam.plus(targets.get(i).getBestCameraToTarget()));
-    return out;
-  }
-
-  @AutoLogOutput(key = "Vision/Tags 2D")
-  private Pose2d[] getVision2dTags() {
-    List<PhotonTrackedTarget> targets = visionInputs.cameraResult.getTargets();
-    var out = new Pose2d[targets.size()];
-    for (int i = 0; i < targets.size(); i++) {
-      var b = robotToCam.plus(targets.get(i).getBestCameraToTarget());
-      out[i] = pose.plus(new Transform2d(b.getTranslation().toTranslation2d(), b.getRotation().toRotation2d()));
-    }
-    return out;
-  }
-
-  @AutoLogOutput(key = "Vision/Tag Ambiguities")
-  private double[] getVisionTagAmbiguities() {
-    List<PhotonTrackedTarget> targets = visionInputs.cameraResult.getTargets();
-    var out = new double[targets.size()];
-    for (int i = 0, targetsSize = targets.size(); i < targetsSize; i++) {
-      PhotonTrackedTarget target = targets.get(i);
-      out[i] = target.getPoseAmbiguity();
-    }
-    return out;
-  }
-
-  @AutoLogOutput(key = "Vision/Corners")
-  private Translation2d[] getVisionCorners() {
-    List<PhotonTrackedTarget> targets = visionInputs.cameraResult.getTargets();
-    var out = new Translation2d[targets.size() * 4];
-    for (int i = 0; i < targets.size(); i++) {
-      var corners = targets.get(i).getDetectedCorners();
-      for (int j = 0; j < corners.size(); j++) {
-        TargetCorner corner = corners.get(j);
-        out[i + j] = new Translation2d(
-                corner.x,
-                corner.y);
+  private void logCameraData() {
+    for (VisionIO.VisionIOInputs visionInput : visionInputs) {
+      // Corners
+      List<PhotonTrackedTarget> targets = visionInput.cameraResult.targets;
+      var outCorners = new Translation2d[targets.size() * 4];
+      for (int i = 0; i < targets.size(); i++) {
+        var corners = targets.get(i).getDetectedCorners();
+        for (int j = 0; j < corners.size(); j++) {
+          TargetCorner corner = corners.get(j);
+          outCorners[i + j] = new Translation2d(
+                  corner.x,
+                  corner.y);
+        }
       }
-    }
-    for (int i = 0; i < out.length; i++) {
-      Translation2d translation2d = out[i];
-      if (translation2d == null) out[i] = new Translation2d();
-    }
-    return out;
-  }
+      for (int i = 0; i < outCorners.length; i++) {
+        Translation2d translation2d = outCorners[i];
+        if (translation2d == null) outCorners[i] = new Translation2d();
+      }
+      Logger.recordOutput("Vision/"+ visionInput.name+ "/Corners", outCorners);
 
+      // PNP Result
+      Logger.recordOutput("Vision/"+ visionInput.name+ "/MultiTag PNP Result", visionInput.cameraResult.getMultiTagResult());
+
+      // Tag Count
+      Logger.recordOutput("Vision/"+visionInput.name+"/Tag Count", visionInput.cameraResult.getTargets().size());
+
+      var outAmbiguities = new double[targets.size()];
+      for (int i = 0, targetsSize = targets.size(); i < targetsSize; i++) {
+        PhotonTrackedTarget target = targets.get(i);
+        outAmbiguities[i] = target.getPoseAmbiguity();
+      }
+      Logger.recordOutput("Vision/"+visionInput.name+"/Tag Ambiguities", outAmbiguities);
+
+      // Tags 2D
+      var outTags2D = new Pose2d[targets.size()];
+      for (int i = 0; i < targets.size(); i++) {
+        var b = robotToCam.plus(targets.get(i).getBestCameraToTarget());
+        outTags2D[i] = pose.plus(new Transform2d(b.getTranslation().toTranslation2d(), b.getRotation().toRotation2d()));
+      }
+      Logger.recordOutput("Vision/"+visionInput.name+"/Tags 2d", outTags2D);
+
+      var outTags3d = new Pose3d[targets.size()];
+      for (int i = 0; i < targets.size(); i++)
+        outTags3d[i] = new Pose3d(pose).plus(robotToCam.plus(targets.get(i).getBestCameraToTarget()));
+      Logger.recordOutput("Vision/"+visionInput.name+"/Tags 3d", outTags3d);
+    }
+  }
   /** Returns the module states (turn angles and drive velocities) for all of the modules. */
   @AutoLogOutput(key = "SwerveStates/Measured")
   private SwerveModuleState[] getModuleStates() {
     SwerveModuleState[] states = new SwerveModuleState[4];
-    for (int i = 0; i < 4; i++) {
-      states[i] = modules[i].getState();
-    }
+    for (int i = 0; i < 4; i++) states[i] = modules[i].getState();
     return states;
-  }
-
-  /**
-   * Returns the amount of tags visible from the vision system
-   */
-  @AutoLogOutput(key = "Vision/Tag Count")
-  private int getTagCount() {
-    return visionInputs.cameraResult.getTargets().size();
   }
 
   /** Returns the current odometry pose. */
@@ -460,8 +472,13 @@ public class Drive extends SubsystemBase {
     return pose;
   }
 
-  public boolean cameraConnected() {
-    return visionInputs.connected;
+  @AutoLogOutput(key = "Vision/Camera Count")
+  public int cameraCount() {
+    var cameraCount = 0;
+    for (VisionIO.VisionIOInputs visionInput : visionInputs) {
+      if (visionInput.connected) cameraCount++;
+    }
+    return cameraCount;
   }
 
   /**
