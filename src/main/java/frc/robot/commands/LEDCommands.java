@@ -37,7 +37,6 @@ public class LEDCommands {
     }
 
     public static Command setIntakeBoolean(){
-        wantsHPI = !wantsHPI;
         return runOnce(() -> wantsHPI = !wantsHPI)
                 .withName("Change Intake Mode");
 
@@ -48,25 +47,38 @@ public class LEDCommands {
         if (leds.getCandle() == null) return idle(leds);
         var candle = leds.getCandle();
 
-        return startEnd(
+        return runEnd(
                 () -> {
                     if(wantsHPI) {
-                        candle.animate(new SingleFadeAnimation(255, 255, 255, 0, 0, stripLength * 4), candleLength);
-                        candle.animate(new SingleFadeAnimation(255, 255, 255, 0, 0, stripLength * 4), candleLength);
-                        candle.animate(new SingleFadeAnimation(255, 255, 255, 0, 0, stripLength * 4), candleLength);
-                        candle.animate(new SingleFadeAnimation(255, 255, 255, 0, 0, stripLength * 4), candleLength);
-                        candle.animate(new SingleFadeAnimation(255, 255, 255, 0, 0, stripLength * 4), candleLength);
+                        candle.animate(new SingleFadeAnimation(255, 255, 50, 0, .1, stripLength * 4, candleLength), 0);
                     }
                     else{
-                        candle.animate(new SingleFadeAnimation(255, 127, 80, 0, 0, stripLength * 4), candleLength);
-                        candle.animate(new SingleFadeAnimation(255, 127, 80, 0, 0, stripLength * 4), candleLength);
-                        candle.animate(new SingleFadeAnimation(255, 127, 80, 0, 0, stripLength * 4), candleLength);
-                        candle.animate(new SingleFadeAnimation(255, 127, 80, 0, 0, stripLength * 4), candleLength);
-                        candle.animate(new SingleFadeAnimation(255, 127, 80, 0, 0, stripLength * 4), candleLength);
+                        candle.animate(new SingleFadeAnimation(0, 0, 80, 0, .1, stripLength * 4, candleLength), 0);
                     }
                 },
                 () -> {
-                    for (int i = 0; i < 5; i++) candle.clearAnimation(i);
+                    for (int i = 0; i < candle.getMaxSimultaneousAnimationCount(); i++) candle.clearAnimation(i);
+                },
+                leds
+        );
+    }
+
+    public static Command dropNoteEmily(LEDs leds){
+        if (leds == null) return none();
+        if (leds.getCandle() == null) return idle(leds);
+        var candle = leds.getCandle();
+
+        return startEnd(
+                () -> {
+                    if(!wantsHPI) {
+                        candle.animate(new LarsonAnimation(255, 255, 50, 0, 0, stripLength, LarsonAnimation.BounceMode.Back, stripLength, candleLength), 0);
+                        candle.animate(new LarsonAnimation(255, 255, 50, 0, 0, stripLength, LarsonAnimation.BounceMode.Front, stripLength, candleLength + stripLength), 1);
+                        candle.animate(new LarsonAnimation(255, 255, 50, 0, 0, stripLength, LarsonAnimation.BounceMode.Back, stripLength, candleLength + stripLength*2), 2);
+                        candle.animate(new LarsonAnimation(255, 255, 50, 0, 0, stripLength, LarsonAnimation.BounceMode.Front, stripLength, candleLength + stripLength*3), 3);
+                    }
+                },
+                () -> {
+                    for (int i = 0; i < candle.getMaxSimultaneousAnimationCount(); i++) candle.clearAnimation(i);
                 },
                 leds
         );
@@ -77,6 +89,8 @@ public class LEDCommands {
     }
 
     public static Command disabled(LEDs leds, RobotContainer robotContainer) {
+        if (leds == null) return none();
+        if (leds.getCandle() == null) return idle(leds);
         var candle = leds.getCandle();
 
         return startEnd(
@@ -96,7 +110,7 @@ public class LEDCommands {
 
             Optional<Alliance> side = DriverStation.getAlliance();
             if (side.isEmpty()) {
-                candle.animate(new StrobeAnimation(100,100,100, 0, 0, 1, 1), 3);//blinkred
+                candle.animate(new StrobeAnimation(50,50,50, 0, 0, 1, 1), 3);//blinkred
             } else if (side.get() == Alliance.Blue) {
                 candle.animate(new SingleFadeAnimation(0,0,100, 0, 0, 1, 1), 3);
             } else if (side.get() == Alliance.Red) {
@@ -107,30 +121,30 @@ public class LEDCommands {
 
             if (dsAttached) {
                 candle.clearAnimation(4);
-                candle.setLEDs(0, 100, 0, 0, 3, 1);
+                candle.setLEDs(0, 100, 0, 0, 2, 1);
             }
-            else candle.animate(new StrobeAnimation(100, 0, 0, 0, 0, 1, 3), 4);
+            else candle.animate(new StrobeAnimation(100, 0, 0, 0, 0, 1, 2), 4);
 
             if (gyroConnected) {
                 candle.clearAnimation(5);
-                candle.setLEDs(0, 100, 0, 0, 5, 1);
+                candle.setLEDs(0, 100, 0, 0, 3, 1);
             }
             else
-                candle.animate(new StrobeAnimation(100, 0, 0, 0, 0, 1, 5), 5);
+                candle.animate(new StrobeAnimation(100, 0, 0, 0, 0, 1, 3), 5);
 
             if (RobotController.getBatteryVoltage() > 13.0) {
                 candle.clearAnimation(5);
-                candle.setLEDs(0, 100, 0, 0, 6, 1);
+                candle.setLEDs(0, 100, 0, 0, 4, 1);
             }
             else
-                candle.animate(new StrobeAnimation(100, 0, 0, 0, 0, 1,6), 5);
+                candle.animate(new StrobeAnimation(100, 0, 0, 0, 0, 1,4), 5);
 
             if (DriverStation.isFMSAttached()) {
                 candle.clearAnimation(6);
-                candle.setLEDs(0, 100, 0, 0, 7, 1);
+                candle.setLEDs(0, 100, 0, 0, 5, 1);
             }
             else
-                candle.animate(new StrobeAnimation(100, 0, 0, 0, 0, 1, 7), 6);
+                candle.animate(new StrobeAnimation(100, 0, 0, 0, 0, 1, 5), 6);
         })).handleInterrupt(() -> {
             for (int i = 0; i < candle.getMaxSimultaneousAnimationCount(); i++) {
                 candle.clearAnimation(i);
@@ -139,6 +153,8 @@ public class LEDCommands {
     }
 
     public static Command enabled(LEDs leds) {
+        if (leds == null) return none();
+        if (leds.getCandle() == null) return idle(leds);
         var candle = leds.getCandle();
         return startEnd(
                 () -> {
