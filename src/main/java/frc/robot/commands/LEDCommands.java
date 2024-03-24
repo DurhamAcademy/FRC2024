@@ -98,7 +98,7 @@ public class LEDCommands {
 
             Optional<Alliance> side = DriverStation.getAlliance();
             if (side.isEmpty()) {
-                candle.animate(new StrobeAnimation(100,100,100, 0, 0, 1, 1), 3);//blinkred
+                candle.animate(new StrobeAnimation(50,50,50, 0, 0, 1, 1), 3);//blinkred
             } else if (side.get() == Alliance.Blue) {
                 candle.animate(new SingleFadeAnimation(0,0,100, 0, 0, 1, 1), 3);
             } else if (side.get() == Alliance.Red) {
@@ -109,30 +109,30 @@ public class LEDCommands {
 
             if (dsAttached) {
                 candle.clearAnimation(4);
-                candle.setLEDs(0, 100, 0, 0, 3, 1);
+                candle.setLEDs(0, 100, 0, 0, 2, 1);
             }
-            else candle.animate(new StrobeAnimation(100, 0, 0, 0, 0, 1, 3), 4);
+            else candle.animate(new StrobeAnimation(100, 0, 0, 0, 0, 1, 2), 4);
 
             if (gyroConnected) {
                 candle.clearAnimation(5);
-                candle.setLEDs(0, 100, 0, 0, 5, 1);
+                candle.setLEDs(0, 100, 0, 0, 3, 1);
             }
             else
-                candle.animate(new StrobeAnimation(100, 0, 0, 0, 0, 1, 5), 5);
+                candle.animate(new StrobeAnimation(100, 0, 0, 0, 0, 1, 3), 5);
 
             if (RobotController.getBatteryVoltage() > 13.0) {
                 candle.clearAnimation(5);
-                candle.setLEDs(0, 100, 0, 0, 6, 1);
+                candle.setLEDs(0, 100, 0, 0, 4, 1);
             }
             else
-                candle.animate(new StrobeAnimation(100, 0, 0, 0, 0, 1,6), 5);
+                candle.animate(new StrobeAnimation(100, 0, 0, 0, 0, 1,4), 5);
 
             if (DriverStation.isFMSAttached()) {
                 candle.clearAnimation(6);
-                candle.setLEDs(0, 100, 0, 0, 7, 1);
+                candle.setLEDs(0, 100, 0, 0, 5, 1);
             }
             else
-                candle.animate(new StrobeAnimation(100, 0, 0, 0, 0, 1, 7), 6);
+                candle.animate(new StrobeAnimation(100, 0, 0, 0, 0, 1, 5), 6);
         })).handleInterrupt(() -> {
             for (int i = 0; i < candle.getMaxSimultaneousAnimationCount(); i++) {
                 candle.clearAnimation(i);
