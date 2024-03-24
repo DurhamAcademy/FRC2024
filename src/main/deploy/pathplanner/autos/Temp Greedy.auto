@@ -18,37 +18,6 @@
           }
         },
         {
-          "type": "named",
-          "data": {
-            "name": "Shoot"
-          }
-        },
-        {
-          "type": "parallel",
-          "data": {
-            "commands": [
-              {
-                "type": "named",
-                "data": {
-                  "name": "Intake Note"
-                }
-              },
-              {
-                "type": "path",
-                "data": {
-                  "pathName": "Greedy No Stage.1"
-                }
-              },
-              {
-                "type": "named",
-                "data": {
-                  "name": "Ready Shooter"
-                }
-              }
-            ]
-          }
-        },
-        {
           "type": "parallel",
           "data": {
             "commands": [
@@ -80,35 +49,16 @@
               {
                 "type": "path",
                 "data": {
-                  "pathName": "Greedy No Stage.2"
-                }
-              },
-              {
-                "type": "named",
-                "data": {
-                  "name": "Ready Shooter"
+                  "pathName": "Temp Greedy.1"
                 }
               }
             ]
           }
         },
         {
-          "type": "parallel",
+          "type": "path",
           "data": {
-            "commands": [
-              {
-                "type": "named",
-                "data": {
-                  "name": "Ready Shooter"
-                }
-              },
-              {
-                "type": "named",
-                "data": {
-                  "name": "Shoot When Ready"
-                }
-              }
-            ]
+            "pathName": "Temp Greedy.2"
           }
         },
         {
@@ -124,7 +74,20 @@
               {
                 "type": "path",
                 "data": {
-                  "pathName": "Greedy No Stage.3"
+                  "pathName": "Temp Greedy.3"
+                }
+              }
+            ]
+          }
+        },
+        {
+          "type": "parallel",
+          "data": {
+            "commands": [
+              {
+                "type": "path",
+                "data": {
+                  "pathName": "Temp Greedy.4"
                 }
               },
               {

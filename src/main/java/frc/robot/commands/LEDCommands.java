@@ -3,6 +3,7 @@ package frc.robot.commands;
 import com.ctre.phoenix.led.*;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.DriverStation.Alliance;
+import edu.wpi.first.wpilibj.RobotController;
 import edu.wpi.first.wpilibj2.command.Command;
 import frc.robot.RobotContainer;
 import frc.robot.subsystems.lights.LEDs;
@@ -15,9 +16,9 @@ import static frc.robot.subsystems.lights.LEDs.candleLength;
 import static frc.robot.subsystems.lights.LEDs.stripLength;
 
 public class LEDCommands {
+    public static boolean wantsHPI;
     public static Command flameCommand(LEDs leds, double brightness) {
         if (leds == null) return none();
-        if (leds.getCandle() == null) return idle(leds);
         if (leds.getCandle() == null) return idle(leds);
         var candle = leds.getCandle();
         return startEnd(
@@ -35,6 +36,42 @@ public class LEDCommands {
         );
     }
 
+    public static Command setIntakeBoolean(){
+        wantsHPI = !wantsHPI;
+        return runOnce(() -> wantsHPI = !wantsHPI)
+                .withName("Change Intake Mode");
+
+    }
+
+    public static Command setIntakeType(LEDs leds){
+        if (leds == null) return none();
+        if (leds.getCandle() == null) return idle(leds);
+        var candle = leds.getCandle();
+
+        return startEnd(
+                () -> {
+                    if(wantsHPI) {
+                        candle.animate(new SingleFadeAnimation(255, 255, 255, 0, 0, stripLength * 4), candleLength);
+                        candle.animate(new SingleFadeAnimation(255, 255, 255, 0, 0, stripLength * 4), candleLength);
+                        candle.animate(new SingleFadeAnimation(255, 255, 255, 0, 0, stripLength * 4), candleLength);
+                        candle.animate(new SingleFadeAnimation(255, 255, 255, 0, 0, stripLength * 4), candleLength);
+                        candle.animate(new SingleFadeAnimation(255, 255, 255, 0, 0, stripLength * 4), candleLength);
+                    }
+                    else{
+                        candle.animate(new SingleFadeAnimation(255, 127, 80, 0, 0, stripLength * 4), candleLength);
+                        candle.animate(new SingleFadeAnimation(255, 127, 80, 0, 0, stripLength * 4), candleLength);
+                        candle.animate(new SingleFadeAnimation(255, 127, 80, 0, 0, stripLength * 4), candleLength);
+                        candle.animate(new SingleFadeAnimation(255, 127, 80, 0, 0, stripLength * 4), candleLength);
+                        candle.animate(new SingleFadeAnimation(255, 127, 80, 0, 0, stripLength * 4), candleLength);
+                    }
+                },
+                () -> {
+                    for (int i = 0; i < 5; i++) candle.clearAnimation(i);
+                },
+                leds
+        );
+    }
+
     public static Command flameCommand(LEDs leds) {
         return flameCommand(leds, 0.25);
     }
@@ -43,11 +80,9 @@ public class LEDCommands {
         var candle = leds.getCandle();
 
         return startEnd(
+                () -> candle.animate(new RainbowAnimation(1, 0, stripLength * 4, false, candleLength), 1),
                 () -> {
-                    candle.animate(new RainbowAnimation(1, 0, stripLength * 4, false, candleLength), 1);
-                },
-                () -> {
-                    for (int i = 0; i < 10; i++) candle.clearAnimation(i);
+                    for (int i = 0; i < candle.getMaxSimultaneousAnimationCount(); i++) candle.clearAnimation(i);
                 },
                 leds
         ).deadlineWith(run(()-> {
@@ -55,38 +90,52 @@ public class LEDCommands {
             boolean cameraConnected = robotContainer.drive.cameraConnected();
             boolean gyroConnected = robotContainer.drive.isGyroConnected();
             if (cameraConnected) {
-                candle.clearAnimation(5);
-                candle.setLEDs(0, 100, 0, 0, 1, 0);
-            }
-            else candle.animate(new StrobeAnimation(255, 0, 0, 0, 0, 1, 0), 5);
-            Optional<Alliance> side = DriverStation.getAlliance();
-            if (side.isEmpty())
-                candle.animate(new StrobeAnimation(100,0,0, 0, 0, 1, 1), 7);//blinkred
-            else if (side.get() == Alliance.Blue)
-                candle.animate(new SingleFadeAnimation(0,0,100, 0, 0, 1, 1), 7);
-            else if (side.get() == Alliance.Red) {
+                candle.clearAnimation(2);
+                candle.setLEDs(0, 100, 0, 0, 0, 1);
+            } else candle.animate(new StrobeAnimation(255, 0, 0, 0, 0, 1, 0), 2);
 
-                candle.animate(new SingleFadeAnimation(100, 0, 0, 0, 0, 1, 1), 7);
+            Optional<Alliance> side = DriverStation.getAlliance();
+            if (side.isEmpty()) {
+                candle.animate(new StrobeAnimation(100,100,100, 0, 0, 1, 1), 3);//blinkred
+            } else if (side.get() == Alliance.Blue) {
+                candle.animate(new SingleFadeAnimation(0,0,100, 0, 0, 1, 1), 3);
+            } else if (side.get() == Alliance.Red) {
+                candle.animate(new SingleFadeAnimation(100, 0, 0, 0, 0, 1, 1), 3);
+            } else {
+                candle.animate(new StrobeAnimation(100,0,0, 0, 0, 1, 1), 3);//blinkred
             }
-            else candle.animate(new StrobeAnimation(100,0,0, 0, 0, 1, 1), 7);//blinkred
+
             if (dsAttached) {
-                candle.clearAnimation(8);
-                candle.setLEDs(0, 100, 0, 0, 1, 3);
+                candle.clearAnimation(4);
+                candle.setLEDs(0, 100, 0, 0, 3, 1);
             }
-            else candle.animate(new StrobeAnimation(100, 0, 0, 0, 0, 1, 3), 8);
+            else candle.animate(new StrobeAnimation(100, 0, 0, 0, 0, 1, 3), 4);
+
             if (gyroConnected) {
-                candle.clearAnimation(9);
-                candle.setLEDs(0, 100, 0, 0, 1, 4);
+                candle.clearAnimation(5);
+                candle.setLEDs(0, 100, 0, 0, 5, 1);
             }
             else
-                candle.animate(new StrobeAnimation(100, 0, 0, 0, 0, 1, 5), 9);
+                candle.animate(new StrobeAnimation(100, 0, 0, 0, 0, 1, 5), 5);
+
+            if (RobotController.getBatteryVoltage() > 13.0) {
+                candle.clearAnimation(5);
+                candle.setLEDs(0, 100, 0, 0, 6, 1);
+            }
+            else
+                candle.animate(new StrobeAnimation(100, 0, 0, 0, 0, 1,6), 5);
+
             if (DriverStation.isFMSAttached()) {
-                candle.clearAnimation(10);
-                candle.setLEDs(0, 100, 0, 0, 1, 4);
+                candle.clearAnimation(6);
+                candle.setLEDs(0, 100, 0, 0, 7, 1);
             }
             else
-                candle.animate(new StrobeAnimation(100, 0, 0, 0, 0, 1, 5), 10);
-        }));
+                candle.animate(new StrobeAnimation(100, 0, 0, 0, 0, 1, 7), 6);
+        })).handleInterrupt(() -> {
+            for (int i = 0; i < candle.getMaxSimultaneousAnimationCount(); i++) {
+                candle.clearAnimation(i);
+            }
+        });
     }
 
     public static Command enabled(LEDs leds) {
@@ -97,7 +146,7 @@ public class LEDCommands {
                     candle.animate(new TwinkleAnimation(200, 200, 200, 1, 0, stripLength * 4, Percent30, candleLength), 1);
                 },
                 () -> {
-                    for (int i = 0; i < 2; i++) candle.clearAnimation(i);
+                    for (int i = 0; i < candle.getMaxSimultaneousAnimationCount(); i++) candle.clearAnimation(i);
                 },
                 leds
         );

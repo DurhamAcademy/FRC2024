@@ -2,25 +2,64 @@
   "version": 1.0,
   "startingPose": {
     "position": {
-      "x": 0.6235952377319336,
-      "y": 4.342130661010742
+      "x": 0.6949124932289124,
+      "y": 4.350799083709717
     },
-    "rotation": 120.96377819814369
+    "rotation": 121.42956875605759
   },
   "command": {
     "type": "sequential",
     "data": {
       "commands": [
         {
-          "type": "named",
+          "type": "parallel",
           "data": {
-            "name": "Shoot"
+            "commands": [
+              {
+                "type": "named",
+                "data": {
+                  "name": "Zero Hood"
+                }
+              },
+              {
+                "type": "path",
+                "data": {
+                  "pathName": "Friend Source Side.1"
+                }
+              }
+            ]
           }
         },
         {
-          "type": "path",
+          "type": "race",
           "data": {
-            "pathName": "Friend Source Side.1"
+            "commands": [
+              {
+                "type": "named",
+                "data": {
+                  "name": "Ready Shooter"
+                }
+              },
+              {
+                "type": "named",
+                "data": {
+                  "name": "Shoot When Ready"
+                }
+              }
+            ]
+          }
+        },
+        {
+          "type": "parallel",
+          "data": {
+            "commands": [
+              {
+                "type": "path",
+                "data": {
+                  "pathName": "Friend Source Side.2"
+                }
+              }
+            ]
           }
         },
         {
@@ -36,7 +75,26 @@
               {
                 "type": "path",
                 "data": {
-                  "pathName": "Friend Source Side.2"
+                  "pathName": "Friend Source Side.3"
+                }
+              }
+            ]
+          }
+        },
+        {
+          "type": "parallel",
+          "data": {
+            "commands": [
+              {
+                "type": "path",
+                "data": {
+                  "pathName": "Friend Source Side.4"
+                }
+              },
+              {
+                "type": "named",
+                "data": {
+                  "name": "Ready Shooter"
                 }
               }
             ]
@@ -56,31 +114,6 @@
                 "type": "named",
                 "data": {
                   "name": "Shoot When Ready"
-                }
-              }
-            ]
-          }
-        },
-        {
-          "type": "path",
-          "data": {
-            "pathName": "Friend Source Side.3"
-          }
-        },
-        {
-          "type": "parallel",
-          "data": {
-            "commands": [
-              {
-                "type": "named",
-                "data": {
-                  "name": "Intake Note"
-                }
-              },
-              {
-                "type": "path",
-                "data": {
-                  "pathName": "Friend Source Side.4"
                 }
               }
             ]

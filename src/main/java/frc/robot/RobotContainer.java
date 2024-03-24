@@ -221,7 +221,6 @@ private final CommandXboxController driverController = new CommandXboxController
         NamedCommands.registerCommand(
                 "Intake Note",
                 smartIntakeCommand(intake, feeder)
-                        .withTimeout(1.0)
                         .andThen(IntakeCommands.idleCommand(intake)
                                 .withTimeout(1.5))
         );
@@ -243,7 +242,9 @@ private final CommandXboxController driverController = new CommandXboxController
                 new Trigger(feeder::getBeamBroken),
                 new Trigger(shooter::allAtSetpoint),
                 new Trigger(shooter::hoodAtSetpoint),
-                new Trigger(shooter::flywheelAtSetpoint)
+                new Trigger(shooter::flywheelAtSetpoint),
+                new Trigger(RobotState::isTeleop),
+                new Trigger(RobotState::isAutonomous)
         );
 
         configureButtonBindings();
@@ -356,6 +357,13 @@ private final CommandXboxController driverController = new CommandXboxController
                                 )
                                         .until(() -> !feeder.getBeamBroken())
                         );
+//                operatorController
+//                        .povRight()
+//                        .onTrue(LEDCommands.setIntakeBoolean())
+//                                .whileTrue(
+//                                                LEDCommands.setIntakeType(leds)
+//                                );
+
 
                 // ---- SHOOTER COMMANDS ----
                 operatorController
@@ -548,6 +556,8 @@ private final CommandXboxController driverController = new CommandXboxController
                                         .andThen(rumbleLightWithFalloff(operatorRumble).withTimeout(10.0))
                         ).ignoringDisable(true)
                 );
+        reactions.isAutonomous.whileTrue(LEDCommands.flameCommand(leds).ignoringDisable(true));
+        reactions.isTeleop.whileTrue(LEDCommands.enabled(leds).ignoringDisable(true));
     }
 
 
@@ -580,13 +590,17 @@ private final CommandXboxController driverController = new CommandXboxController
         Trigger shooterAllAtSetpoint;
         Trigger shooterHoodAtSetpoint;
         Trigger shooterRpmAtSetpoint;
+        Trigger isTeleop;
+        Trigger isAutonomous;
 
-        public ReactionObject(Trigger intakeBeamBroken, Trigger shooterBeamBroken, Trigger shooterAllAtSetpoint, Trigger shooterHoodAtSetpoint, Trigger shooterRpmAtSetpoint) {
+        public ReactionObject(Trigger intakeBeamBroken, Trigger shooterBeamBroken, Trigger shooterAllAtSetpoint, Trigger shooterHoodAtSetpoint, Trigger shooterRpmAtSetpoint, Trigger t, Trigger b) {
             this.intakeBeamBroken = intakeBeamBroken;
             this.shooterBeamBroken = shooterBeamBroken;
             this.shooterAllAtSetpoint = shooterAllAtSetpoint;
             this.shooterHoodAtSetpoint = shooterHoodAtSetpoint;
             this.shooterRpmAtSetpoint = shooterRpmAtSetpoint;
+            this.isTeleop = t;
+            this.isAutonomous = b;
         }
     }
 }
