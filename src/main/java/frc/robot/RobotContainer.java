@@ -50,7 +50,6 @@ import frc.robot.subsystems.intake.IntakeIOSim;
 import frc.robot.subsystems.intake.IntakeIOSparkMax;
 import frc.robot.subsystems.lights.LEDs;
 import frc.robot.subsystems.shooter.*;
-import frc.robot.util.Dashboard;
 import frc.robot.util.Mode;
 import org.littletonrobotics.junction.networktables.LoggedDashboardBoolean;
 import org.littletonrobotics.junction.networktables.LoggedDashboardChooser;
@@ -244,7 +243,8 @@ private final CommandXboxController driverController = new CommandXboxController
                 new Trigger(shooter::hoodAtSetpoint),
                 new Trigger(shooter::flywheelAtSetpoint),
                 new Trigger(RobotState::isTeleop),
-                new Trigger(RobotState::isAutonomous)
+                new Trigger(RobotState::isAutonomous),
+                new Trigger(RobotState::isEnabled)
         );
 
         configureButtonBindings();
@@ -556,8 +556,14 @@ private final CommandXboxController driverController = new CommandXboxController
                                         .andThen(rumbleLightWithFalloff(operatorRumble).withTimeout(10.0))
                         ).ignoringDisable(true)
                 );
-        reactions.isAutonomous.whileTrue(LEDCommands.flameCommand(leds).ignoringDisable(true));
-        reactions.isTeleop.whileTrue(LEDCommands.enabled(leds).ignoringDisable(true));
+        reactions
+                .isAutonomous
+                .and(reactions.isEnabled)
+                .whileTrue(LEDCommands.flameCommand(leds).ignoringDisable(true));
+        reactions
+                .isTeleop
+                .and(reactions.isEnabled)
+                .whileTrue(LEDCommands.enabled(leds).ignoringDisable(true));
     }
 
 
@@ -585,6 +591,7 @@ private final CommandXboxController driverController = new CommandXboxController
     }
 
     private class ReactionObject {
+        Trigger isEnabled;
         Trigger intakeBeamBroken;
         Trigger shooterBeamBroken;
         Trigger shooterAllAtSetpoint;
@@ -593,7 +600,7 @@ private final CommandXboxController driverController = new CommandXboxController
         Trigger isTeleop;
         Trigger isAutonomous;
 
-        public ReactionObject(Trigger intakeBeamBroken, Trigger shooterBeamBroken, Trigger shooterAllAtSetpoint, Trigger shooterHoodAtSetpoint, Trigger shooterRpmAtSetpoint, Trigger t, Trigger b) {
+        public ReactionObject(Trigger intakeBeamBroken, Trigger shooterBeamBroken, Trigger shooterAllAtSetpoint, Trigger shooterHoodAtSetpoint, Trigger shooterRpmAtSetpoint, Trigger t, Trigger b, Trigger trigger) {
             this.intakeBeamBroken = intakeBeamBroken;
             this.shooterBeamBroken = shooterBeamBroken;
             this.shooterAllAtSetpoint = shooterAllAtSetpoint;
@@ -601,6 +608,7 @@ private final CommandXboxController driverController = new CommandXboxController
             this.shooterRpmAtSetpoint = shooterRpmAtSetpoint;
             this.isTeleop = t;
             this.isAutonomous = b;
+            this.isEnabled = trigger;
         }
     }
 }

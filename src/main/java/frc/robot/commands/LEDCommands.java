@@ -77,6 +77,8 @@ public class LEDCommands {
     }
 
     public static Command disabled(LEDs leds, RobotContainer robotContainer) {
+        if (leds == null) return none();
+        if (leds.getCandle() == null) return idle(leds);
         var candle = leds.getCandle();
 
         return startEnd(
@@ -139,6 +141,8 @@ public class LEDCommands {
     }
 
     public static Command enabled(LEDs leds) {
+        if (leds == null) return none();
+        if (leds.getCandle() == null) return idle(leds);
         var candle = leds.getCandle();
         return startEnd(
                 () -> {
