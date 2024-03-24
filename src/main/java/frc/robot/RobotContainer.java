@@ -121,7 +121,7 @@ private final CommandXboxController driverController = new CommandXboxController
                                 new ModuleIOSparkMax(3){},
                                 new VisionIOReal[]{
                                         new VisionIOReal("ShootSideCamera"),
-                                        new VisionIOReal("OtherCamera") //fixme: rename camera
+                                        new VisionIOReal("RightCamera") //fixme: rename camera
                                 });
                 shooter = new Shooter(new ShooterIOTalonFX(), new HoodIOSparkMax()); // new HoodIOSparkMax() {}
                 feeder = new Feeder(new FeederIOTalonFX());

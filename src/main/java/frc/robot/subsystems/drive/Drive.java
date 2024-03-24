@@ -110,7 +110,6 @@ public class Drive extends SubsystemBase {
     this.visionIO = visionIO;
     visionInputs = new VisionIO.VisionIOInputs[visionIO.length];
     for (int i = 0, visionIOLength = visionIO.length; i < visionIOLength; i++) {
-        VisionIO vision = visionIO[i];
         visionInputs[i] = new VisionIO.VisionIOInputs() {};
     }
 
@@ -173,7 +172,7 @@ public class Drive extends SubsystemBase {
           vision.updateInputs(visionInputs[i]);
       }
       for (VisionIO.VisionIOInputs visionInput : visionInputs) {
-          Logger.processInputs("Drive/Vision" + visionInput.name, visionInput);
+          Logger.processInputs("Drive/Vision/" + visionInput.name, visionInput);
       }
 
       for (var module : modules) {
@@ -304,6 +303,7 @@ public class Drive extends SubsystemBase {
 //      }
     }
     getTwistPerDt();
+      logCameraData();
   }
 
   private void updateSwerveModulePositions() {
@@ -411,7 +411,7 @@ public class Drive extends SubsystemBase {
     averageDriveMotor.angularPosition(drivePositionAverage.divide(4.0));
   }
 
-  private void LogCameraData() {
+  private void logCameraData() {
     for (VisionIO.VisionIOInputs visionInput : visionInputs) {
       // Corners
       List<PhotonTrackedTarget> targets = visionInput.cameraResult.targets;
