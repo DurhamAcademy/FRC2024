@@ -87,7 +87,7 @@ public class LEDCommands {
                 leds
         ).deadlineWith(run(()-> {
             boolean dsAttached = DriverStation.isDSAttached();
-            boolean cameraConnected = robotContainer.drive.cameraConnected();
+            boolean cameraConnected = robotContainer.drive.cameraCount() > 1;
             boolean gyroConnected = robotContainer.drive.isGyroConnected();
             if (cameraConnected) {
                 candle.clearAnimation(2);

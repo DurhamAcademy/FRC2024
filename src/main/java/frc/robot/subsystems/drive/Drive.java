@@ -90,7 +90,17 @@ public class Drive extends SubsystemBase {
   private Pose2d previousPose = new Pose2d();
   double timestampSeconds = 0.0;
 
-  public Drive(
+    public Drive(
+        GyroIO gyroIO,
+        VisionIO visionIO,
+        ModuleIO flModuleIO,
+        ModuleIO frModuleIO,
+        ModuleIO blModuleIO,
+        ModuleIO brModuleIO) {
+        this(gyroIO, flModuleIO, frModuleIO, blModuleIO, brModuleIO, new VisionIO[]{visionIO});
+    }
+
+    public Drive(
       GyroIO gyroIO,
       ModuleIO flModuleIO,
       ModuleIO frModuleIO,
@@ -243,8 +253,9 @@ public class Drive extends SubsystemBase {
 //    new UnscentedKalmanFilter<>()
 //    Transform2d twistPerDt = getTwistPerDt();
 //    poseEstimator.addVisionMeasurement(pose.minus(new Transform2d(gyroInputs.accelY * 0.02 * 0.02 - twistPerDt.getX() * .02, gyroInputs.accelX * 0.02 * 0.02 - twistPerDt.getY() * .02, Rotation2d.fromDegrees(0.0))), new Matrix<N3, N1>(Nat.N3(), Nat.N1(), new double[]{0.075, .075, 100.0}));// fixme: add acceleration from gyro
-
-    for (VisionIO.VisionIOInputs visionInput : visionInputs) {
+    var visionInput = visionInputs[0];
+//
+//    for (VisionIO.VisionIOInputs visionInput : visionInputs) {
       Optional<EstimatedRobotPose> estPose = photonPoseEstimator.update(visionInput.cameraResult);
       if (estPose.isPresent() && (timestampSeconds != estPose.get().timestampSeconds)) {
         estPose.ifPresent(
@@ -288,13 +299,11 @@ public class Drive extends SubsystemBase {
                         visionMatrix = new Matrix<>(Nat.N3(), Nat.N1(), new double[]{0.05, 0.05, 0.2});
                     }
                     poseEstimator.addVisionMeasurement(pose2d, estimatedRobotPose.timestampSeconds, visionMatrix);
-//                noGyroPoseEstimation.addVisionMeasurement(pose2d, estimatedRobotPose.timestampSeconds, visionMatrix);
                   }
                 });
-      }
+//      }
     }
     getTwistPerDt();
-    getTagCount();
   }
 
   private void updateSwerveModulePositions() {
@@ -400,79 +409,61 @@ public class Drive extends SubsystemBase {
     var averageDriveMotor = routineLog.motor("Average TurnMotor");
     averageDriveMotor.angularVelocity(driveVelocityAverage.divide(4.0));
     averageDriveMotor.angularPosition(drivePositionAverage.divide(4.0));
-    getVisionTags();
   }
 
-  /**
-   * Returns all currently visable apriltags.
-   */
-  @AutoLogOutput(key = "Vision/Tags 3D")
-  private Pose3d[] getVisionTags() {
-    List<PhotonTrackedTarget> targets = visionInputs.cameraResult.getTargets();
-    var out = new Pose3d[targets.size()];
-    for (int i = 0; i < targets.size(); i++)
-      out[i] = new Pose3d(pose).plus(robotToCam.plus(targets.get(i).getBestCameraToTarget()));
-    return out;
-  }
-
-  @AutoLogOutput(key = "Vision/Tags 2D")
-  private Pose2d[] getVision2dTags() {
-    List<PhotonTrackedTarget> targets = visionInputs.cameraResult.getTargets();
-    var out = new Pose2d[targets.size()];
-    for (int i = 0; i < targets.size(); i++) {
-      var b = robotToCam.plus(targets.get(i).getBestCameraToTarget());
-      out[i] = pose.plus(new Transform2d(b.getTranslation().toTranslation2d(), b.getRotation().toRotation2d()));
-    }
-    return out;
-  }
-
-  @AutoLogOutput(key = "Vision/Tag Ambiguities")
-  private double[] getVisionTagAmbiguities() {
-    List<PhotonTrackedTarget> targets = visionInputs.cameraResult.getTargets();
-    var out = new double[targets.size()];
-    for (int i = 0, targetsSize = targets.size(); i < targetsSize; i++) {
-      PhotonTrackedTarget target = targets.get(i);
-      out[i] = target.getPoseAmbiguity();
-    }
-    return out;
-  }
-
-  @AutoLogOutput(key = "Vision/Corners")
-  private Translation2d[] getVisionCorners() {
-    List<PhotonTrackedTarget> targets = t.cameraResult.getTargets();
-    var out = new Translation2d[targets.size() * 4];
-    for (int i = 0; i < targets.size(); i++) {
-      var corners = targets.get(i).getDetectedCorners();
-      for (int j = 0; j < corners.size(); j++) {
-        TargetCorner corner = corners.get(j);
-        out[i + j] = new Translation2d(
-                corner.x,
-                corner.y);
+  private void LogCameraData() {
+    for (VisionIO.VisionIOInputs visionInput : visionInputs) {
+      // Corners
+      List<PhotonTrackedTarget> targets = visionInput.cameraResult.targets;
+      var outCorners = new Translation2d[targets.size() * 4];
+      for (int i = 0; i < targets.size(); i++) {
+        var corners = targets.get(i).getDetectedCorners();
+        for (int j = 0; j < corners.size(); j++) {
+          TargetCorner corner = corners.get(j);
+          outCorners[i + j] = new Translation2d(
+                  corner.x,
+                  corner.y);
+        }
       }
-    }
-    for (int i = 0; i < out.length; i++) {
-      Translation2d translation2d = out[i];
-      if (translation2d == null) out[i] = new Translation2d();
-    }
-    return out;
-  }
+      for (int i = 0; i < outCorners.length; i++) {
+        Translation2d translation2d = outCorners[i];
+        if (translation2d == null) outCorners[i] = new Translation2d();
+      }
+      Logger.recordOutput("Vision/"+ visionInput.name+ "/Corners", outCorners);
 
+      // PNP Result
+      Logger.recordOutput("Vision/"+ visionInput.name+ "/MultiTag PNP Result", visionInput.cameraResult.getMultiTagResult());
+
+      // Tag Count
+      Logger.recordOutput("Vision/"+visionInput.name+"/Tag Count", visionInput.cameraResult.getTargets().size());
+
+      var outAmbiguities = new double[targets.size()];
+      for (int i = 0, targetsSize = targets.size(); i < targetsSize; i++) {
+        PhotonTrackedTarget target = targets.get(i);
+        outAmbiguities[i] = target.getPoseAmbiguity();
+      }
+      Logger.recordOutput("Vision/"+visionInput.name+"/Tag Ambiguities", outAmbiguities);
+
+      // Tags 2D
+      var outTags2D = new Pose2d[targets.size()];
+      for (int i = 0; i < targets.size(); i++) {
+        var b = robotToCam.plus(targets.get(i).getBestCameraToTarget());
+        outTags2D[i] = pose.plus(new Transform2d(b.getTranslation().toTranslation2d(), b.getRotation().toRotation2d()));
+      }
+      Logger.recordOutput("Vision/"+visionInput.name+"/Tags 2d", outTags2D);
+
+      var outTags3d = new Pose3d[targets.size()];
+      for (int i = 0; i < targets.size(); i++)
+        outTags3d[i] = new Pose3d(pose).plus(robotToCam.plus(targets.get(i).getBestCameraToTarget()));
+      Logger.recordOutput("Vision/"+visionInput.name+"/Tags 3d", outTags3d);
+    }
+  }
   /** Returns the module states (turn angles and drive velocities) for all of the modules. */
   @AutoLogOutput(key = "SwerveStates/Measured")
   private SwerveModuleState[] getModuleStates() {
     SwerveModuleState[] states = new SwerveModuleState[4];
-    for (int i = 0; i < 4; i++) {
-      states[i] = modules[i].getState();
-    }
+    for (int i = 0; i < 4; i++) states[i] = modules[i].getState();
     return states;
-  }
-
-  /**
-   * Returns the amount of tags visible from the vision system
-   */
-  @AutoLogOutput(key = "Vision/Tag Count")
-  private int getTagCount() {
-    return visionInputs.cameraResult.getTargets().size();
   }
 
   /** Returns the current odometry pose. */
@@ -481,8 +472,13 @@ public class Drive extends SubsystemBase {
     return pose;
   }
 
-  public boolean cameraConnected() {
-    return visionInputs.connected;
+  @AutoLogOutput(key = "Vision/Camera Count")
+  public int cameraCount() {
+    var cameraCount = 0;
+    for (VisionIO.VisionIOInputs visionInput : visionInputs) {
+      if (visionInput.connected) cameraCount++;
+    }
+    return cameraCount;
   }
 
   /**

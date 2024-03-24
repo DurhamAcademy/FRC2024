@@ -115,12 +115,14 @@ private final CommandXboxController driverController = new CommandXboxController
                 drive =
                         new Drive(
                                 new GyroIOPigeon2(),
-                                new VisionIOReal("ShootSideCamera"),
-                                new VisionIOReal("OtherCamera"), //fixme: rename
                                 new ModuleIOSparkMax(0){},
                                 new ModuleIOSparkMax(1){},
                                 new ModuleIOSparkMax(2){},
-                                new ModuleIOSparkMax(3){});
+                                new ModuleIOSparkMax(3){},
+                                new VisionIOReal[]{
+                                        new VisionIOReal("ShootSideCamera"),
+                                        new VisionIOReal("OtherCamera") //fixme: rename camera
+                                });
                 shooter = new Shooter(new ShooterIOTalonFX(), new HoodIOSparkMax()); // new HoodIOSparkMax() {}
                 feeder = new Feeder(new FeederIOTalonFX());
                 intake = new Intake(new IntakeIOSparkMax());
