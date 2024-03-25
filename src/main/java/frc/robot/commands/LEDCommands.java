@@ -31,10 +31,14 @@ public class LEDCommands {
     }
 
     public static Command flameCommand(LEDs leds) {
+        if (leds == null) return none();
+        if (leds.getCandle() == null) return idle(leds);
         return flameCommand(leds, 0.25);
     }
 
     public static Command disabled(LEDs leds) {
+        if (leds == null) return none();
+        if (leds.getCandle() == null) return idle(leds);
         var candle = leds.getCandle();
         return startEnd(
                 () -> {
@@ -49,6 +53,8 @@ public class LEDCommands {
     }
 
     public static Command enabled(LEDs leds) {
+        if (leds == null) return none();
+        if (leds.getCandle() == null) return idle(leds);
         var candle = leds.getCandle();
         return startEnd(
                 () -> {

@@ -92,7 +92,8 @@ public class Shooter extends SubsystemBase {
                 hoodFB = new ProfiledPIDController(6.0, 0.0, .25, new TrapezoidProfile.Constraints(1000.0 / 2.0, 7600.0 / 32.0));
                 hoodFB.setTolerance(0.1);
                 shooterVelocityFB =
-                        new PIDController(0.0079065 * 5, 0.0, 0.0);
+                        new PIDController(0.0079065 * 5, 0.0015, 0.0);
+                shooterVelocityFB.setIZone(2);
                 shooterVelocityFB.setTolerance(218.69 * .25); // this is the pid max velocity error (rad/sec)
                 shooterVelocityFF = new SimpleMotorFeedforward(.58287, .013052, .0038592);
                 break;

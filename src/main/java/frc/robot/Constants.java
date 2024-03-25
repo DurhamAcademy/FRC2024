@@ -16,6 +16,7 @@ package frc.robot;
 import edu.wpi.first.math.geometry.Rotation3d;
 import edu.wpi.first.math.geometry.Transform3d;
 import edu.wpi.first.math.geometry.Translation3d;
+import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.RobotBase;
 
 import static edu.wpi.first.math.util.Units.degreesToRadians;
@@ -30,7 +31,7 @@ import static edu.wpi.first.math.util.Units.inchesToMeters;
  * constants are needed, to reduce verbosity.
  */
 public final class Constants {
-    public static final Mode currentMode = (RobotBase.isReal()) ? Mode.REAL : Mode.SIM;
+    public static final Mode currentMode = (RobotBase.isReal()) ? Mode.REAL : Mode.REPLAY;
 
   public static enum Mode {
     /** Running on a real robot. */
@@ -43,12 +44,12 @@ public final class Constants {
     REPLAY
   }
 
-    public static Transform3d robotToCam =
-            new Transform3d(
+    public static Transform3d robotToCam
+            = new Transform3d(
                     new Translation3d(
-                            inchesToMeters(10.18),
-                            inchesToMeters(7.074),
-                            inchesToMeters(8.53 + 2.5)
+                            0.258572,
+                            0.1796796,
+                            0.280162
                     ),
                     new Rotation3d(
                             0,
@@ -56,4 +57,5 @@ public final class Constants {
                             degreesToRadians(3)
                     )
             );
+
 }

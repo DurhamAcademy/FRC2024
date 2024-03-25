@@ -10,6 +10,11 @@ import org.photonvision.common.dataflow.structures.Packet;
 import org.photonvision.targeting.PhotonPipelineResult;
 
 public interface VisionIO {
+
+  String cameraName = "";
+  default String getCameraName() {
+    return cameraName;
+  }
   default void updateInputs(VisionIOInputs inputs) {
   }
 
@@ -20,6 +25,12 @@ public interface VisionIO {
     boolean connected = false;
     PhotonPipelineResult cameraResult = new PhotonPipelineResult();
     private PhotonPipelineResult.APacketSerde aPacketSerde;
+
+    public VisionIOInputs(String name) {
+      this.name = name;
+    }
+
+    public VisionIOInputs() {}
 
     public Transform3d[] arrayToPosition(double[] value) {
       var length = ((int) (value.length / 7.0));

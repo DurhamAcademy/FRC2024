@@ -143,18 +143,18 @@ private final CommandXboxController driverController = new CommandXboxController
                 // Replayed robot, disable IO implementations
                 drive =
                         new Drive(
-                                new GyroIO() {
-                                },
-                                new VisionIO() {
-                                },
-                                new ModuleIO() {
-                                },
-                                new ModuleIO() {
-                                },
-                                new ModuleIO() {
-                                },
-                                new ModuleIO() {
-                                });
+                                new GyroIO() {},
+                                new ModuleIO() {},
+                                new ModuleIO() {},
+                                new ModuleIO() {},
+                                new ModuleIO() {},
+                                new VisionIO[]{new VisionIO() {
+                                    @Override
+                                    public String getCameraName() {
+                                        return "ShootSideCamera";
+                                    }}, new VisionIO() {
+                                    public String getCameraName() {return "RightCamera";}
+                                }});
                 shooter = new Shooter(new ShooterIO() {
                 }, new HoodIO() {
                 });
@@ -226,10 +226,6 @@ private final CommandXboxController driverController = new CommandXboxController
                 "Intake",
                 intakeCommand(intake)
                         .withTimeout(1.0)
-        );
-        NamedCommands.registerCommand(
-                "Drive Backwards", none()
-//                DriveCommands.joystickDrive(drive, () -> .1, () -> 0, () -> 0.0).withTimeout(4.0)
         );
         autoChooser = new LoggedDashboardChooser<>("Auto Choices", AutoBuilder.buildAutoChooser());
         vision = new VisionIOReal("ShootSideCamera");

@@ -153,8 +153,15 @@ public class Drive extends SubsystemBase {
     gyroIO.updateInputs(gyroInputs);
     Logger.processInputs("Drive/Gyro", gyroInputs);
 
-    visionIO.updateInputs(visionInputs);
-    Logger.processInputs("Drive/Vision", visionInputs);
+      VisionIO vision = null;
+      for (int i = 0, visionIOLength = visionIO.length; i < visionIOLength; i++) {
+          vision = visionIO[i];
+          vision.updateInputs(visionInputs[i]);
+      }
+      for (int i = 0, visionInputsLength = visionInputs.length; i < visionInputsLength; i++) {
+          VisionIO.VisionIOInputs visionInput = visionInputs[i];
+          Logger.processInputs("Drive/Vision/" + visionIO[i].getCameraName(), visionInput);
+      }
 
     for (var module : modules) {
       module.periodic();
@@ -270,7 +277,7 @@ public class Drive extends SubsystemBase {
                       visionMatrix = new Matrix<>(Nat.N3(), Nat.N1(), new double[]{0.05, 0.05, 0.2});
                   }
                   poseEstimator.addVisionMeasurement(pose2d, estimatedRobotPose.timestampSeconds, visionMatrix);
-//                noGyroPoseEstimation.addVisionMeasurement(pose2d, estimatedRobotPose.timestampSeconds, visionMatrix);
+                    poseEstTransform();
                 }
               });
     }
@@ -358,6 +365,12 @@ public class Drive extends SubsystemBase {
     var averageDriveMotor = routineLog.motor("Average DriveMotor");
     averageDriveMotor.angularVelocity(driveVelocityAverage.divide(4.0));
     averageDriveMotor.angularPosition(drivePositionAverage.divide(4.0));
+  }
+
+  @AutoLogOutput()
+  public Transform3d poseEstTransform() {
+    return visionInputs[1].cameraResult.getMultiTagResult().estimatedPose.best
+            .plus(visionInputs[0].cameraResult.getMultiTagResult().estimatedPose.best.inverse());
   }
 
   public void populateTurnCharacterizationData(SysIdRoutineLog routineLog) {
