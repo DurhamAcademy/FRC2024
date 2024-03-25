@@ -209,7 +209,14 @@ private final CommandXboxController driverController = new CommandXboxController
                         feedToShooter(feeder)
                 )
                         .withTimeout(3.0)
+
         );
+
+        NamedCommands.registerCommand(
+                "Stop Shooter",
+                ShooterCommands.shooterIdle(shooter).withTimeout(0.1)
+        );
+
         NamedCommands.registerCommand(
                 "Shoot",
                 sequence(
@@ -222,7 +229,7 @@ private final CommandXboxController driverController = new CommandXboxController
         NamedCommands.registerCommand(
                 "Intake Note",
                 smartIntakeCommand(intake, feeder)
-                        .andThen(IntakeCommands.idleCommand(intake)
+                        .andThen(IntakeCommands.idleCommand(intake).andThen(FeederCommands.idleFeeder(feeder))
                                 .withTimeout(1.5))
         );
         NamedCommands.registerCommand(
