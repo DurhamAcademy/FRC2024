@@ -70,12 +70,10 @@ public class LEDCommands {
 
         return startEnd(
                 () -> {
-                    if(!wantsHPI) {
-                        candle.animate(new LarsonAnimation(255, 255, 50, 0, 0, stripLength, LarsonAnimation.BounceMode.Back, stripLength, candleLength), 0);
-                        candle.animate(new LarsonAnimation(255, 255, 50, 0, 0, stripLength, LarsonAnimation.BounceMode.Front, stripLength, candleLength + stripLength), 1);
-                        candle.animate(new LarsonAnimation(255, 255, 50, 0, 0, stripLength, LarsonAnimation.BounceMode.Back, stripLength, candleLength + stripLength*2), 2);
-                        candle.animate(new LarsonAnimation(255, 255, 50, 0, 0, stripLength, LarsonAnimation.BounceMode.Front, stripLength, candleLength + stripLength*3), 3);
-                    }
+                    candle.animate(new LarsonAnimation(255, 255, 50, 0, 0, stripLength, LarsonAnimation.BounceMode.Back, stripLength, candleLength), 0);
+                    candle.animate(new LarsonAnimation(255, 255, 50, 0, 0, stripLength, LarsonAnimation.BounceMode.Front, stripLength, candleLength + stripLength), 1);
+                    candle.animate(new LarsonAnimation(255, 255, 50, 0, 0, stripLength, LarsonAnimation.BounceMode.Back, stripLength, candleLength + stripLength*2), 2);
+                    candle.animate(new LarsonAnimation(255, 255, 50, 0, 0, stripLength, LarsonAnimation.BounceMode.Front, stripLength, candleLength + stripLength*3), 3);
                 },
                 () -> {
                     for (int i = 0; i < candle.getMaxSimultaneousAnimationCount(); i++) candle.clearAnimation(i);
