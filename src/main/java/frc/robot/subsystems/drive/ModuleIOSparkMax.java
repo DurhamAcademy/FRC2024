@@ -24,8 +24,6 @@ import com.revrobotics.RelativeEncoder;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.util.Units;
 
-import static java.lang.Double.NaN;
-
 /**
  * Module IO implementation for SparkMax drive motor controller, SparkMax turn motor controller (NEO
  * or NEO 550), and analog absolute encoder connected to the RIO
@@ -63,27 +61,27 @@ public class ModuleIOSparkMax implements ModuleIO {
         turnSparkMax = new CANSparkMax(2, MotorType.kBrushless);
         cancoder = new CANcoder(0);
         absoluteEncoderOffset =
-            new Rotation2d(-1.771_747_809_96); // MUST BE CALIBRATED
+            new Rotation2d(1.369_844_843_629_793_2); // MUST BE CALIBRATED
         break;
       case 1:
         driveSparkMax = new CANSparkMax(3, MotorType.kBrushless);
         turnSparkMax = new CANSparkMax(4, MotorType.kBrushless);
         cancoder = new CANcoder(1);
-        absoluteEncoderOffset = new Rotation2d(-5.098_952_114_3); // MUST BE CALIBRATED
+        absoluteEncoderOffset = new Rotation2d(-1.957_359_460_710_207_2); // MUST BE CALIBRATED
         break;
       case 2:
         driveSparkMax = new CANSparkMax(5, MotorType.kBrushless);
         turnSparkMax = new CANSparkMax(6, MotorType.kBrushless);
         cancoder = new CANcoder(2);
         absoluteEncoderOffset =
-            new Rotation2d(4.154_019_965_27); // MUST BE CALIBRATED
+            new Rotation2d(7.295_612_618_859_793); // MUST BE CALIBRATED
         break;
       case 3:
         driveSparkMax = new CANSparkMax(7, MotorType.kBrushless);
         turnSparkMax = new CANSparkMax(8, MotorType.kBrushless);
         cancoder = new CANcoder(3);
         absoluteEncoderOffset =
-            new Rotation2d(0.329_805_869_4); // MUST BE CALIBRATED
+            new Rotation2d(3.471_398_522_989_793); // MUST BE CALIBRATED
         break;
       default:
         throw new RuntimeException("Invalid module index");
@@ -103,7 +101,7 @@ public class ModuleIOSparkMax implements ModuleIO {
     turnSparkMax.setSmartCurrentLimit(30);
     driveSparkMax.enableVoltageCompensation(12.0);
     turnSparkMax.enableVoltageCompensation(12.0);
-    driveSparkMax.setInverted(false);
+    driveSparkMax.setInverted(true);
 
     driveEncoder.setPosition(0.0);
     driveEncoder.setMeasurementPeriod(10);
@@ -128,9 +126,8 @@ public class ModuleIOSparkMax implements ModuleIO {
   @Override
   public void updateInputs(ModuleIOInputs inputs) {
     BaseStatusSignal.refreshAll(turnAbsolutePosition);
-    double position = driveEncoder.getPosition();
-    inputs.drivePositionRad =
-        Units.rotationsToRadians((position == NaN) ? 0.0 : position) / DRIVE_GEAR_RATIO;
+      inputs.drivePositionRad =
+        Units.rotationsToRadians(driveEncoder.getPosition()) / DRIVE_GEAR_RATIO;
     inputs.driveVelocityRadPerSec =
         Units.rotationsPerMinuteToRadiansPerSecond(driveEncoder.getVelocity()) / DRIVE_GEAR_RATIO;
     inputs.driveAppliedVolts = driveSparkMax.getAppliedOutput() * driveSparkMax.getBusVoltage();

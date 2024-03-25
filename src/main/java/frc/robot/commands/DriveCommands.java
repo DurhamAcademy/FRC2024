@@ -13,10 +13,6 @@
 
 package frc.robot.commands;
 
-import com.pathplanner.lib.auto.AutoBuilder;
-import com.pathplanner.lib.commands.PathfindingCommand;
-import com.pathplanner.lib.path.PathPlannerPath;
-import com.pathplanner.lib.pathfinding.Pathfinding;
 import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.controller.ProfiledPIDController;
 import edu.wpi.first.math.filter.LinearFilter;
@@ -45,6 +41,7 @@ import static edu.wpi.first.math.MathUtil.inputModulus;
 import static edu.wpi.first.math.geometry.Rotation2d.fromRotations;
 import static edu.wpi.first.units.Units.*;
 import static edu.wpi.first.wpilibj.DriverStation.Alliance.Blue;
+import static edu.wpi.first.wpilibj.DriverStation.Alliance.Red;
 
 public class DriveCommands {
 
@@ -101,7 +98,6 @@ public class DriveCommands {
                                           DoubleSupplier omegaSupplier) {
         return Commands.run(
                 () -> {
-
                     // Apply deadband
                     double linearMagnitude =
                             MathUtil.applyDeadband(
@@ -128,7 +124,6 @@ public class DriveCommands {
                                     omega * drive.getMaxAngularSpeedRadPerSec(),
                                     drive.getRotation().rotateBy(
                                             getAllianceRotation())));
-
                 },
                 drive);
     }
@@ -250,7 +245,7 @@ public class DriveCommands {
                                             linearVelocity.getX() * drive.getMaxLinearSpeedMetersPerSec(),
                                             linearVelocity.getY() * drive.getMaxLinearSpeedMetersPerSec(),
 
-                                            -value*6.28,
+                                            (rotationController.getSetpoint().velocity+value)*6.28,
                                             drive.getRotation().rotateBy(
                                                     getAllianceRotation())));
                             previousPose[0] = drive.getPose();
@@ -269,7 +264,7 @@ public class DriveCommands {
     }
 
     private static Rotation2d getAllianceRotation() {
-        return fromRotations((DriverStation.getAlliance().orElse(Blue) == Blue) ? 0.5 : 0.0);
+        return fromRotations((DriverStation.getAlliance().orElse(Blue) == Red) ? 0.5 : 0.0);
     }
 
     public static CommandAndReadySupplier aimAtSpeakerCommand(
