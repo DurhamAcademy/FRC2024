@@ -84,6 +84,25 @@ public class LEDCommands {
         );
     }
 
+    public static Command hasNote(LEDs leds){
+        if (leds == null) return none();
+        if (leds.getCandle() == null) return idle(leds);
+        var candle = leds.getCandle();
+
+        return startEnd(
+                () -> {
+                    candle.animate(new LarsonAnimation(255, 165, 50, 0, 0, stripLength, LarsonAnimation.BounceMode.Back, stripLength, candleLength), 0);
+                    candle.animate(new LarsonAnimation(255, 165, 50, 0, 0, stripLength, LarsonAnimation.BounceMode.Front, stripLength, candleLength + stripLength), 1);
+                    candle.animate(new LarsonAnimation(255, 165, 50, 0, 0, stripLength, LarsonAnimation.BounceMode.Back, stripLength, candleLength + stripLength*2), 2);
+                    candle.animate(new LarsonAnimation(255, 165, 50, 0, 0, stripLength, LarsonAnimation.BounceMode.Front, stripLength, candleLength + stripLength*3), 3);
+                },
+                () -> {
+                    for (int i = 0; i < candle.getMaxSimultaneousAnimationCount(); i++) candle.clearAnimation(i);
+                },
+                leds
+        );
+    }
+
     public static Command flameCommand(LEDs leds) {
         return flameCommand(leds, 0.25);
     }

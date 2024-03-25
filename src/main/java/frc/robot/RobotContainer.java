@@ -553,10 +553,16 @@ private final CommandXboxController driverController = new CommandXboxController
                 .and(reactions.shooterBeamBroken.negate())
                 .whileTrue(
                         parallel(
-                                rumbleLight(driverRumble)
-                                        .withTimeout(0.1),
-                                waitSeconds(0.2)
-                                        .andThen(rumbleLightWithFalloff(operatorRumble).withTimeout(10.0))
+                                parallel(
+                                        rumbleLight(driverRumble)
+                                                .withTimeout(0.1),
+                                        waitSeconds(0.2)
+                                                .andThen(rumbleLightWithFalloff(operatorRumble).withTimeout(10.0))),
+                                LEDCommands.hasNote(leds)
+                                        .withTimeout(1.0)
+                                        .andThen(
+                                                LEDCommands.setIntakeType(leds)
+                                        )
                         ).ignoringDisable(true)
                 );
         reactions

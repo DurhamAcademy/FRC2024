@@ -179,7 +179,7 @@ public class ShooterCommands {
     public static Command humanPlayerIntake(Shooter shooter){
         return run(() -> {
             shooter.setTargetShooterAngle(Rotation2d.fromRadians(1.214));
-            shooter.shooterRunVelocity(-1000);
+            shooter.shooterRunVelocity(-1500);
         });
     }
 
