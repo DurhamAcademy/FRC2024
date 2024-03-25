@@ -114,9 +114,11 @@ public class ShooterCommands {
                 run(() -> {
                     shooter.zeroMode = true;
                     shooter.setHoodPIDEnabled(false);
+                    //fixme: potentially make this higher (must do with testing, could damage robot)
                     shooter.hoodRunVolts(2);
                 }, shooter),
                 sequence(
+                        waitSeconds(0.25),
                         waitUntil(() -> !(zeroStateDetection.calculate(
                                 shooter.isStalled()
                                         || (abs(
@@ -126,11 +128,9 @@ public class ShooterCommands {
                         runOnce(() -> shooter.setHasZeroed(true))
                 )
         )
-                .beforeStarting(print("Starting Hood Zero Sequence"))
                 .withTimeout(4.0)
                 .finallyDo(() -> {
                     shooter.zeroMode = false;
-                    System.out.println("Finished Hood Zero Sequence");
                     shooter.setHoodPIDEnabled(true);
                 })
                 .handleInterrupt(() -> {
@@ -179,7 +179,7 @@ public class ShooterCommands {
     public static Command humanPlayerIntake(Shooter shooter){
         return run(() -> {
             shooter.setTargetShooterAngle(Rotation2d.fromRadians(1.214));
-            shooter.shooterRunVelocity(-750);
+            shooter.shooterRunVelocity(-1000);
         });
     }
 

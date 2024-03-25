@@ -2,10 +2,10 @@
   "version": 1.0,
   "startingPose": {
     "position": {
-      "x": 1.390610933303833,
-      "y": 5.547595977783203
+      "x": 1.3711200952529907,
+      "y": 5.528105735778809
     },
-    "rotation": -177.70940339240997
+    "rotation": 180.0
   },
   "command": {
     "type": "sequential",
@@ -36,16 +36,16 @@
               {
                 "type": "path",
                 "data": {
-                  "pathName": "Greedy.1"
+                  "pathName": "Greedy No Stage.1"
+                }
+              },
+              {
+                "type": "named",
+                "data": {
+                  "name": "Ready Shooter"
                 }
               }
             ]
-          }
-        },
-        {
-          "type": "named",
-          "data": {
-            "name": "Shoot"
           }
         },
         {
@@ -55,47 +55,16 @@
               {
                 "type": "named",
                 "data": {
-                  "name": "Intake Note"
+                  "name": "Ready Shooter"
                 }
               },
-              {
-                "type": "path",
-                "data": {
-                  "pathName": "Greedy.2"
-                }
-              }
-            ]
-          }
-        },
-        {
-          "type": "named",
-          "data": {
-            "name": "Shoot"
-          }
-        },
-        {
-          "type": "parallel",
-          "data": {
-            "commands": [
               {
                 "type": "named",
                 "data": {
-                  "name": "Intake Note"
-                }
-              },
-              {
-                "type": "path",
-                "data": {
-                  "pathName": "Greedy.3"
+                  "name": "Shoot When Ready"
                 }
               }
             ]
-          }
-        },
-        {
-          "type": "named",
-          "data": {
-            "name": "Shoot"
           }
         }
       ]

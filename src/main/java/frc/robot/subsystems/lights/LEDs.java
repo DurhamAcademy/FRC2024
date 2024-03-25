@@ -23,6 +23,9 @@ public class LEDs extends SubsystemBase {
             config.v5Enabled = false;
             config.enableOptimizations = true;
             candle.configAllSettings(config);
+            for (int i = 0; i < candle.getMaxSimultaneousAnimationCount(); i++) {
+                candle.clearAnimation(i);
+            }
         }
     }
 
