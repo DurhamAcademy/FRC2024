@@ -154,7 +154,7 @@ public class DriveCommands {
 
         final Pose2d[] previousPose = {null};
         ProfiledPIDController rotationController =
-                new ProfiledPIDController(.5, 0, 0, new TrapezoidProfile.Constraints(1, 2));
+                new ProfiledPIDController(.5, 0, 0, new TrapezoidProfile.Constraints(RotationsPerSecond.of(1), RotationsPerSecond.per(Second).of(2)));
 
         LoggedDashboardBoolean invertVelocity = new LoggedDashboardBoolean("Disable Velocity", false);
 
@@ -189,17 +189,6 @@ public class DriveCommands {
                                 } else movingWhileShootingTarget = targetPose;
                             } else movingWhileShootingTarget = ShooterCommands.getSpeakerPos().toPose2d();
                             Logger.recordOutput("speakerAimTargetPose", movingWhileShootingTarget);
-                    /*
-
-                    |--------|
-                    |-------|
-                    |------|
-                    |----|
-                    |---|
-                    |--|
-                    |-|*
-                    |=>
-                     */
 
 
                             Measure<Velocity<Angle>> goalAngleVelocity = null;
@@ -224,9 +213,9 @@ public class DriveCommands {
                                     new TrapezoidProfile.State(
                                             Radians.of(goalAngle.getRadians()), goalAngleVelocity));
                             var value = rotationController.calculate(
-                                    inputModulus(drive.getPose().getRotation().getRotations(), 0, 1),
+                                    inputModulus(Rotations.toBaseUnits(drive.getPose().getRotation().getRotations()), Rotations.zero().baseUnitMagnitude(), Rotation.one().baseUnitMagnitude()),
 //                            new TrapezoidProfile.State(
-                                    inputModulus(goalAngle.getRotations(), 0, 1)
+                                    inputModulus(Rotations.toBaseUnits(goalAngle.getRotations()), Rotations.zero().baseUnitMagnitude(), Rotation.one().baseUnitMagnitude())
 //                                    goalAngleVelocity.in(RotationsPerSecond)*.0025
 //                            )
                             );
@@ -245,7 +234,7 @@ public class DriveCommands {
                                             linearVelocity.getX() * drive.getMaxLinearSpeedMetersPerSec(),
                                             linearVelocity.getY() * drive.getMaxLinearSpeedMetersPerSec(),
 
-                                            (rotationController.getSetpoint().velocity+value)*6.28,
+                                            RadiansPerSecond.fromBaseUnits(rotationController.getSetpoint().velocity + value),
                                             drive.getRotation().rotateBy(
                                                     getAllianceRotation())));
                             previousPose[0] = drive.getPose();
