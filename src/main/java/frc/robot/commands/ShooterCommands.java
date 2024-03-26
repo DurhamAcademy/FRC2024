@@ -103,9 +103,16 @@ public class ShooterCommands {
     public static Command shooterIdle(Shooter shooter) {
         return run(() -> {
             shooter.shooterRunVelocity(0.0);
-            shooter.setTargetShooterAngle(Rotation2d.fromRadians(1.5));
+            shooter.setTargetShooterAngle(Rotation2d.fromRadians(1.6));
         }, shooter)
                 .withName("Shooter Idle");
+    }
+
+    public static Command SHOOTLONGWAY (Shooter shooter) {
+        return run(() -> {
+            shooter.setTargetShooterAngle(Rotation2d.fromRadians(0.6));
+            shooter.shooterRunVelocity(4500.0);
+        });
     }
 
     public static Command simpleHoodZero(Shooter shooter) {

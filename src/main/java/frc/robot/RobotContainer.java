@@ -407,6 +407,12 @@ private final CommandXboxController driverController = new CommandXboxController
                                 .alongWith(feedToShooter(feeder))
                                 .onlyWhile(feeder::getBeamBroken)
                                 .andThen(ShooterCommands.ampAngle(shooter)));
+                driverController
+                        .rightBumper()
+                        .whileTrue(ShooterCommands.SHOOTLONGWAY(shooter));
+                driverController
+                        .a()
+                        .whileTrue(FeederCommands.feedToShooter(feeder));
 
                 // NEW OPERATOR CONTROLS
                 // leftbumper zero
