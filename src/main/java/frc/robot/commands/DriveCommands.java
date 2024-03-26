@@ -146,6 +146,26 @@ public class DriveCommands {
         }
     }
 
+    public static CommandAndReadySupplier aimAtSourceCommand(
+            Drive drive,
+            DoubleSupplier xSupplier,
+            DoubleSupplier ySupplier,
+            DoubleSupplier omegaSupplier) {
+        final Pose2d[] startingPose = {null};
+        ProfiledPIDController  rotationController= new ProfiledPIDController(0.5, 0, 0.1, new TrapezoidProfile.Constraints(1, 2));
+        rotationController.enableContinuousInput(0, 1);
+        Command command =
+                new RunCommand(() -> {
+                    Translation2d linearVelocity = getLinearVelocity(xSupplier, ySupplier);
+                    var goalAngle =
+                            IntakeCommands.getSourcePos().toPose2d()
+                            .getTranslation()
+                            .minus(drive.getPose().getTranslation())
+                            .getAngle();
+                });
+        return new CommandAndReadySupplier(command, () -> rotationController.atGoal());
+    }
+
     public static CommandAndReadySupplier aimAtSpeakerCommand(
             Drive drive,
             DoubleSupplier xSupplier,

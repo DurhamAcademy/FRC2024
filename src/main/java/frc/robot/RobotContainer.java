@@ -208,6 +208,7 @@ private final CommandXboxController driverController = new CommandXboxController
                         waitUntil(() -> (shooter.allAtSetpoint() && (shooter.getShooterVelocityRPM() > 1000))),
                         feedToShooter(feeder)
                 )
+                        .onlyWhile(() -> !feeder.getBeamBroken())
                         .withTimeout(3.0)
         );
         NamedCommands.registerCommand(
