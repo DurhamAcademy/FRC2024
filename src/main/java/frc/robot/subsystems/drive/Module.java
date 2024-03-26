@@ -93,9 +93,6 @@ public class Module {
 
     turnFeedback.enableContinuousInput(-Math.PI, Math.PI);
     setBrakeMode(true);
-    var a = Units.RadiansPerSecond.ofBaseUnits(1.0).toLongString();
-    System.out.println(a);
-    System.exit(12);
   }
 
   public void periodic() {
