@@ -23,9 +23,13 @@ import edu.wpi.first.units.Measure;
 import edu.wpi.first.units.Velocity;
 import frc.robot.Constants;
 import org.littletonrobotics.junction.Logger;
+import org.littletonrobotics.junction.networktables.LoggedDashboardNumber;
 
 public class Module {
-    private static final double WHEEL_RADIUS = 0.04669558502518819;
+    private static final double WHEEL_RADIUS = .04754228114;
+
+  private LoggedDashboardNumber pPidRot = new LoggedDashboardNumber("Drive Rot P Value", 7.0);
+  private LoggedDashboardNumber dPidRot = new LoggedDashboardNumber("Drive Rot D Value", 0.0);
 
   private final ModuleIO io;
   private final ModuleIOInputsAutoLogged inputs = new ModuleIOInputsAutoLogged();
@@ -56,7 +60,7 @@ public class Module {
             //            driveFeedforward = new SimpleMotorFeedforward(0.081671, 0.82741,
             // 0.081036);
             //            driveFeedback = new PIDController(0.75099, 0.0, 0.0);
-            //            //            brea/**/k;
+                        //            break;
             //          case 2:
             //            driveFeedforward = new SimpleMotorFeedforward(0.082023, 0.81434, 0.12098);
             //            driveFeedback = new PIDController(0.096474, 0.0, 0.0);
@@ -70,7 +74,7 @@ public class Module {
             driveFeedback = new PIDController(0.05, 0.0, 0.0);
             break;
         }
-        turnFeedback = new PIDController(7.0, 0.0, 0.0);
+        turnFeedback = new PIDController(4.58, 0.0, .02);
         break;
       case REPLAY:
         driveFeedforward = new SimpleMotorFeedforward(0.1, 0.13);
@@ -95,6 +99,8 @@ public class Module {
 
   public void periodic() {
     io.updateInputs(inputs);
+    turnFeedback.setP(pPidRot.get());
+    turnFeedback.setD(dPidRot.get());
     //noinspection UnnecessaryCallToStringValueOf
     Logger.processInputs("Drive/Module" + Integer.toString(index), inputs);
 
