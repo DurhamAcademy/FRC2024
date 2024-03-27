@@ -8,10 +8,8 @@ import edu.wpi.first.math.interpolation.InterpolatingTreeMap;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj2.command.Command;
 import frc.robot.subsystems.drive.Drive;
-import frc.robot.subsystems.feeder.Feeder;
 import frc.robot.subsystems.shooter.Shooter;
 import org.littletonrobotics.junction.Logger;
-import org.littletonrobotics.junction.networktables.LoggedDashboardBoolean;
 
 import static edu.wpi.first.units.Units.RadiansPerSecond;
 import static edu.wpi.first.wpilibj.DriverStation.Alliance.Blue;
@@ -61,14 +59,13 @@ public class ShooterCommands {
         distanceToRPM.clear();
         distanceToRPM.put(0.0, 3500.0);
         distanceToRPM.put(0.894, 3500.0);
+        distanceToRPM.put(3.506, 5000.0);
         distanceToRPM.put(2.52, 3750.0); //GOOD VALUES
         distanceToRPM.put(4.25, 4000.0);
         distanceToRPM.put(1000.0, 4000.0);
     }
 
-    public static LoggedDashboardBoolean retractAfterShot = new LoggedDashboardBoolean("Aim/Retract After Shooting", true);
-
-    public static Command autoAim(Shooter shooter, Drive drive, Feeder feeder) {
+    public static Command autoAim(Shooter shooter, Drive drive) {
         construct();
         //the parameter is the robot, idk how to declare it, also this returns the angle
         return run(() -> {
@@ -88,11 +85,9 @@ public class ShooterCommands {
             Logger.recordOutput("distanceFromGoal", distance);
             Logger.recordOutput("Aim/getZ", targetRelativeToShooter.getZ());
             Logger.recordOutput("Aim/atan", atan);
-            shooter.overrideHoodAtSetpoint(true);
             shooter.setTargetShooterAngle(Rotation2d.fromRadians(atan + distanceToAngle.get(distance)));
             shooter.shooterRunVelocity(distanceToRPM.get(distance));
         }, shooter)
-                .until(() -> !feeder.getBeamBroken() && feeder.getVelocityRPM() > 300 && retractAfterShot.get())
                 .withName("Auto Aim");
     }
 
@@ -108,7 +103,7 @@ public class ShooterCommands {
     public static Command shooterIdle(Shooter shooter) {
         return run(() -> {
             shooter.shooterRunVelocity(0.0);
-            shooter.setTargetShooterAngle(Rotation2d.fromRadians(1.65));
+            shooter.setTargetShooterAngle(Rotation2d.fromRadians(1.5));
         }, shooter)
                 .withName("Shooter Idle");
     }
@@ -184,7 +179,7 @@ public class ShooterCommands {
     public static Command humanPlayerIntake(Shooter shooter){
         return run(() -> {
             shooter.setTargetShooterAngle(Rotation2d.fromRadians(1.214));
-            shooter.shooterRunVelocity(-1000);
+            shooter.shooterRunVelocity(-1500);
         });
     }
 

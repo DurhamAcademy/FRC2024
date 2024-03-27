@@ -208,6 +208,7 @@ private final CommandXboxController driverController = new CommandXboxController
                         waitUntil(() -> (shooter.allAtSetpoint() && (shooter.getShooterVelocityRPM() > 1000))),
                         feedToShooter(feeder)
                 )
+                        .onlyWhile(() -> !feeder.getBeamBroken())
                         .withTimeout(3.0)
         );
         NamedCommands.registerCommand(
@@ -402,6 +403,12 @@ private final CommandXboxController driverController = new CommandXboxController
                                 .alongWith(feedToShooter(feeder))
                                 .onlyWhile(feeder::getBeamBroken)
                                 .andThen(ShooterCommands.ampAngle(shooter)));
+                driverController
+                        .rightBumper()
+                        .whileTrue(ShooterCommands.SHOOTLONGWAY(shooter));
+                driverController
+                        .a()
+                        .whileTrue(FeederCommands.feedToShooter(feeder));
 
                 // NEW OPERATOR CONTROLS
                 // leftbumper zero
@@ -549,10 +556,16 @@ private final CommandXboxController driverController = new CommandXboxController
                 .and(reactions.shooterBeamBroken.negate())
                 .whileTrue(
                         parallel(
-                                rumbleLight(driverRumble)
-                                        .withTimeout(0.1),
-                                waitSeconds(0.2)
-                                        .andThen(rumbleLightWithFalloff(operatorRumble).withTimeout(10.0))
+                                parallel(
+                                        rumbleLight(driverRumble)
+                                                .withTimeout(0.1),
+                                        waitSeconds(0.2)
+                                                .andThen(rumbleLightWithFalloff(operatorRumble).withTimeout(10.0))),
+                                LEDCommands.hasNote(leds)
+                                        .withTimeout(1.0)
+                                        .andThen(
+                                                LEDCommands.setIntakeType(leds)
+                                        )
                         ).ignoringDisable(true)
                 );
         reactions
