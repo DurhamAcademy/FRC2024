@@ -333,36 +333,37 @@ private final CommandXboxController driverController = new CommandXboxController
                         );
                 operatorController
                         .povDown()
+                        .and(operatorController.a().negate())
                         .whileTrue(
                                 sequence(
                                         parallel(
                                                 ShooterCommands.humanPlayerIntake(shooter),
                                                 FeederCommands.humanPlayerIntake(feeder)
-                                        )
-                                                .until(() -> feeder.getBeamBroken()),
+                                        ).until(feeder::getBeamBroken),
                                         parallel(
                                                 ShooterCommands.humanPlayerIntake(shooter),
                                                 FeederCommands.humanPlayerIntake(feeder)
-                                        )
-                                                .until(() -> !feeder.getBeamBroken())
+                                        ).until(() -> !feeder.getBeamBroken())
                                 )
                         )
                         .onFalse(
                                 parallel(
                                         ShooterCommands.humanPlayerIntake(shooter),
                                         FeederCommands.humanPlayerIntake(feeder)
-                                )
-                                        .until(() -> !feeder.getBeamBroken())
+                                ).until(() -> !feeder.getBeamBroken())
                         );
                 operatorController
-                        .a()
-                        .toggleOnTrue(LEDCommands.setIntakeBoolean())
-                                .onTrue(
-                                        LEDCommands.setIntakeType(leds).ignoringDisable(true)
-                                );
+                        .povUp()
+                        .and(operatorController.a())
+                        .whileTrue(
+                                LEDCommands.ledsUp(leds)
+                        );
                 operatorController
-                        .b()
-                            .toggleOnTrue(LEDCommands.dropNoteEmily(leds).ignoringDisable(true));
+                        .povDown()
+                        .and(operatorController.a())
+                        .whileTrue(
+                                LEDCommands.ledsDown(leds)
+                        );
 
                 // ---- SHOOTER COMMANDS ----
                 operatorController

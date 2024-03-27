@@ -63,6 +63,48 @@ public class LEDCommands {
         );
     }
 
+    public static Command ledsUp(LEDs leds){
+        if (leds == null) return none();
+        if (leds.getCandle() == null) return idle(leds);
+        var candle = leds.getCandle();
+
+        return runEnd(
+                () -> {
+                    candle.setLEDs(0, 0, 0, 0, candleLength, stripLength/2); // up half 1
+                    candle.setLEDs(100, 100, 100, 0, candleLength + stripLength*1 - stripLength/2, stripLength); // up half 2 down half 2
+                    candle.setLEDs(0, 0, 0, 0, candleLength + stripLength*2 - stripLength/2, stripLength); // down half 1 up half 1
+                    candle.setLEDs(100, 100, 100, 0, candleLength + stripLength*3 - stripLength/2, stripLength); // up half 2 down half 2
+                    candle.setLEDs(0, 0, 0, 0, candleLength + stripLength*4 - stripLength/2, stripLength/2); // down half 1
+
+                },
+                () -> {
+                    for (int i = 0; i < candle.getMaxSimultaneousAnimationCount(); i++) candle.clearAnimation(i);
+                },
+                leds
+        );
+    }
+
+    public static Command ledsDown(LEDs leds){
+        if (leds == null) return none();
+        if (leds.getCandle() == null) return idle(leds);
+        var candle = leds.getCandle();
+
+        return runEnd(
+                () -> {
+                    candle.setLEDs(100, 100, 100, 0, candleLength, stripLength/2); // up half 1
+                    candle.setLEDs(0, 0, 0, 0, candleLength + stripLength*1 - stripLength/2, stripLength); // up half 2 down half 2
+                    candle.setLEDs(100, 100, 100, 0, candleLength + stripLength*2 - stripLength/2, stripLength); // down half 1 up half 1
+                    candle.setLEDs(0, 0, 0, 0, candleLength + stripLength*3 - stripLength/2, stripLength); // up half 2 down half 2
+                    candle.setLEDs(100, 100, 100, 0, candleLength + stripLength*4 - stripLength/2, stripLength/2); // down half 1
+
+                },
+                () -> {
+                    for (int i = 0; i < candle.getMaxSimultaneousAnimationCount(); i++) candle.clearAnimation(i);
+                },
+                leds
+        );
+    }
+
     public static Command dropNoteEmily(LEDs leds){
         if (leds == null) return none();
         if (leds.getCandle() == null) return idle(leds);
