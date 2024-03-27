@@ -86,6 +86,7 @@ public class ShooterCommands {
             Logger.recordOutput("Aim/getZ", targetRelativeToShooter.getZ());
             Logger.recordOutput("Aim/atan", atan);
             shooter.setTargetShooterAngle(Rotation2d.fromRadians(atan + distanceToAngle.get(distance)));
+            shooter.overrideHoodAtSetpoint(true);
             shooter.shooterRunVelocity(distanceToRPM.get(distance));
         }, shooter)
                 .withName("Auto Aim");
