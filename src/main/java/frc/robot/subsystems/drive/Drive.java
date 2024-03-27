@@ -171,8 +171,9 @@ public class Drive extends SubsystemBase {
           vision = visionIO[i];
           vision.updateInputs(visionInputs[i]);
       }
-      for (VisionIO.VisionIOInputs visionInput : visionInputs) {
-          Logger.processInputs("Drive/Vision/" + visionInput.name, visionInput);
+      for (int i = 0; i < visionInputs.length; i++) {
+          VisionIO.VisionIOInputs visionInput = visionInputs[i];
+          Logger.processInputs("Drive/Vision/" + visionIO[i].getCameraName(), visionInput);
       }
 
       for (var module : modules) {

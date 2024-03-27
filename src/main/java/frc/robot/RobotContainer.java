@@ -191,7 +191,7 @@ private final CommandXboxController driverController = new CommandXboxController
 //        );
         NamedCommands.registerCommand(
                 "Ready Shooter",
-                autoAim(shooter, drive)
+                autoAim(shooter, drive, feeder)
                         .withTimeout(3.0)
         );
         NamedCommands.registerCommand(
@@ -200,7 +200,7 @@ private final CommandXboxController driverController = new CommandXboxController
         );
         NamedCommands.registerCommand(
                 "Auto Point",
-                ShooterCommands.autoAim(shooter, drive)
+                ShooterCommands.autoAim(shooter, drive, feeder)
         );
         NamedCommands.registerCommand(
                 "Shoot When Ready",
@@ -367,7 +367,7 @@ private final CommandXboxController driverController = new CommandXboxController
                 // ---- SHOOTER COMMANDS ----
                 operatorController
                         .y()
-                        .whileTrue(autoAim(shooter, drive));
+                        .whileTrue(autoAim(shooter, drive, feeder));
                 operatorController
                         .x()
                         .whileTrue(

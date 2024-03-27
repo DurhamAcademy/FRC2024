@@ -55,8 +55,9 @@ public class GyroIOPigeon2 implements GyroIO {
   @Override
   public void updateInputs(GyroIOInputs inputs) {
     StatusCode x = BaseStatusSignal.refreshAll(
-            yaw, yawVelocity, accelerationX, accelerationY, accelerationZ, getMagFieldX,
-            getMagFieldY, getMagFieldZ
+            yaw, yawVelocity, accelerationX, accelerationY, accelerationZ,
+            getMagFieldX, getMagFieldY, getMagFieldZ,
+            quatW, quatX, quatY, quatZ
     );
     inputs.connected = x.equals(StatusCode.OK);
     inputs.yawPosition = Rotation2d.fromDegrees(yaw.getValueAsDouble());
@@ -68,6 +69,7 @@ public class GyroIOPigeon2 implements GyroIO {
     inputs.quatX = quatX.getValueAsDouble();
     inputs.quatY = quatY.getValueAsDouble();
     inputs.quatZ = quatZ.getValueAsDouble();
+
 
   }
 }

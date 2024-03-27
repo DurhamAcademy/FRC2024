@@ -26,35 +26,31 @@ public class ClimbCommands {
             public Debouncer rightDebounce = new Debouncer(1.0, kFalling);
 
             public void reset() {
-                leftDebounce = new Debouncer(1.0, kFalling);
+                leftDebounce = new Debouncer(.35, kFalling);
                 cannotMoveAL = false;
                 cannotMoveAR = false;
                 cannotMoveBL = false;
                 cannotMoveBR = false;
-                rightDebounce = new Debouncer(1.0, kFalling);
+                rightDebounce = new Debouncer(0.35, kFalling);
             }
         };
         SequentialCommandGroup sequentialCommandGroup = new InstantCommand(debouncers::reset).andThen(
                 parallel(
-                        sequence(
-                                runLeft(climb, true)
-                                        .onlyWhile(getDebounce(debouncers.leftDebounce, climb.getLeftVelocityRadPerSec(), () -> debouncers.cannotMoveAL = true))
-                                        .withTimeout(8)
-                        ),
-                        sequence(
-                                runRight(climb, true)
-                                        .onlyWhile(getDebounce(debouncers.rightDebounce, climb.getRightVelocityRadPerSec(), () -> debouncers.cannotMoveAR = true))
-                                        .withTimeout(8)
-                        )
+                        runLeft(climb, true)
+                                .onlyWhile(getDebounce(debouncers.leftDebounce, climb::getLeftVelocityRadPerSec, () -> debouncers.cannotMoveAL = true))
+                                .withTimeout(8),
+                        runRight(climb, true)
+                                .onlyWhile(getDebounce(debouncers.rightDebounce, climb::getRightVelocityRadPerSec, () -> debouncers.cannotMoveAR = true))
+                                .withTimeout(8)
                 )
         );
         sequentialCommandGroup.addRequirements(climb);
         return sequentialCommandGroup;
     }
 
-    private static BooleanSupplier getDebounce(Debouncer debouncers, double climb, Runnable onTrue) {
+    private static BooleanSupplier getDebounce(Debouncer debouncers, DoubleSupplier climb, Runnable onTrue) {
         return () -> {
-            boolean calculate = debouncers.calculate(Math.abs(climb) < 0.5);
+            boolean calculate = debouncers.calculate(Math.abs(climb.getAsDouble()) > 0.5);
             if (calculate) onTrue.run();
             return calculate;
         };

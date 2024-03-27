@@ -90,7 +90,7 @@ public class Shooter extends SubsystemBase {
         switch (Constants.currentMode) {
             case REAL:
                 hoodFB = new ProfiledPIDController(6.0, 0.0, .25, new TrapezoidProfile.Constraints(1000.0 / 2.0, 7600.0 / 32.0));
-                hoodFB.setTolerance(0.1);
+                hoodFB.setTolerance(0.025);
                 shooterVelocityFB =
                         new PIDController(0.0079065 * 5, 0.0015, 0.0);
                 shooterVelocityFB.setIZone(2);
@@ -186,6 +186,12 @@ public class Shooter extends SubsystemBase {
         hoodFB.reset(hoodInputs.motorPositionRad - hoodOffsetAngle.getRadians());
     }
 
+    boolean hoodOverride = false;
+
+    public void overrideHoodAtSetpoint(boolean isAtSetpoint) {
+        hoodOverride = isAtSetpoint;
+    }
+
     public boolean isStalled() {
         return hoodInputs.isStalled;
     }
@@ -197,7 +203,7 @@ public class Shooter extends SubsystemBase {
 
     @AutoLogOutput
     public boolean hoodAtSetpoint() {
-        return this.hoodFB.atGoal();
+        return this.hoodFB.atGoal() && hoodOverride;
     }
 
     @AutoLogOutput
