@@ -88,8 +88,8 @@ public class ShooterCommands {
             Logger.recordOutput("distanceFromGoal", distance);
             Logger.recordOutput("Aim/getZ", targetRelativeToShooter.getZ());
             Logger.recordOutput("Aim/atan", atan);
-            shooter.overrideHoodAtSetpoint(true);
             shooter.setTargetShooterAngle(Rotation2d.fromRadians(atan + distanceToAngle.get(distance)));
+            shooter.overrideHoodAtSetpoint(true);
             shooter.shooterRunVelocity(distanceToRPM.get(distance));
         }, shooter)
                 .until(() -> !feeder.getBeamBroken() && feeder.getVelocityRPM() > 300 && retractAfterShot.get())
