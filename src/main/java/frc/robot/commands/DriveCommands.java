@@ -22,7 +22,9 @@ import edu.wpi.first.math.geometry.Transform2d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.math.trajectory.TrapezoidProfile;
-import edu.wpi.first.units.*;
+import edu.wpi.first.units.Angle;
+import edu.wpi.first.units.Measure;
+import edu.wpi.first.units.Velocity;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
@@ -144,7 +146,25 @@ public class DriveCommands {
         }
     }
 
-    public static final Per<Velocity<Angle>, Angle> RotationsPerSecondPerRotation = Rotations.per(Second).per(Rotations);
+    public static CommandAndReadySupplier aimAtSourceCommand(
+            Drive drive,
+            DoubleSupplier xSupplier,
+            DoubleSupplier ySupplier,
+            DoubleSupplier omegaSupplier) {
+        final Pose2d[] startingPose = {null};
+        ProfiledPIDController  rotationController= new ProfiledPIDController(0.5, 0, 0.1, new TrapezoidProfile.Constraints(1, 2));
+        rotationController.enableContinuousInput(0, 1);
+        Command command =
+                new RunCommand(() -> {
+                    Translation2d linearVelocity = getLinearVelocity(xSupplier, ySupplier);
+                    var goalAngle =
+                            IntakeCommands.getSourcePos().toPose2d()
+                            .getTranslation()
+                            .minus(drive.getPose().getTranslation())
+                            .getAngle();
+                });
+        return new CommandAndReadySupplier(command, () -> rotationController.atGoal());
+    }
 
     public static CommandAndReadySupplier aimAtSpeakerCommand(
             Drive drive,
@@ -154,7 +174,7 @@ public class DriveCommands {
 
         final Pose2d[] previousPose = {null};
         ProfiledPIDController rotationController =
-                new ProfiledPIDController(RotationsPerSecondPerRotation.of(0.5).baseUnitMagnitude(), 0, 0, new TrapezoidProfile.Constraints(RotationsPerSecond.of(1), RotationsPerSecond.per(Second).of(2)));
+                new ProfiledPIDController(.5, 0, .01, new TrapezoidProfile.Constraints(1, 2));
 
         LoggedDashboardBoolean invertVelocity = new LoggedDashboardBoolean("Disable Velocity", false);
 

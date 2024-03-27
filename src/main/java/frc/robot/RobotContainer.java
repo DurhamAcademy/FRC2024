@@ -191,7 +191,7 @@ private final CommandXboxController driverController = new CommandXboxController
 //        );
         NamedCommands.registerCommand(
                 "Ready Shooter",
-                autoAim(shooter, drive, feeder)
+                autoAim(shooter, drive)
                         .withTimeout(3.0)
         );
         NamedCommands.registerCommand(
@@ -200,7 +200,7 @@ private final CommandXboxController driverController = new CommandXboxController
         );
         NamedCommands.registerCommand(
                 "Auto Point",
-                ShooterCommands.autoAim(shooter, drive, feeder)
+                ShooterCommands.autoAim(shooter, drive)
         );
         NamedCommands.registerCommand(
                 "Shoot When Ready",
@@ -208,6 +208,7 @@ private final CommandXboxController driverController = new CommandXboxController
                         waitUntil(() -> (shooter.allAtSetpoint() && (shooter.getShooterVelocityRPM() > 1000))),
                         feedToShooter(feeder)
                 )
+                        .onlyWhile(() -> !feeder.getBeamBroken())
                         .withTimeout(3.0)
         );
         NamedCommands.registerCommand(
@@ -368,7 +369,7 @@ private final CommandXboxController driverController = new CommandXboxController
                 // ---- SHOOTER COMMANDS ----
                 operatorController
                         .y()
-                        .whileTrue(autoAim(shooter, drive, feeder));
+                        .whileTrue(autoAim(shooter, drive));
                 operatorController
                         .x()
                         .whileTrue(
@@ -550,15 +551,22 @@ private final CommandXboxController driverController = new CommandXboxController
                 .and(reactions.shooterBeamBroken.negate())
                 .whileTrue(
                         parallel(
-                                rumbleLight(driverRumble)
-                                        .withTimeout(0.1),
-                                waitSeconds(0.2)
-                                        .andThen(rumbleLightWithFalloff(operatorRumble).withTimeout(10.0))
+                                parallel(
+                                        rumbleLight(driverRumble)
+                                                .withTimeout(0.1),
+                                        waitSeconds(0.2)
+                                                .andThen(rumbleLightWithFalloff(operatorRumble).withTimeout(10.0))),
+                                LEDCommands.hasNote(leds)
+                                        .withTimeout(1.0)
+                                        .andThen(
+                                                LEDCommands.setIntakeType(leds)
+                                        )
                         ).ignoringDisable(true)
                 );
         reactions
                 .isAutonomous
                 .and(reactions.isEnabled)
+
                 .whileTrue(LEDCommands.flameCommand(leds).ignoringDisable(true));
         reactions
                 .isTeleop
