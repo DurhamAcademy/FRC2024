@@ -319,7 +319,7 @@ private final CommandXboxController driverController = new CommandXboxController
                                         none(),
                                         race(
                                                 feedToBeamBreak(feeder).withTimeout(5),
-                                                IntakeCommands.flushIntakeWithoutTheArmExtendedOutward(intake)
+                                                IntakeCommands.flushIntakeWithoutTheArmExtendedOutward(intake, feeder)
                                         ),
                                         feeder::getBeamBroken
                                 )

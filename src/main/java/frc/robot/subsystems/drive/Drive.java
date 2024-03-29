@@ -163,7 +163,7 @@ public class Drive extends SubsystemBase {
         noGyroPoseEstimation = null;
         noGyroRotation = null;
     }
-
+    Transform2d transform = new Transform2d(0,0, Rotation2d.fromRadians(0));
     public void periodic() {
         previousPose = pose;
 
@@ -210,9 +210,10 @@ public class Drive extends SubsystemBase {
         // loop cycle in x, y, and theta based only on the modules,
         // without the gyro. The gyro is always disconnected in simulation.
         var twist = kinematics.toTwist2d(wheelDeltas);
-        twist.dtheta *= -1;
-        twist.dx *= -1;
-        twist.dy *= -1;
+//        twist.dtheta *= -1;
+//        twist.dx *= -1;
+//        twist.dy *= -1;
+        this.transform = pose.exp(twist).minus(pose);
         if (gyroInputs.connected) {
             boolean isAnyCameraConnected = false;
             for (VisionIO.VisionIOInputs visionInput : visionInputs) {
@@ -515,7 +516,7 @@ public class Drive extends SubsystemBase {
      */
     @AutoLogOutput(key = "Odometry/Pose Per Delta Time")
     public Transform2d getTwistPerDt() {
-        return previousPose.minus(pose).div(.02);
+        return transform.times(.02);
     }
 
     /**

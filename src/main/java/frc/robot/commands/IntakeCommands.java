@@ -38,7 +38,7 @@ public class IntakeCommands {
                 intakeCommand(intake)
                         .withTimeout(.2)
                         .onlyWhile(feeder::getIntakeBeamBroken),
-                IntakeCommands.flushIntakeWithoutTheArmExtendedOutward(intake)
+                IntakeCommands.flushIntakeWithoutTheArmExtendedOutward(intake,feeder)
                         .onlyWhile(feeder::getIntakeBeamBroken)
         ).onlyIf(()-> !(feeder.getIntakeBeamBroken() || feeder.getBeamBroken()));
     }
@@ -52,18 +52,18 @@ public class IntakeCommands {
                 intake);
     }
 
-    public static Command flushIntakeWithoutTheArmExtendedOutward(Intake intake){
+    public static Command flushIntakeWithoutTheArmExtendedOutward(Intake intake, Feeder feeder){
         return new RunCommand(
                 () -> {
                     intake.setIntakePosition(Rotation2d.fromRadians(-2.05));
                     intake.setRollerVoltage(6.0);
-                }, intake);
+                }, intake).until(() -> !feeder.getIntakeBeamBroken());
     }
 
     public static Command idleCommand(Intake intake) {
         return new RunCommand(
                 () -> {
-                    intake.setIntakePosition(Rotation2d.fromRadians(-2.15));
+                    intake.setIntakePosition(Rotation2d.fromRadians(-1.90));
                     intake.setRollerVoltage(0.0);
                 },
                 intake);

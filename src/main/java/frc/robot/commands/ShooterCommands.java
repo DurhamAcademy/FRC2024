@@ -124,7 +124,7 @@ public class ShooterCommands {
     public static Command shooterIdle(Shooter shooter) {
         return run(() -> {
             shooter.shooterRunVelocity(0.0);
-            shooter.setTargetShooterAngle(Rotation2d.fromRadians(1.5));
+            shooter.setTargetShooterAngle(Rotation2d.fromRadians(1.6));
         }, shooter)
                 .withName("Shooter Idle");
     }

@@ -196,15 +196,16 @@ public class DriveCommands {
                             Pose2d movingWhileShootingTarget;
                             Pose2d targetPose = ShooterCommands.getSpeakerPos().toPose2d();
                             targetPose = targetPose.plus(new Transform2d(0.0, goalAngle.getSin() * 0.5, new Rotation2d()));
-                            if (previousPose[0] != null) {
+                            if (previousPose[0] != null &&false) {
                                 double distance =
                                         targetPose
                                                 .getTranslation()
                                                 .getDistance(previousPose[0].getTranslation());
                                 if (distance != 0) {
+                                    var noteVelocity = 16.5;
                                     movingWhileShootingTarget =
                                             targetPose.plus(
-                                                    robotVelocity.times(0.02).times(16.5 / distance));
+                                                    robotVelocity.times(noteVelocity / distance));
                                 } else movingWhileShootingTarget = targetPose;
                             } else movingWhileShootingTarget = ShooterCommands.getSpeakerPos().toPose2d();
                             Logger.recordOutput("speakerAimTargetPose", movingWhileShootingTarget);
@@ -253,9 +254,8 @@ public class DriveCommands {
                                             linearVelocity.getX() * drive.getMaxLinearSpeedMetersPerSec(),
                                             linearVelocity.getY() * drive.getMaxLinearSpeedMetersPerSec(),
 
-                                            RadiansPerSecond.fromBaseUnits(rotationController.getSetpoint().velocity + value),
-                                            drive.getRotation().rotateBy(
-                                                    getAllianceRotation())));
+                                            RadiansPerSecond.fromBaseUnits(rotationController.getSetpoint().velocity) + (value),
+                                            drive.getRotation().rotateBy(getAllianceRotation())));
                             previousPose[0] = drive.getPose();
                         }, drive)
                         .beforeStarting(

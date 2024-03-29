@@ -66,7 +66,7 @@ public final class Constants {
                     new Rotation3d(
                             0,
                             degreesToRadians(60 - 90),
-                            degreesToRadians(3 + 90)
+                            degreesToRadians(3 - 90)
                     )
             )
     };
