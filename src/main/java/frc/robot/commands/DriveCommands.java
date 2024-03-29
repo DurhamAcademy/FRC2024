@@ -174,7 +174,7 @@ public class DriveCommands {
 
         final Pose2d[] previousPose = {null};
         ProfiledPIDController rotationController =
-                new ProfiledPIDController(2, 0, 0, new TrapezoidProfile.Constraints(RotationsPerSecond.of(1), RotationsPerSecond.per(Second).of(2)));
+                new ProfiledPIDController(.5, 0, 0, new TrapezoidProfile.Constraints(RotationsPerSecond.of(1), RotationsPerSecond.per(Second).of(2)));
 
         LoggedDashboardBoolean invertVelocity = new LoggedDashboardBoolean("Disable Velocity", false);
 
