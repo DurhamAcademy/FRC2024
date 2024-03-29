@@ -78,6 +78,7 @@ public class DriveCommands {
                 .getTranslation();
     }
 
+
 //    public static Command ampAlign(Drive drive) {
 //        AutoBuilder.pathfindThenFollowPath(PathPlannerPath.fromChoreoTrajectory("AmpAlign"),);
 //    }
@@ -146,25 +147,6 @@ public class DriveCommands {
         }
     }
 
-    public static CommandAndReadySupplier aimAtSourceCommand(
-            Drive drive,
-            DoubleSupplier xSupplier,
-            DoubleSupplier ySupplier,
-            DoubleSupplier omegaSupplier) {
-        final Pose2d[] startingPose = {null};
-        ProfiledPIDController  rotationController= new ProfiledPIDController(0.5, 0, 0.1, new TrapezoidProfile.Constraints(1, 2));
-        rotationController.enableContinuousInput(0, 1);
-        Command command =
-                new RunCommand(() -> {
-                    Translation2d linearVelocity = getLinearVelocity(xSupplier, ySupplier);
-                    var goalAngle =
-                            IntakeCommands.getSourcePos().toPose2d()
-                            .getTranslation()
-                            .minus(drive.getPose().getTranslation())
-                            .getAngle();
-                });
-        return new CommandAndReadySupplier(command, () -> rotationController.atGoal());
-    }
 
     public static CommandAndReadySupplier aimAtSpeakerCommand(
             Drive drive,
@@ -270,6 +252,8 @@ public class DriveCommands {
                                 });
         return new CommandAndReadySupplier(command, rotationController::atGoal);
     }
+
+//source angle is: 150 against side wall, 120 against speaker wall
 
     private static Rotation2d getAllianceRotation() {
         return fromRotations((DriverStation.getAlliance().orElse(Blue) == Red) ? 0.5 : 0.0);

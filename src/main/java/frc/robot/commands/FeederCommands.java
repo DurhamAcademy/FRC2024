@@ -1,8 +1,6 @@
 package frc.robot.commands;
 
 import edu.wpi.first.wpilibj2.command.Command;
-import edu.wpi.first.wpilibj2.command.RunCommand;
-import edu.wpi.first.wpilibj2.command.StartEndCommand;
 import frc.robot.subsystems.feeder.Feeder;
 
 import static edu.wpi.first.wpilibj2.command.Commands.*;
@@ -24,10 +22,10 @@ public class FeederCommands {
     }
     public static Command feedToShooter(Feeder feeder) {
         return sequence(
-                run(() -> feeder.runVolts(12), feeder)
+                run(() -> feeder.runVolts(9), feeder)
                         .onlyIf(feeder::getBeamBroken)
                         .until(() -> !feeder.getBeamBroken()),
-                run(() -> feeder.runVolts(12), feeder)
+                run(() -> feeder.runVolts(9), feeder)
                         .withTimeout(0.5),
                 runOnce(() -> feeder.runVolts(0.0))
         );

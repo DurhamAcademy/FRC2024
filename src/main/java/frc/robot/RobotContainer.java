@@ -13,6 +13,7 @@
 
 package frc.robot;
 
+import com.fasterxml.jackson.databind.util.Named;
 import com.pathplanner.lib.auto.AutoBuilder;
 import com.pathplanner.lib.auto.NamedCommands;
 import edu.wpi.first.math.geometry.Pose2d;
@@ -190,9 +191,17 @@ private final CommandXboxController driverController = new CommandXboxController
 //                )
 //        );
         NamedCommands.registerCommand(
+                "Aim Drivetrain",
+                command.getCommand()
+        );
+        NamedCommands.registerCommand(
                 "Ready Shooter",
                 autoAim(shooter, drive)
                         .withTimeout(3.0)
+        );
+        NamedCommands.registerCommand(
+                "Zero Feeder",
+                FeederCommands.feedToBeamBreak(feeder)
         );
         NamedCommands.registerCommand(
                 "Zero Hood",
@@ -223,8 +232,14 @@ private final CommandXboxController driverController = new CommandXboxController
         NamedCommands.registerCommand(
                 "Intake Note",
                 smartIntakeCommand(intake, feeder)
-                        .andThen(IntakeCommands.idleCommand(intake)
-                                .withTimeout(1.5))
+                        .andThen(either(
+                                none(),
+                                race(
+                                        feedToBeamBreak(feeder).withTimeout(5),
+                                        IntakeCommands.flushIntakeWithoutTheArmExtendedOutward(intake, feeder)
+                                ),
+                                feeder::getBeamBroken
+                        )).withTimeout(3.0)
         );
         NamedCommands.registerCommand(
                 "Intake",
@@ -291,7 +306,6 @@ private final CommandXboxController driverController = new CommandXboxController
 
                 // ---- DRIVETRAIN COMMANDS ----
                 driverController.x().whileTrue(runOnce(drive::stopWithX, drive));
-
 
                 var command =
                         DriveCommands.aimAtSpeakerCommand(

@@ -72,7 +72,7 @@ public class Drive extends SubsystemBase {
     private SwerveDriveKinematics kinematics = new SwerveDriveKinematics(getModuleTranslations());
     private SwerveDrivePoseEstimator poseEstimator;
     private Pose2d pose = new Pose2d();
-    PIDConstants positionPID = new PIDConstants(2, .00);
+    PIDConstants positionPID = new PIDConstants(4, .00);
     PIDConstants rotationPID = new PIDConstants(2.5, .00);
     private Measure<Velocity<Angle>> angularVelocity = RadiansPerSecond.zero();
     private Rotation2d lastGyroRotation = new Rotation2d();
