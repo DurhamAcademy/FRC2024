@@ -214,11 +214,14 @@ private final CommandXboxController driverController = new CommandXboxController
         NamedCommands.registerCommand(
                 "Shoot When Ready",
                 sequence(
-                        waitUntil(() -> (shooter.allAtSetpoint() && (shooter.getShooterVelocityRPM() > 1000))),
-                        feedToShooter(feeder)
+                        waitUntil(feeder::getBeamBroken),
+                        sequence(
+                                waitUntil(() -> (shooter.allAtSetpoint() && (shooter.getShooterVelocityRPM() > 1000))),
+                                feedToShooter(feeder)
+                        )
+                                .onlyWhile(() -> !feeder.getBeamBroken())
+                                .withTimeout(3.0)
                 )
-                        .onlyWhile(() -> !feeder.getBeamBroken())
-                        .withTimeout(3.0)
         );
         NamedCommands.registerCommand(
                 "Shoot",
@@ -302,7 +305,7 @@ private final CommandXboxController driverController = new CommandXboxController
 
                 leds.setDefaultCommand(
                         either(LEDCommands.enabled(leds), LEDCommands.disabled(leds, this), RobotState::isEnabled)
-                        .ignoringDisable(true)); //fixme: MAKE THIS LINE WORK
+                        .ignoringDisable(true));
 
                 // ---- DRIVETRAIN COMMANDS ----
                 driverController.x().whileTrue(runOnce(drive::stopWithX, drive));

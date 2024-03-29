@@ -49,7 +49,7 @@ public class Robot extends LoggedRobot {
         Logger.recordMetadata("GitDirty", "All changes committed");
         break;
       case 1:
-        Logger.recordMetadata("GitDirty", "Uncomitted changes");
+        Logger.recordMetadata("GitDirty", "Uncommitted changes");
         break;
       default:
         Logger.recordMetadata("GitDirty", "Unknown");
@@ -159,4 +159,5 @@ public class Robot extends LoggedRobot {
   /** This function is called periodically whilst in simulation. */
   @Override
   public void simulationPeriodic() {}
+
 }

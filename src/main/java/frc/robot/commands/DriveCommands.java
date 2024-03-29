@@ -29,6 +29,7 @@ import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.RunCommand;
+import frc.robot.Robot;
 import frc.robot.subsystems.drive.Drive;
 import org.littletonrobotics.junction.Logger;
 import org.littletonrobotics.junction.networktables.LoggedDashboardBoolean;
@@ -178,7 +179,7 @@ public class DriveCommands {
                             Pose2d movingWhileShootingTarget;
                             Pose2d targetPose = ShooterCommands.getSpeakerPos().toPose2d();
                             targetPose = targetPose.plus(new Transform2d(0.0, goalAngle.getSin() * 0.5, new Rotation2d()));
-                            if (previousPose[0] != null &&false) {
+                            if (previousPose[0] != null) {
                                 double distance =
                                         targetPose
                                                 .getTranslation()
@@ -187,7 +188,7 @@ public class DriveCommands {
                                     var noteVelocity = 16.5;
                                     movingWhileShootingTarget =
                                             targetPose.plus(
-                                                    robotVelocity.times(noteVelocity / distance));
+                                                    robotVelocity.times( distance / noteVelocity));
                                 } else movingWhileShootingTarget = targetPose;
                             } else movingWhileShootingTarget = ShooterCommands.getSpeakerPos().toPose2d();
                             Logger.recordOutput("speakerAimTargetPose", movingWhileShootingTarget);
@@ -203,7 +204,7 @@ public class DriveCommands {
                                 var currentAngle = goalAngle;
                                 goalAngleVelocity =
                                         Radians.of(currentAngle.minus(previousAngle).getRadians())
-                                                .per(Seconds.of(0.02));
+                                                .per(Seconds.of(Robot.defaultPeriodSecs));
                             } else goalAngleVelocity = RadiansPerSecond.zero();
                             Logger.recordOutput("Aim/goalAngleVelocity", goalAngleVelocity);
                             // calculate how much speed is needed to get there

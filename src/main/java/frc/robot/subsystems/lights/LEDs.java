@@ -16,7 +16,7 @@ public class LEDs extends SubsystemBase {
             candle = new CANdle(0);
             candle.configFactoryDefault();
             CANdleConfiguration config = new CANdleConfiguration();
-            config.disableWhenLOS = false;
+            config.disableWhenLOS = true;
             config.statusLedOffWhenActive = true;
             config.stripType = CANdle.LEDStripType.GRB;
             config.brightnessScalar = 1.0;
