@@ -174,11 +174,11 @@ public class DriveCommands {
 
         final Pose2d[] previousPose = {null};
         ProfiledPIDController rotationController =
-                new ProfiledPIDController(.5, 0, .01, new TrapezoidProfile.Constraints(1, 2));
+                new ProfiledPIDController(2, 0, 0, new TrapezoidProfile.Constraints(RotationsPerSecond.of(1), RotationsPerSecond.per(Second).of(2)));
 
         LoggedDashboardBoolean invertVelocity = new LoggedDashboardBoolean("Disable Velocity", false);
 
-        rotationController.enableContinuousInput(0, 1);
+        rotationController.enableContinuousInput(Rotations.zero().baseUnitMagnitude(), Rotations.one().baseUnitMagnitude());
         var filter = LinearFilter.singlePoleIIR(0.08, 0.02);
 
         var command =
@@ -268,7 +268,7 @@ public class DriveCommands {
                                     var isLTE = omegaSupplier.getAsDouble() <= -CANCEL_COMMAND_DEADBAND;
                                     return isLTE || isGTE;
                                 });
-        return new CommandAndReadySupplier(command, () -> rotationController.atGoal());
+        return new CommandAndReadySupplier(command, rotationController::atGoal);
     }
 
     private static Rotation2d getAllianceRotation() {

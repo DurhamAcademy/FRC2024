@@ -26,8 +26,8 @@ import org.littletonrobotics.junction.networktables.LoggedDashboardNumber;
 public class Module {
     private static final double WHEEL_RADIUS = .04754228114;
 
-  private LoggedDashboardNumber pPidRot = new LoggedDashboardNumber("Drive Rot P Value", 7.0);
-  private LoggedDashboardNumber dPidRot = new LoggedDashboardNumber("Drive Rot D Value", 0.0);
+  private LoggedDashboardNumber pPidRot = new LoggedDashboardNumber("Drive/Module/Rot P");
+  private LoggedDashboardNumber dPidRot = new LoggedDashboardNumber("Drive/Module/Rot D");
 
   private final ModuleIO io;
   private final ModuleIOInputsAutoLogged inputs = new ModuleIOInputsAutoLogged();
@@ -72,7 +72,7 @@ public class Module {
             driveFeedback = new PIDController(0.05, 0.0, 0.0);
             break;
         }
-        turnFeedback = new PIDController(4.58, 0.0, .02);
+        turnFeedback = new PIDController(5.0, 0.0, .02);
         break;
       case REPLAY:
         driveFeedforward = new SimpleMotorFeedforward(0.1, 0.13);
@@ -91,14 +91,17 @@ public class Module {
         break;
     }
 
+    dPidRot.setDefault(turnFeedback.getD());
+    pPidRot.setDefault(turnFeedback.getP());
+
     turnFeedback.enableContinuousInput(-Math.PI, Math.PI);
     setBrakeMode(true);
   }
 
   public void periodic() {
     io.updateInputs(inputs);
-    turnFeedback.setP(pPidRot.get());
-    turnFeedback.setD(dPidRot.get());
+//    turnFeedback.setP(pPidRot.get());
+//    turnFeedback.setD(dPidRot.get());
     //noinspection UnnecessaryCallToStringValueOf
     Logger.processInputs("Drive/Module" + Integer.toString(index), inputs);
 

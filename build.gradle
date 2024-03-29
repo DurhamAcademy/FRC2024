@@ -108,9 +108,10 @@ test {
 }
 
 // Simulation configuration (e.g. environment variables).
-wpi.sim.addGui().defaultEnabled = true
-wpi.sim.addDriverstation()
-
+if (System.getenv().getOrDefault("TEST_RUN_MODE", "false").equalsIgnoreCase("false")) {
+    wpi.sim.addGui().defaultEnabled = true;
+    wpi.sim.addDriverstation()
+}
 // Setting up my Jar File. In this case, adding all libraries into the main jar ('fat jar')
 // in order to make them all available at runtime. Also adding the manifest so WPILib
 // knows where to look for our Robot Class.
@@ -139,7 +140,7 @@ gversion {
     className    = "BuildConstants"
     dateFormat   = "yyyy-MM-dd HH:mm:ss z"
     timeZone     = "America/New_York"
-    indent       = "  "
+    indent       = "    "
 }
 
 // Spotless formatting

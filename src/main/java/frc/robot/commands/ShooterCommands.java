@@ -8,8 +8,11 @@ import edu.wpi.first.math.interpolation.InterpolatingTreeMap;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj2.command.Command;
 import frc.robot.subsystems.drive.Drive;
+import frc.robot.subsystems.feeder.Feeder;
 import frc.robot.subsystems.shooter.Shooter;
 import org.littletonrobotics.junction.Logger;
+import org.littletonrobotics.junction.networktables.LoggedDashboardBoolean;
+import org.littletonrobotics.junction.networktables.LoggedDashboardNumber;
 
 import static edu.wpi.first.units.Units.RadiansPerSecond;
 import static edu.wpi.first.wpilibj.DriverStation.Alliance.Blue;
@@ -24,6 +27,9 @@ public class ShooterCommands {
     static InterpolatingTreeMap<Double, Double> distanceToAngle = new InterpolatingDoubleTreeMap();
     static InterpolatingDoubleTreeMap distanceToRPM = new InterpolatingDoubleTreeMap();
     static Transform3d shooterOffset = new Transform3d(new Translation3d(0.0, 0.239, .669), new Rotation3d());
+
+    public static LoggedDashboardBoolean isOverridden = new LoggedDashboardBoolean("Override Hood Angle", false);
+    public static LoggedDashboardNumber overrideAngle = new LoggedDashboardNumber("Overridden Hood Angle", 0.0);
 
     public static double inverseInterpolate(Double startValue, Double endValue, Double q) {
         double totalRange = endValue - startValue;
@@ -62,32 +68,46 @@ public class ShooterCommands {
         distanceToRPM.put(3.506, 5000.0);
         distanceToRPM.put(2.52, 3750.0); //GOOD VALUES
         distanceToRPM.put(4.25, 4000.0);
-        distanceToRPM.put(1000.0, 4000.0);
+        distanceToRPM.put(1000.0,
+                4000.0);
     }
+
+    public static LoggedDashboardBoolean retractAfterShot = new LoggedDashboardBoolean("Aim/Retract After Shooting", true);
+    public static LoggedDashboardNumber flywheelSpeed = new LoggedDashboardNumber("Aim/FlywheelSpeed", 3000);
 
     public static Command autoAim(Shooter shooter, Drive drive) {
         construct();
+        flywheelSpeed.periodic();
+        isOverridden.periodic();
+        overrideAngle.periodic();
+        retractAfterShot.periodic();
         //the parameter is the robot, idk how to declare it, also this returns the angle
         return run(() -> {
-            // Calcaulate new linear velocity
-            // Get the angle to point at the goal
-            var goalAngle =
-                    ShooterCommands.getSpeakerPos().toPose2d()
-                            .getTranslation()
-                            .minus(drive.getPose().getTranslation())
-                            .getAngle();
-            Pose3d targetPose = ShooterCommands.getSpeakerPos();
-            targetPose = targetPose.plus(new Transform3d(0.0, goalAngle.getSin() * 0.5, 0.0, new Rotation3d()));
-            Pose3d shooterLocation = new Pose3d(drive.getPose()).plus(shooterOffset);
-            Pose3d targetRelativeToShooter = targetPose.relativeTo(shooterLocation);
-            double distance = getDistance(targetRelativeToShooter);
-            double atan = atan(targetRelativeToShooter.getZ() / distance);
-            Logger.recordOutput("distanceFromGoal", distance);
-            Logger.recordOutput("Aim/getZ", targetRelativeToShooter.getZ());
-            Logger.recordOutput("Aim/atan", atan);
-            shooter.setTargetShooterAngle(Rotation2d.fromRadians(atan + distanceToAngle.get(distance)));
-            shooter.overrideHoodAtSetpoint(true);
-            shooter.shooterRunVelocity(distanceToRPM.get(distance));
+            if (isOverridden.get()) {
+                shooter.setTargetShooterAngle(Rotation2d.fromRadians(overrideAngle.get()));
+                shooter.overrideHoodAtSetpoint(true);
+                shooter.shooterRunVelocity(3000);
+            } else {
+                // Calcaulate new linear velocity
+                // Get the angle to point at the goal
+                var goalAngle =
+                        ShooterCommands.getSpeakerPos().toPose2d()
+                                .getTranslation()
+                                .minus(drive.getPose().getTranslation())
+                                .getAngle();
+                Pose3d targetPose = ShooterCommands.getSpeakerPos();
+                targetPose = targetPose.plus(new Transform3d(0.0, goalAngle.getSin() * 0.5, 0.0, new Rotation3d()));
+                Pose3d shooterLocation = new Pose3d(drive.getPose()).plus(shooterOffset);
+                Pose3d targetRelativeToShooter = targetPose.relativeTo(shooterLocation);
+                double distance = getDistance(targetRelativeToShooter);
+                double atan = atan(targetRelativeToShooter.getZ() / distance);
+                Logger.recordOutput("distanceFromGoal", distance);
+                Logger.recordOutput("Aim/getZ", targetRelativeToShooter.getZ());
+                Logger.recordOutput("Aim/atan", atan);
+                shooter.setTargetShooterAngle(Rotation2d.fromRadians(atan + distanceToAngle.get(distance)));
+                shooter.overrideHoodAtSetpoint(true);
+                shooter.shooterRunVelocity(distanceToRPM.get(distance));
+            }
         }, shooter)
                 .withName("Auto Aim");
     }
@@ -110,7 +130,7 @@ public class ShooterCommands {
     }
 
     public static Command simpleHoodZero(Shooter shooter) {
-        Debouncer zeroStateDetection = new Debouncer(.25, Debouncer.DebounceType.kRising);
+        Debouncer zeroStateDetection = new Debouncer(.2, Debouncer.DebounceType.kRising);
         return race(
                 run(() -> {
                     shooter.zeroMode = true;
@@ -119,7 +139,11 @@ public class ShooterCommands {
                     shooter.hoodRunVolts(2);
                 }, shooter),
                 sequence(
-                        waitSeconds(0.25),
+                        waitSeconds(0.25).raceWith(run(() -> zeroStateDetection.calculate(
+                                shooter.isStalled()
+                                        || (abs(
+                                        shooter.getHoodCharacterizationVelocity()
+                                                .in(RadiansPerSecond)) > 1)))),
                         waitUntil(() -> !(zeroStateDetection.calculate(
                                 shooter.isStalled()
                                         || (abs(

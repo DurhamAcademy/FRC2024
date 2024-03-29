@@ -439,11 +439,11 @@ private final CommandXboxController driverController = new CommandXboxController
                         .onFalse(runOnce(drive::stopWithX, drive));
                 driverController
                         .a()
-                        .whileTrue(drivetrainDriveSysID.quasistatic(Direction.kForward).withTimeout(2.0))
+                        .whileTrue(drivetrainDriveSysID.quasistatic(Direction.kForward).withTimeout(20.0))
                         .onFalse(runOnce(drive::stopWithX, drive));
                 driverController
                         .b()
-                        .whileTrue(drivetrainDriveSysID.quasistatic(Direction.kReverse).withTimeout(2.0))
+                        .whileTrue(drivetrainDriveSysID.quasistatic(Direction.kReverse).withTimeout(20.0))
                         .onFalse(runOnce(drive::stopWithX, drive));
                 driverController
                         .rightTrigger()

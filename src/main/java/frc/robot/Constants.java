@@ -44,8 +44,8 @@ public final class Constants {
     REPLAY
   }
 
-    public static Transform3d robotToCam
-            = new Transform3d(
+    public static Transform3d[] robotToCam = new Transform3d[]{
+            new Transform3d(
                     new Translation3d(
                             0.258572,
                             0.1796796,
@@ -56,6 +56,19 @@ public final class Constants {
                             degreesToRadians(60 - 90),
                             degreesToRadians(3)
                     )
-            );
+            ),
+            new Transform3d(
+                    new Translation3d(
+                            0.258572,
+                            0.1796796,
+                            0.280162
+                    ),
+                    new Rotation3d(
+                            0,
+                            degreesToRadians(60 - 90),
+                            degreesToRadians(3 + 90)
+                    )
+            )
+    };
 
 }
