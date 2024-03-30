@@ -51,21 +51,21 @@ public class Module {
       case REAL:
         switch (index) {
             //          case 0:
-            //            driveFeedforward = new SimpleMotorFeedforward(0.01626, 0.82954, 0.14095);
-            //            driveFeedback = new PIDController(0.21268, 0.0, 0.0);
+            //            driveFeedforward = new SimpleMotorFeedforward(0.16843, 0.84597, 0.12757);
+            //            driveFeedback = new PIDController(1.5035, 0.0, 0.0);
             //            //            break;
             //          case 1:
-            //            driveFeedforward = new SimpleMotorFeedforward(0.081671, 0.82741,
-            // 0.081036);
-            //            driveFeedback = new PIDController(0.75099, 0.0, 0.0);
+            //            driveFeedforward = new SimpleMotorFeedforward(0.11371, 0.81423,
+            // 0.17477);
+            //            driveFeedback = new PIDController(0.11041, 0.0, 0.0);
                         //            break;
             //          case 2:
-            //            driveFeedforward = new SimpleMotorFeedforward(0.082023, 0.81434, 0.12098);
-            //            driveFeedback = new PIDController(0.096474, 0.0, 0.0);
+            //            driveFeedforward = new SimpleMotorFeedforward(0.20993, 0.85826, 0.1189);
+            //            driveFeedback = new PIDController(0.083206, 0.0, 0.0);
             //            //            break;
             //          case 3:
-            //            driveFeedforward = new SimpleMotorFeedforward(0.040377, 0.84332, 0.13969);
-            //            driveFeedback = new PIDController(0.015087, 0.0, 0.0);
+            //            driveFeedforward = new SimpleMotorFeedforward(0.1969, 0.82537, 0.15257);
+            //            driveFeedback = new PIDController(0.056345, 0.0, 0.0);
             //            break;
           default:
             driveFeedforward = new SimpleMotorFeedforward(0.05, 0.8, .13);
