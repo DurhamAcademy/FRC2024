@@ -31,13 +31,16 @@ public class LEDs extends SubsystemBase {
             candle = new CANdle(0);
             candle.configFactoryDefault();
             CANdleConfiguration config = new CANdleConfiguration();
-            config.disableWhenLOS = false;
+            config.disableWhenLOS = true;
             config.statusLedOffWhenActive = true;
             config.stripType = CANdle.LEDStripType.RGB;
             config.brightnessScalar = 1.0;
             config.v5Enabled = false;
             config.enableOptimizations = true;
             candle.configAllSettings(config);
+            for (int i = 0; i < candle.getMaxSimultaneousAnimationCount(); i++) {
+                candle.clearAnimation(i);
+            }
         }
     }
     public void Init(){

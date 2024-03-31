@@ -49,7 +49,7 @@ public class Robot extends LoggedRobot {
         Logger.recordMetadata("GitDirty", "All changes committed");
         break;
       case 1:
-        Logger.recordMetadata("GitDirty", "Uncomitted changes");
+        Logger.recordMetadata("GitDirty", "Uncommitted changes");
         break;
       default:
         Logger.recordMetadata("GitDirty", "Unknown");
@@ -69,13 +69,14 @@ public class Robot extends LoggedRobot {
         // Running a physics simulator, log to NT
         Logger.addDataReceiver(new NT4Publisher());
         break;
-
       case REPLAY:
         // Replaying a log, set up replay source
         setUseTiming(false); // Run as fast as possible
         String logPath = LogFileUtil.findReplayLog();
         Logger.setReplaySource(new WPILOGReader(logPath));
-        Logger.addDataReceiver(new WPILOGWriter(LogFileUtil.addPathSuffix(logPath, "_sim")));
+        if (System.getenv().getOrDefault("TEST_RUN_MODE", "false").equals("false")) {
+          Logger.addDataReceiver(new WPILOGWriter(LogFileUtil.addPathSuffix(logPath, "_sim")));
+        }
         break;
     }
 
@@ -112,7 +113,7 @@ public class Robot extends LoggedRobot {
   /** This autonomous runs the autonomous command selected by your {@link RobotContainer} class. */
   @Override
   public void autonomousInit() {
-    autonomousCommand = robotContainer.getAutonomousCommand();
+    autonomousCommand = robotContainer.getAutonomousCommand(); //fixme: add zero sequence before this command
 
     // schedule the autonomous command (example)
     if (autonomousCommand != null) {
@@ -158,4 +159,5 @@ public class Robot extends LoggedRobot {
   /** This function is called periodically whilst in simulation. */
   @Override
   public void simulationPeriodic() {}
+
 }

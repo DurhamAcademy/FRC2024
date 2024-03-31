@@ -12,7 +12,7 @@ public class ControllerRumble extends SubsystemBase {
     }
 
     public void setRumbleLight(double rumble) {
-        controller.setRumble(GenericHID.RumbleType.kLeftRumble, rumble);
+        controller.setRumble(GenericHID.RumbleType.kRightRumble, rumble);
     }
 
     public void setRumbleHeavy(double rumble) {

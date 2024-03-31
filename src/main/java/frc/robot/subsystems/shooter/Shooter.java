@@ -62,6 +62,10 @@ public class Shooter extends SubsystemBase {
         this.hasZeroed = hasZeroed;
     }
 
+    public boolean getLimitSwitch() {
+        return hoodInputs.islimitSwitchPressed;
+    }
+
     private boolean hasReset = false;
     private boolean hoodPIDEnabled = true;
 
@@ -85,10 +89,11 @@ public class Shooter extends SubsystemBase {
         // separate robot with different tuning)
         switch (Constants.currentMode) {
             case REAL:
-                hoodFB = new ProfiledPIDController(6.0, 0.0, .25, new TrapezoidProfile.Constraints(1000.0 / 8.0, 7600.0 / 128.0));
-                hoodFB.setTolerance(0.1);
+                hoodFB = new ProfiledPIDController(6.0, 0.0, .25, new TrapezoidProfile.Constraints(1000.0 / 2.0, 7600.0 / 32.0));
+                hoodFB.setTolerance(0.025);
                 shooterVelocityFB =
-                        new PIDController(0.0079065 * 5, 0.0, 0.0);
+                        new PIDController(0.0079065 * 5, 0.0015, 0.0);
+                shooterVelocityFB.setIZone(2);
                 shooterVelocityFB.setTolerance(218.69 * .25); // this is the pid max velocity error (rad/sec)
                 shooterVelocityFF = new SimpleMotorFeedforward(.58287, .013052, .0038592);
                 break;
@@ -181,6 +186,12 @@ public class Shooter extends SubsystemBase {
         hoodFB.reset(hoodInputs.motorPositionRad - hoodOffsetAngle.getRadians());
     }
 
+    boolean hoodOverride = false;
+
+    public void overrideHoodAtSetpoint(boolean isAtSetpoint) {
+        hoodOverride = isAtSetpoint;
+    }
+
     public boolean isStalled() {
         return hoodInputs.isStalled;
     }
@@ -192,7 +203,7 @@ public class Shooter extends SubsystemBase {
 
     @AutoLogOutput
     public boolean hoodAtSetpoint() {
-        return this.hoodFB.atGoal();
+        return this.hoodFB.atGoal() && hoodOverride;
     }
 
     @AutoLogOutput

@@ -18,15 +18,16 @@ import edu.wpi.first.math.controller.SimpleMotorFeedforward;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.kinematics.SwerveModulePosition;
 import edu.wpi.first.math.kinematics.SwerveModuleState;
-import edu.wpi.first.math.util.Units;
-import edu.wpi.first.units.Angle;
-import edu.wpi.first.units.Measure;
-import edu.wpi.first.units.Velocity;
+import edu.wpi.first.units.*;
 import frc.robot.Constants;
 import org.littletonrobotics.junction.Logger;
+import org.littletonrobotics.junction.networktables.LoggedDashboardNumber;
 
 public class Module {
-    private static final double WHEEL_RADIUS = Units.inchesToMeters(2.0) * 1.01105;
+    private static final double WHEEL_RADIUS = .04754228114;
+
+  private LoggedDashboardNumber pPidRot = new LoggedDashboardNumber("Drive/Module/Rot P");
+  private LoggedDashboardNumber dPidRot = new LoggedDashboardNumber("Drive/Module/Rot D");
 
   private final ModuleIO io;
   private final ModuleIOInputsAutoLogged inputs = new ModuleIOInputsAutoLogged();
@@ -49,29 +50,28 @@ public class Module {
     switch (Constants.currentMode) {
       case REAL:
         switch (index) {
-            //          case 0:
-            //            driveFeedforward = new SimpleMotorFeedforward(0.01626, 0.82954, 0.14095);
-            //            driveFeedback = new PIDController(0.21268, 0.0, 0.0);
-            //            //            break;
-            //          case 1:
-            //            driveFeedforward = new SimpleMotorFeedforward(0.081671, 0.82741,
-            // 0.081036);
-            //            driveFeedback = new PIDController(0.75099, 0.0, 0.0);
-            //            //            brea/**/k;
-            //          case 2:
-            //            driveFeedforward = new SimpleMotorFeedforward(0.082023, 0.81434, 0.12098);
-            //            driveFeedback = new PIDController(0.096474, 0.0, 0.0);
-            //            //            break;
-            //          case 3:
-            //            driveFeedforward = new SimpleMotorFeedforward(0.040377, 0.84332, 0.13969);
-            //            driveFeedback = new PIDController(0.015087, 0.0, 0.0);
-            //            break;
+//          case 0:
+//            driveFeedforward = new SimpleMotorFeedforward(0.14767, 0.85218, 0.12428);
+//            driveFeedback = new PIDController(0.15254, 0.0, 0.0);
+//            break;
+//          case 1:
+//            driveFeedforward = new SimpleMotorFeedforward(0.13197, 0.82237, 0.1558);
+//            driveFeedback = new PIDController(0.1295, 0.0, 0.0);
+//            break;
+//          case 2:
+//            driveFeedforward = new SimpleMotorFeedforward(0.21763, 0.83827, 0.13853);
+//            driveFeedback = new PIDController(0.13535, 0.0, 0.0);
+//            break;
+//          case 3:
+//            driveFeedforward = new SimpleMotorFeedforward(0.21342, 0.8122, 0.1631);
+//            driveFeedback = new PIDController(0.10222, 0.0, 0.0);
+//            break;
           default:
             driveFeedforward = new SimpleMotorFeedforward(0.05, 0.8, .13);
             driveFeedback = new PIDController(0.05, 0.0, 0.0);
             break;
         }
-        turnFeedback = new PIDController(7.0, 0.0, 0.0);
+        turnFeedback = new PIDController(5.0, 0.0, .02);
         break;
       case REPLAY:
         driveFeedforward = new SimpleMotorFeedforward(0.1, 0.13);
@@ -90,12 +90,17 @@ public class Module {
         break;
     }
 
+    dPidRot.setDefault(turnFeedback.getD());
+    pPidRot.setDefault(turnFeedback.getP());
+
     turnFeedback.enableContinuousInput(-Math.PI, Math.PI);
     setBrakeMode(true);
   }
 
   public void periodic() {
     io.updateInputs(inputs);
+//    turnFeedback.setP(pPidRot.get());
+//    turnFeedback.setD(dPidRot.get());
     //noinspection UnnecessaryCallToStringValueOf
     Logger.processInputs("Drive/Module" + Integer.toString(index), inputs);
 

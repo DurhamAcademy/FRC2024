@@ -16,42 +16,54 @@ package frc.robot.subsystems.feeder;
 import edu.wpi.first.math.system.plant.DCMotor;
 import edu.wpi.first.wpilibj.simulation.FlywheelSim;
 
+import java.util.function.BooleanSupplier;
+
 public class FeederIOSim implements FeederIO {
-  private final FlywheelSim sim =
-          new FlywheelSim(
-              DCMotor.getNEO(1), 1.5, 0.025);
-  //  private ProfiledPIDController pid = new ProfiledPIDController(0.0, 0.0, 0.0);
-  //  private SimpleMotorFeedforward ffModel = new SimpleMotorFeedforward(0.0, 0.0);
+    private final FlywheelSim sim =
+            new FlywheelSim(
+                    DCMotor.getNEO(1), 1.5, 0.025);
+    //  private ProfiledPIDController pid = new ProfiledPIDController(0.0, 0.0, 0.0);
+    //  private SimpleMotorFeedforward ffModel = new SimpleMotorFeedforward(0.0, 0.0);
 
-  private boolean closedLoop = false;
-  private double appliedVolts = 0.0;
+    private int cycles = 0;
 
-  @Override
-  public void updateInputs(FeederIOInputs inputs) {
-    if (closedLoop) {
-      //      appliedVolts = MathUtil.clamp(pid.calculate(sim.getAngleRads()) + ffVolts, -12.0,
-      // 12.0);
+    private BooleanSupplier intakeSupplier = () -> cycles % 512 == 0;
+    private BooleanSupplier shooterSupplier = () -> cycles % 848 == 0;
+
+    public FeederIOSim(BooleanSupplier intakeSupplier, BooleanSupplier shooterSupplier) {
+        this.intakeSupplier = intakeSupplier;
+        this.shooterSupplier = shooterSupplier;
     }
-    sim.setInputVoltage(appliedVolts);
 
-    sim.update(0.02);
+    public FeederIOSim() {}
 
-    inputs.positionRad = sim.getAngularVelocityRadPerSec();
-    inputs.velocityRadPerSec = sim.getAngularVelocityRadPerSec();
-    inputs.appliedVolts = appliedVolts;
-    inputs.currentAmps = new double[] {sim.getCurrentDrawAmps()};
-  }
+    private double appliedVolts = 0.0;
 
-  @Override
-  public void setVoltage(double volts) {
-    closedLoop = false;
-    appliedVolts = volts;
-    sim.setInputVoltage(volts);
-  }
+    @Override
+    public void updateInputs(FeederIOInputs inputs) {
+        cycles++;
+        sim.setInputVoltage(appliedVolts);
 
-  @Override
-  public void stop() {
-    sim.setState(sim.getAngularVelocityRadPerSec());
-    setVoltage(0.0);
-  }
+        sim.update(0.02);
+
+        inputs.positionRad = sim.getAngularVelocityRadPerSec();
+        inputs.velocityRadPerSec = sim.getAngularVelocityRadPerSec();
+        inputs.appliedVolts = appliedVolts;
+        inputs.currentAmps = new double[]{sim.getCurrentDrawAmps()};
+        inputs.temperature = new double[]{0.0};
+        inputs.beamUnobstructed = shooterSupplier.getAsBoolean();
+        inputs.intakebeamUnobstructed = intakeSupplier.getAsBoolean();
+    }
+
+    @Override
+    public void setVoltage(double volts) {
+        appliedVolts = volts;
+        sim.setInputVoltage(volts);
+    }
+
+    @Override
+    public void stop() {
+        sim.setState(sim.getAngularVelocityRadPerSec());
+        setVoltage(0.0);
+    }
 }

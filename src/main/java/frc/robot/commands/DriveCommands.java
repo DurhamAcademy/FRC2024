@@ -29,6 +29,7 @@ import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.RunCommand;
+import frc.robot.Robot;
 import frc.robot.subsystems.drive.Drive;
 import org.littletonrobotics.junction.Logger;
 import org.littletonrobotics.junction.networktables.LoggedDashboardBoolean;
@@ -41,6 +42,7 @@ import static edu.wpi.first.math.MathUtil.inputModulus;
 import static edu.wpi.first.math.geometry.Rotation2d.fromRotations;
 import static edu.wpi.first.units.Units.*;
 import static edu.wpi.first.wpilibj.DriverStation.Alliance.Blue;
+import static edu.wpi.first.wpilibj.DriverStation.Alliance.Red;
 
 public class DriveCommands {
 
@@ -77,6 +79,11 @@ public class DriveCommands {
                 .getTranslation();
     }
 
+
+//    public static Command ampAlign(Drive drive) {
+//        AutoBuilder.pathfindThenFollowPath(PathPlannerPath.fromChoreoTrajectory("AmpAlign"),);
+//    }
+
   /*
   ------------------
   ---- COMMANDS ----
@@ -93,7 +100,6 @@ public class DriveCommands {
                                           DoubleSupplier omegaSupplier) {
         return Commands.run(
                 () -> {
-
                     // Apply deadband
                     double linearMagnitude =
                             MathUtil.applyDeadband(
@@ -120,7 +126,6 @@ public class DriveCommands {
                                     omega * drive.getMaxAngularSpeedRadPerSec(),
                                     drive.getRotation().rotateBy(
                                             getAllianceRotation())));
-
                 },
                 drive);
     }
@@ -143,6 +148,7 @@ public class DriveCommands {
         }
     }
 
+
     public static CommandAndReadySupplier aimAtSpeakerCommand(
             Drive drive,
             DoubleSupplier xSupplier,
@@ -151,11 +157,11 @@ public class DriveCommands {
 
         final Pose2d[] previousPose = {null};
         ProfiledPIDController rotationController =
-                new ProfiledPIDController(.5, 0, .01, new TrapezoidProfile.Constraints(1, 2));
+                new ProfiledPIDController(.5, 0, 0, new TrapezoidProfile.Constraints(RotationsPerSecond.of(1), RotationsPerSecond.per(Second).of(2)));
 
         LoggedDashboardBoolean invertVelocity = new LoggedDashboardBoolean("Disable Velocity", false);
 
-        rotationController.enableContinuousInput(0, 1);
+        rotationController.enableContinuousInput(Rotations.zero().baseUnitMagnitude(), Rotations.one().baseUnitMagnitude());
         var filter = LinearFilter.singlePoleIIR(0.08, 0.02);
 
         var command =
@@ -169,34 +175,23 @@ public class DriveCommands {
                                             .getTranslation()
                                             .minus(drive.getPose().getTranslation())
                                             .getAngle();
-                            Transform2d robotVelocity;
+                            Transform2d robotVelocity = drive.getTwistPerDt();
                             Pose2d movingWhileShootingTarget;
                             Pose2d targetPose = ShooterCommands.getSpeakerPos().toPose2d();
                             targetPose = targetPose.plus(new Transform2d(0.0, goalAngle.getSin() * 0.5, new Rotation2d()));
                             if (previousPose[0] != null) {
-                                robotVelocity = previousPose[0].minus(drive.getPose());
                                 double distance =
                                         targetPose
                                                 .getTranslation()
                                                 .getDistance(previousPose[0].getTranslation());
                                 if (distance != 0) {
+                                    var noteVelocity = 16.5;
                                     movingWhileShootingTarget =
                                             targetPose.plus(
-                                                    robotVelocity.times(0.02).times(16.5 / distance));
+                                                    robotVelocity.times( distance / noteVelocity));
                                 } else movingWhileShootingTarget = targetPose;
                             } else movingWhileShootingTarget = ShooterCommands.getSpeakerPos().toPose2d();
                             Logger.recordOutput("speakerAimTargetPose", movingWhileShootingTarget);
-                    /*
-
-                    |--------|
-                    |-------|
-                    |------|
-                    |----|
-                    |---|
-                    |--|
-                    |-|*
-                    |=>
-                     */
 
 
                             Measure<Velocity<Angle>> goalAngleVelocity = null;
@@ -209,7 +204,7 @@ public class DriveCommands {
                                 var currentAngle = goalAngle;
                                 goalAngleVelocity =
                                         Radians.of(currentAngle.minus(previousAngle).getRadians())
-                                                .per(Seconds.of(0.02));
+                                                .per(Seconds.of(Robot.defaultPeriodSecs));
                             } else goalAngleVelocity = RadiansPerSecond.zero();
                             Logger.recordOutput("Aim/goalAngleVelocity", goalAngleVelocity);
                             // calculate how much speed is needed to get there
@@ -221,9 +216,9 @@ public class DriveCommands {
                                     new TrapezoidProfile.State(
                                             Radians.of(goalAngle.getRadians()), goalAngleVelocity));
                             var value = rotationController.calculate(
-                                    inputModulus(drive.getPose().getRotation().getRotations(), 0, 1),
+                                    inputModulus(Rotations.toBaseUnits(drive.getPose().getRotation().getRotations()), Rotations.zero().baseUnitMagnitude(), Rotation.one().baseUnitMagnitude()),
 //                            new TrapezoidProfile.State(
-                                    inputModulus(goalAngle.getRotations(), 0, 1)
+                                    inputModulus(Rotations.toBaseUnits(goalAngle.getRotations()), Rotations.zero().baseUnitMagnitude(), Rotation.one().baseUnitMagnitude())
 //                                    goalAngleVelocity.in(RotationsPerSecond)*.0025
 //                            )
                             );
@@ -242,9 +237,8 @@ public class DriveCommands {
                                             linearVelocity.getX() * drive.getMaxLinearSpeedMetersPerSec(),
                                             linearVelocity.getY() * drive.getMaxLinearSpeedMetersPerSec(),
 
-                                            -value*6.28,
-                                            drive.getRotation().rotateBy(
-                                                    getAllianceRotation())));
+                                            RadiansPerSecond.fromBaseUnits(rotationController.getSetpoint().velocity) + (value),
+                                            drive.getRotation().rotateBy(getAllianceRotation())));
                             previousPose[0] = drive.getPose();
                         }, drive)
                         .beforeStarting(
@@ -257,11 +251,13 @@ public class DriveCommands {
                                     var isLTE = omegaSupplier.getAsDouble() <= -CANCEL_COMMAND_DEADBAND;
                                     return isLTE || isGTE;
                                 });
-        return new CommandAndReadySupplier(command, () -> rotationController.atGoal());
+        return new CommandAndReadySupplier(command, rotationController::atGoal);
     }
 
+//source angle is: 150 against side wall, 120 against speaker wall
+
     private static Rotation2d getAllianceRotation() {
-        return fromRotations((DriverStation.getAlliance().orElse(Blue) == Blue) ? 0.5 : 0.0);
+        return fromRotations((DriverStation.getAlliance().orElse(Blue) == Red) ? 0.5 : 0.0);
     }
 
     public static CommandAndReadySupplier aimAtSpeakerCommand(

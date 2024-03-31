@@ -1,6 +1,8 @@
+import edu.wpi.first.gradlerio.GradleRIOPlugin
+
 plugins {
     id "java"
-    id "edu.wpi.first.GradleRIO" version "2024.3.1"
+    id "edu.wpi.first.GradleRIO" version "2024.3.2"
     id "com.peterabeles.gversion" version "1.10"
 //    id "com.diffplug.spotless" version "6.12.0"
 }
@@ -106,16 +108,17 @@ test {
 }
 
 // Simulation configuration (e.g. environment variables).
-wpi.sim.addGui().defaultEnabled = true
-wpi.sim.addDriverstation()
-
+if (System.getenv().getOrDefault("TEST_RUN_MODE", "false").equalsIgnoreCase("false")) {
+    wpi.sim.addGui().defaultEnabled = true;
+    wpi.sim.addDriverstation()
+}
 // Setting up my Jar File. In this case, adding all libraries into the main jar ('fat jar')
 // in order to make them all available at runtime. Also adding the manifest so WPILib
 // knows where to look for our Robot Class.
 jar {
     from { configurations.runtimeClasspath.collect { it.isDirectory() ? it : zipTree(it) } }
     from sourceSets.main.allSource
-    manifest edu.wpi.first.gradlerio.GradleRIOPlugin.javaManifest(ROBOT_MAIN_CLASS)
+    manifest GradleRIOPlugin.javaManifest(ROBOT_MAIN_CLASS)
     duplicatesStrategy = DuplicatesStrategy.INCLUDE
 }
 
@@ -137,7 +140,7 @@ gversion {
     className    = "BuildConstants"
     dateFormat   = "yyyy-MM-dd HH:mm:ss z"
     timeZone     = "America/New_York"
-    indent       = "  "
+    indent       = "    "
 }
 
 // Spotless formatting

@@ -48,7 +48,7 @@ public class VisionIOSim implements VisionIO {
       cameraSim.enableRawStream(false);
     cameraSim.enableProcessedStream(true);
       cameraSim.enableDrawWireframe(false);
-    cameraSystem.addCamera(cameraSim, robotToCam);
+    cameraSystem.addCamera(cameraSim, robotToCam[0]);
   }
 
   @Override

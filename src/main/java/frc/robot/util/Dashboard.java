@@ -18,10 +18,8 @@ public class Dashboard {
             Shooter shooter,
             Feeder feeder,
             Intake intake,
-//            HoodIO.HoodIOInputs hood,
             VisionIOReal vision,
             LoggedDashboardChooser smartChooser
-
 
     ) {
         main.addDouble("Flywheel RPM", shooter::getShooterVelocityRPM)
@@ -33,8 +31,10 @@ public class Dashboard {
                 .withWidget(BuiltInWidgets.kComboBoxChooser)
                 .withSize(2, 1)
                 .withPosition(2, 0);
-        main.add("Enable Smart Commands", smartChooser);
-//        main.addCamera("Camera feed", "ShootSideCamera");
+        main.add("Enable Smart Commands", smartChooser)
+                .withWidget(BuiltInWidgets.kComboBoxChooser)
+                .withSize(3, 1);
+//        main.addCamera("Camera feed", "...");
         SmartDashboard.putData("Swerve Drive", builder -> {
             builder.setSmartDashboardType("SwerveDrive");
             builder.addDoubleProperty("Front Left Angle", () -> drive.shuffleboardMethod()[0].getAngle().getRadians(), null);

@@ -1,0 +1,208 @@
+{
+  "version": 1.0,
+  "startingPose": {
+    "position": {
+      "x": 1.390610933303833,
+      "y": 5.547595977783203
+    },
+    "rotation": -177.70940339240997
+  },
+  "command": {
+    "type": "sequential",
+    "data": {
+      "commands": [
+        {
+          "type": "parallel",
+          "data": {
+            "commands": [
+              {
+                "type": "named",
+                "data": {
+                  "name": "Zero Hood"
+                }
+              },
+              {
+                "type": "named",
+                "data": {
+                  "name": "Zero Feeder"
+                }
+              }
+            ]
+          }
+        },
+        {
+          "type": "parallel",
+          "data": {
+            "commands": [
+              {
+                "type": "named",
+                "data": {
+                  "name": "Ready Shooter"
+                }
+              },
+              {
+                "type": "sequential",
+                "data": {
+                  "commands": [
+                    {
+                      "type": "wait",
+                      "data": {
+                        "waitTime": 0.08
+                      }
+                    },
+                    {
+                      "type": "named",
+                      "data": {
+                        "name": "Shoot When Ready"
+                      }
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        },
+        {
+          "type": "parallel",
+          "data": {
+            "commands": [
+              {
+                "type": "named",
+                "data": {
+                  "name": "Intake Note"
+                }
+              },
+              {
+                "type": "path",
+                "data": {
+                  "pathName": "Greedy.1"
+                }
+              }
+            ]
+          }
+        },
+        {
+          "type": "race",
+          "data": {
+            "commands": [
+              {
+                "type": "named",
+                "data": {
+                  "name": "Aim Drivetrain"
+                }
+              },
+              {
+                "type": "named",
+                "data": {
+                  "name": "Ready Shooter"
+                }
+              },
+              {
+                "type": "named",
+                "data": {
+                  "name": "Shoot When Ready"
+                }
+              }
+            ]
+          }
+        },
+        {
+          "type": "parallel",
+          "data": {
+            "commands": [
+              {
+                "type": "named",
+                "data": {
+                  "name": "Intake Note"
+                }
+              },
+              {
+                "type": "path",
+                "data": {
+                  "pathName": "Greedy.2"
+                }
+              }
+            ]
+          }
+        },
+        {
+          "type": "race",
+          "data": {
+            "commands": [
+              {
+                "type": "named",
+                "data": {
+                  "name": "Aim Drivetrain"
+                }
+              },
+              {
+                "type": "named",
+                "data": {
+                  "name": "Ready Shooter"
+                }
+              },
+              {
+                "type": "named",
+                "data": {
+                  "name": "Shoot When Ready"
+                }
+              }
+            ]
+          }
+        },
+        {
+          "type": "parallel",
+          "data": {
+            "commands": [
+              {
+                "type": "named",
+                "data": {
+                  "name": "Intake Note"
+                }
+              },
+              {
+                "type": "path",
+                "data": {
+                  "pathName": "Greedy.3"
+                }
+              },
+              {
+                "type": "named",
+                "data": {
+                  "name": "Ready Shooter"
+                }
+              }
+            ]
+          }
+        },
+        {
+          "type": "race",
+          "data": {
+            "commands": [
+              {
+                "type": "named",
+                "data": {
+                  "name": "Aim Drivetrain"
+                }
+              },
+              {
+                "type": "named",
+                "data": {
+                  "name": "Ready Shooter"
+                }
+              },
+              {
+                "type": "named",
+                "data": {
+                  "name": "Shoot When Ready"
+                }
+              }
+            ]
+          }
+        }
+      ]
+    }
+  },
+  "folder": null,
+  "choreoAuto": true
+}
