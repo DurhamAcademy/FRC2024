@@ -18,6 +18,9 @@ import edu.wpi.first.math.geometry.Transform3d;
 import edu.wpi.first.math.geometry.Translation3d;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.RobotBase;
+import org.littletonrobotics.junction.LogFileUtil;
+import org.littletonrobotics.junction.Logger;
+import org.littletonrobotics.junction.wpilog.WPILOGWriter;
 
 import static edu.wpi.first.math.util.Units.degreesToRadians;
 import static edu.wpi.first.math.util.Units.inchesToMeters;
@@ -31,7 +34,9 @@ import static edu.wpi.first.math.util.Units.inchesToMeters;
  * constants are needed, to reduce verbosity.
  */
 public final class Constants {
-    public static final Mode currentMode = (RobotBase.isReal()) ? Mode.REAL : Mode.REPLAY;
+    public static final boolean isInReplayTestMode =
+            (System.getenv().getOrDefault("TEST_RUN_MODE", "false").equalsIgnoreCase("true"));
+    public static final Mode currentMode = (RobotBase.isReal()) ? Mode.REAL : ((isInReplayTestMode)?Mode.REPLAY:Mode.SIM);
 
   public static enum Mode {
     /** Running on a real robot. */

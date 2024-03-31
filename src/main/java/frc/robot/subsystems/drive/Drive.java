@@ -30,6 +30,7 @@ import edu.wpi.first.math.kinematics.SwerveModulePosition;
 import edu.wpi.first.math.kinematics.SwerveModuleState;
 import edu.wpi.first.math.numbers.N1;
 import edu.wpi.first.math.numbers.N3;
+import edu.wpi.first.math.system.LinearSystemLoop;
 import edu.wpi.first.units.Angle;
 import edu.wpi.first.units.Measure;
 import edu.wpi.first.units.Velocity;
@@ -38,6 +39,7 @@ import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.DriverStation.Alliance;
 import edu.wpi.first.wpilibj.sysid.SysIdRoutineLog;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
+import frc.robot.Robot;
 import org.littletonrobotics.junction.AutoLogOutput;
 import org.littletonrobotics.junction.Logger;
 import org.photonvision.EstimatedRobotPose;
@@ -63,7 +65,7 @@ public class Drive extends SubsystemBase {
     private final GyroIO gyroIO;
     private final GyroIOInputsAutoLogged gyroInputs = new GyroIOInputsAutoLogged();
     private final Module[] modules = new Module[4]; // FL, FR, BL, BR
-    private final SwerveModulePosition[] swerveModulePositions;
+    private SwerveModulePosition[] swerveModulePositions;
     private final VisionIO[] visionIO;
     private final VisionIO.VisionIOInputs[] visionInputs;
 
@@ -72,8 +74,8 @@ public class Drive extends SubsystemBase {
     private SwerveDriveKinematics kinematics = new SwerveDriveKinematics(getModuleTranslations());
     private SwerveDrivePoseEstimator poseEstimator;
     private Pose2d pose = new Pose2d();
-    PIDConstants positionPID = new PIDConstants(4, .00);
-    PIDConstants rotationPID = new PIDConstants(2.5, .00);
+    PIDConstants positionPID = new PIDConstants(16, 0);//32
+    PIDConstants rotationPID = new PIDConstants(16, 0);//32
     private Measure<Velocity<Angle>> angularVelocity = RadiansPerSecond.zero();
     private Rotation2d lastGyroRotation = new Rotation2d();
 
@@ -85,6 +87,14 @@ public class Drive extends SubsystemBase {
     Rotation2d noGyroRotation;
     private Pose2d previousPose = new Pose2d();
     double timestampSeconds = 0.0;
+
+    private SwerveModulePosition[] lastModulePositions = // For delta tracking
+            new SwerveModulePosition[] {
+                    new SwerveModulePosition(),
+                    new SwerveModulePosition(),
+                    new SwerveModulePosition(),
+                    new SwerveModulePosition()
+            };
 
     public Drive(
             GyroIO gyroIO,
@@ -132,7 +142,7 @@ public class Drive extends SubsystemBase {
                 () -> kinematics.toChassisSpeeds(getModuleStates()),
                 this::runVelocity,
                 new HolonomicPathFollowerConfig(positionPID, rotationPID,
-                        MAX_LINEAR_SPEED, DRIVE_BASE_RADIUS, new ReplanningConfig(true, true)),
+                        MAX_LINEAR_SPEED, DRIVE_BASE_RADIUS, new ReplanningConfig(true, true), Robot.defaultPeriodSecs),
                 () ->
                         DriverStation.getAlliance().isPresent()
                                 && DriverStation.getAlliance().get() == Alliance.Red,
@@ -201,19 +211,26 @@ public class Drive extends SubsystemBase {
 
         updateSwerveModulePositions();
         // Update odometry
-        SwerveModulePosition[] wheelDeltas = new SwerveModulePosition[4];
-        for (int i = 0; i < 4; i++) {
-            wheelDeltas[i] = modules[i].getPositionDelta();
+
+        // Read wheel positions and deltas from each module
+        swerveModulePositions = getModulePositions();
+        SwerveModulePosition[] moduleDeltas = new SwerveModulePosition[4];
+        for (int moduleIndex = 0; moduleIndex < 4; moduleIndex++) {
+            moduleDeltas[moduleIndex] =
+                    new SwerveModulePosition(
+                            swerveModulePositions[moduleIndex].distanceMeters
+                                    - lastModulePositions[moduleIndex].distanceMeters,
+                            swerveModulePositions[moduleIndex].angle);
+            lastModulePositions[moduleIndex] = swerveModulePositions[moduleIndex];
         }
+
 
         // The twist represents the motion of the robot since the last
         // loop cycle in x, y, and theta based only on the modules,
         // without the gyro. The gyro is always disconnected in simulation.
-        var twist = kinematics.toTwist2d(wheelDeltas);
-//        twist.dtheta *= -1;
-//        twist.dx *= -1;
-//        twist.dy *= -1;
+        var twist = kinematics.toTwist2d(moduleDeltas);
         this.transform = pose.exp(twist).minus(pose);
+        twist.dtheta *= -1;
         if (gyroInputs.connected) {
             boolean isAnyCameraConnected = false;
             for (VisionIO.VisionIOInputs visionInput : visionInputs) {
@@ -244,8 +261,7 @@ public class Drive extends SubsystemBase {
             }
 
             // Apply the twist (change since last loop cycle) to the current pose
-            noGyroRotation =
-                    pose.rotateBy(noGyroRotation.minus(pose.getRotation())).exp(twist).getRotation();
+            noGyroRotation = noGyroRotation.plus(Rotation2d.fromRadians(twist.dtheta));
             pose = noGyroPoseEstimation.update(noGyroRotation, swerveModulePositions);
             angularVelocity = RadiansPerSecond.of(twist.dtheta / .02);
         }
@@ -269,9 +285,8 @@ public class Drive extends SubsystemBase {
                         estimatedRobotPose -> {
                             Logger.recordOutput("estRoPose", estimatedRobotPose.estimatedPose);
                             Pose2d pose2d = estimatedRobotPose.estimatedPose.toPose2d();
-                            var shouldUse = true;
                             if (
-                                    shouldUse && ((!DriverStation.isFMSAttached()) ||
+                                    ((!DriverStation.isFMSAttached()) ||
                                             ((estimatedRobotPose.estimatedPose.getX() <= 16.5) &&
                                                     (estimatedRobotPose.estimatedPose.getX() > 0) &&
                                                     (estimatedRobotPose.estimatedPose.getZ() <= 1) &&
@@ -412,8 +427,10 @@ public class Drive extends SubsystemBase {
 
     @AutoLogOutput()
     public Transform3d poseEstTransform() {
-        return visionInputs[1].cameraResult.getMultiTagResult().estimatedPose.best
-                .plus(visionInputs[0].cameraResult.getMultiTagResult().estimatedPose.best.inverse());
+        if (visionInputs.length >= 2)
+            return visionInputs[1].cameraResult.getMultiTagResult().estimatedPose.best
+                    .plus(visionInputs[0].cameraResult.getMultiTagResult().estimatedPose.best.inverse());
+        else return null;
     }
 
     public void populateTurnCharacterizationData(SysIdRoutineLog routineLog) {
@@ -491,6 +508,15 @@ public class Drive extends SubsystemBase {
     private SwerveModuleState[] getModuleStates() {
         SwerveModuleState[] states = new SwerveModuleState[4];
         for (int i = 0; i < 4; i++) states[i] = modules[i].getState();
+        return states;
+    }
+
+    /** Returns the module positions (turn angles and drive positions) for all of the modules. */
+    private SwerveModulePosition[] getModulePositions() {
+        SwerveModulePosition[] states = new SwerveModulePosition[4];
+        for (int i = 0; i < 4; i++) {
+            states[i] = modules[i].getPosition();
+        }
         return states;
     }
 

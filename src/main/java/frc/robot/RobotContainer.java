@@ -315,6 +315,8 @@ private final CommandXboxController driverController = new CommandXboxController
                                 () -> (-driverController.getLeftY() * (invertX.get()?-1:1)),
                                 () -> (-driverController.getLeftX() * (invertY.get()?-1:1)),
                                 () -> (-driverController.getRightX()) * (invertOmega.get()?-1:1));
+
+                drive.setDefaultCommand(command.getCommand());
                 driverController.leftBumper().whileTrue(command.getCommand());
 
                 // ---- INTAKE COMMANDS ----
