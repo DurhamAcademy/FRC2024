@@ -37,7 +37,9 @@ public class LEDCommands {
         );
     }
 
-    public static Command setIntakeBoolean(){
+    public static Command setIntakeBoolean(LEDs leds){
+        if (leds == null) return none();
+        if (leds.getCandle() == null) return idle(leds);
         return runOnce(() -> wantsHPI = !wantsHPI)
                 .withName("Change Intake Mode");
 
@@ -145,14 +147,20 @@ public class LEDCommands {
     }
 
     public static Command hasNoteCommand(LEDs leds){
+        if (leds == null) return none();
+        if (leds.getCandle() == null) return idle(leds);
         var candle = leds.getCandle();
         return runOnce(() -> candle.setLEDs(0, 255, 0));
     }
     public static Command shooterMaxVel(LEDs leds){
+        if (leds == null) return none();
+        if (leds.getCandle() == null) return idle(leds);
         var candle = leds.getCandle();
         return runOnce(() -> candle.animate(new StrobeAnimation(0, 255, 0 , 100, 1,8,0))); //when the flywheel at max velocity
     }
     public static Command shooterVel(LEDs leds){
+        if (leds == null) return none();
+        if (leds.getCandle() == null) return idle(leds);
         var candle = leds.getCandle();
         return runOnce(() -> candle.animate(new StrobeAnimation(255,255,0,100,1,8,0))); //when the flywheel is starting to spin to shoot, but not quite ready
     }
