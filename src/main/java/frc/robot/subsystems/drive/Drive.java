@@ -39,6 +39,7 @@ import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.DriverStation.Alliance;
 import edu.wpi.first.wpilibj.sysid.SysIdRoutineLog;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
+import frc.robot.Constants;
 import frc.robot.Robot;
 import org.littletonrobotics.junction.AutoLogOutput;
 import org.littletonrobotics.junction.Logger;
@@ -74,8 +75,8 @@ public class Drive extends SubsystemBase {
     private SwerveDriveKinematics kinematics = new SwerveDriveKinematics(getModuleTranslations());
     private SwerveDrivePoseEstimator poseEstimator;
     private Pose2d pose = new Pose2d();
-    PIDConstants positionPID = new PIDConstants(16, 0);//32
-    PIDConstants rotationPID = new PIDConstants(16, 0);//32
+    PIDConstants positionPID = new PIDConstants(20, .1);//64 //works at 8
+    PIDConstants rotationPID = new PIDConstants(45, 0.8);//32+16
     private Measure<Velocity<Angle>> angularVelocity = RadiansPerSecond.zero();
     private Rotation2d lastGyroRotation = new Rotation2d();
 
@@ -478,6 +479,9 @@ public class Drive extends SubsystemBase {
 
             // Tag Count
             Logger.recordOutput("Vision/" + visionInput.name + "/Tag Count", visionInput.cameraResult.getTargets().size());
+
+            // Camera Offsets
+            Logger.recordOutput("Vision/" + visionInput.name + "/Vision Override", new Pose3d(pose).plus(robotToCam[k]));
 
             var outAmbiguities = new double[targets.size()];
             for (int i = 0, targetsSize = targets.size(); i < targetsSize; i++) {

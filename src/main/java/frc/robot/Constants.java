@@ -36,7 +36,7 @@ import static edu.wpi.first.math.util.Units.inchesToMeters;
 public final class Constants {
     public static final boolean isInReplayTestMode =
             (System.getenv().getOrDefault("TEST_RUN_MODE", "false").equalsIgnoreCase("true"));
-    public static final Mode currentMode = (RobotBase.isReal()) ? Mode.REAL : ((isInReplayTestMode)?Mode.REPLAY:Mode.SIM);
+    public static final Mode currentMode = (RobotBase.isReal()) ? Mode.REAL : ((isInReplayTestMode)?Mode.REPLAY:Mode.REPLAY);
 
   public static enum Mode {
     /** Running on a real robot. */
