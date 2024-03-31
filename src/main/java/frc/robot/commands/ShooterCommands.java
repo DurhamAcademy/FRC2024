@@ -8,6 +8,7 @@ import edu.wpi.first.math.interpolation.InterpolatingTreeMap;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj2.command.Command;
 import frc.robot.subsystems.drive.Drive;
+import frc.robot.subsystems.feeder.Feeder;
 import frc.robot.subsystems.shooter.Shooter;
 import org.littletonrobotics.junction.Logger;
 import org.littletonrobotics.junction.networktables.LoggedDashboardBoolean;
@@ -80,7 +81,7 @@ public class ShooterCommands {
     public static LoggedDashboardBoolean retractAfterShot = new LoggedDashboardBoolean("Aim/Retract After Shooting", true);
     public static LoggedDashboardNumber flywheelSpeed = new LoggedDashboardNumber("Aim/FlywheelSpeed", 3000);
 
-    public static Command autoAim(Shooter shooter, Drive drive) {
+    public static Command autoAim(Shooter shooter, Drive drive, Feeder feeder) {
         construct();
         flywheelSpeed.periodic();
         isOverridden.periodic();
