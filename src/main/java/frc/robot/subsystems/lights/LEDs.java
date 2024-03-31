@@ -42,12 +42,6 @@ public class LEDs extends SubsystemBase {
                 candle.clearAnimation(i);
             }
         }
-    }
-    public void Init(){
-        candle.setLEDs(255,255,255);//sets it to white
-    }
-    @Override
-    public void periodic() {
         beamBroken.onTrue(LEDCommands.hasNoteCommand(led));
         maxVel
                 .and(beamBroken).onTrue(LEDCommands.shooterMaxVel(led));
@@ -57,6 +51,12 @@ public class LEDs extends SubsystemBase {
                 run(() -> candle.setLEDs(255,0,0))
 
         );
+    }
+    public void Init(){
+        candle.setLEDs(255,255,255);//sets it to white
+    }
+    @Override
+    public void periodic() {
     }
     public CANdle getCandle() {
         return candle;
