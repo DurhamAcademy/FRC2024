@@ -319,7 +319,6 @@ private final CommandXboxController driverController = new CommandXboxController
                                 () -> (-driverController.getLeftX() * (invertY.get()?-1:1)),
                                 () -> (-driverController.getRightX()) * (invertOmega.get()?-1:1));
 
-                drive.setDefaultCommand(command.getCommand());
                 driverController.leftBumper().whileTrue(command.getCommand());
 
                 // ---- INTAKE COMMANDS ----
@@ -568,6 +567,7 @@ private final CommandXboxController driverController = new CommandXboxController
 
     public void configureReactions() {
         driverRumble.setDefaultCommand(noRumble(driverRumble).ignoringDisable(true));
+        operatorRumble.setDefaultCommand(noRumble(operatorRumble).ignoringDisable(true));
         reactions.intakeBeamBroken
                 .and(reactions.shooterBeamBroken.negate())
                 .whileTrue(
