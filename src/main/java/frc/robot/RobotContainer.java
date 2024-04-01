@@ -16,8 +16,12 @@ package frc.robot;
 import com.fasterxml.jackson.databind.util.Named;
 import com.pathplanner.lib.auto.AutoBuilder;
 import com.pathplanner.lib.auto.NamedCommands;
+import com.pathplanner.lib.commands.PathPlannerAuto;
+import com.pathplanner.lib.path.PathPlannerPath;
+import com.pathplanner.lib.path.PathPlannerTrajectory;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
+import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.units.Units;
 import edu.wpi.first.wpilibj.GenericHID;
 import edu.wpi.first.wpilibj.Joystick;
@@ -250,7 +254,6 @@ private final CommandXboxController driverController = new CommandXboxController
         );
         autoChooser = new LoggedDashboardChooser<>("Auto Choices", AutoBuilder.buildAutoChooser());
 //        dashboard = new Dashboard(autoChooser, drive, shooter, feeder, intake, vision, this.smartCommandsMode);
-
         this.reactions = new ReactionObject(
                 new Trigger(feeder::getIntakeBeamBroken),
                 new Trigger(feeder::getBeamBroken),
@@ -614,7 +617,7 @@ private final CommandXboxController driverController = new CommandXboxController
         AllElse
     }
 
-    private class ReactionObject {
+    private static class ReactionObject {
         Trigger isEnabled;
         Trigger intakeBeamBroken;
         Trigger shooterBeamBroken;
