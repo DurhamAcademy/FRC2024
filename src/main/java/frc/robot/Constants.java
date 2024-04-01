@@ -24,6 +24,7 @@ import org.littletonrobotics.junction.wpilog.WPILOGWriter;
 
 import static edu.wpi.first.math.util.Units.degreesToRadians;
 import static edu.wpi.first.math.util.Units.inchesToMeters;
+import static edu.wpi.first.units.Units.*;
 
 /**
  * The Constants class provides a convenient place for teams to hold robot-wide numerical or boolean
@@ -38,42 +39,52 @@ public final class Constants {
             (System.getenv().getOrDefault("TEST_RUN_MODE", "false").equalsIgnoreCase("true"));
     public static final Mode currentMode = (RobotBase.isReal()) ? Mode.REAL : ((isInReplayTestMode)?Mode.REPLAY:Mode.REPLAY);
 
-  public static enum Mode {
-    /** Running on a real robot. */
-    REAL,
+    public static enum Mode {
+        /**
+         * Running on a real robot.
+         */
+        REAL,
 
-    /** Running a physics simulator. */
-    SIM,
+        /**
+         * Running a physics simulator.
+         */
+        SIM,
 
-    /** Replaying from a log file. */
-    REPLAY
-  }
+        /**
+         * Replaying from a log file.
+         */
+        REPLAY
+    }
 
-    public static Transform3d[] robotToCam = new Transform3d[]{
-            new Transform3d(
-                    new Translation3d(
-                            0.258572,
-                            0.1796796,
-                            0.280162
-                    ),
-                    new Rotation3d(
-                            0,
-                            degreesToRadians(60 - 90),
-                            degreesToRadians(3)
-                    )
-            ),
-            new Transform3d(
-                    new Translation3d(
-                            0.258572,
-                            0.1796796,
-                            0.280162
-                    ),
-                    new Rotation3d(
-                            0,
-                            degreesToRadians(60 - 90),
-                            degreesToRadians(3 - 90)
-                    )
-            )
-    };
+    public static Transform3d[] robotToCam;
 
+    static {
+        Transform3d ShootSideCamera = new Transform3d(
+                new Translation3d(
+                        Meters.of(0.258572),//-0.25009 y
+                        Meters.of(0.1796796),//-0.1854 x
+                        Meters.of(0.280162)//-0.34316 z
+                ),
+                new Rotation3d(
+                        Radians.zero().in(Radians),
+                        Degrees.of(-30).in(Radians),
+                        Degrees.of(3).in(Radians)
+                )
+        );
+        robotToCam = new Transform3d[]{
+                ShootSideCamera,
+                new Transform3d(
+                        new Translation3d(
+                                Meters.of(0.258572).minus(Inches.of(-0.323914)),
+                                Meters.of(0.1796796).minus(Inches.of(14.265874)),
+                                Meters.of(0.280162).plus(Inches.of(4.938808))
+                        ),
+                        new Rotation3d(
+                                Radians.zero().in(Radians),
+                                Degrees.of(-30).plus(Radians.of(0.1839466536)).in(Radians),
+                                Degrees.of(3).plus(Radians.of(-1.500654)).in(Radians)
+                        )
+                )
+        };
+    }
 }
