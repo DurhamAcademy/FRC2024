@@ -19,7 +19,8 @@ public class IntakeCommands {
                     intake.setIntakePosition(Rotation2d.fromDegrees(-10));
                     intake.setRollerVoltage(9.0);
                 },
-                intake);
+                intake)
+                .raceWith(SpecializedCommands.timeoutDuringAutoSim(3));
     }
 
     public static Command safeIntakeCommand(Intake intake, Feeder feeder) {
@@ -57,7 +58,9 @@ public class IntakeCommands {
                 () -> {
                     intake.setIntakePosition(Rotation2d.fromRadians(-2.05));
                     intake.setRollerVoltage(6.0);
-                }, intake).until(() -> !feeder.getIntakeBeamBroken());
+                }, intake)
+                .raceWith(SpecializedCommands.timeoutDuringAutoSim(5))
+                .until(() -> !feeder.getIntakeBeamBroken());
     }
 
     public static Command idleCommand(Intake intake) {

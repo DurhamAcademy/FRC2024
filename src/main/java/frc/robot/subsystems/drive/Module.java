@@ -23,6 +23,8 @@ import frc.robot.Constants;
 import org.littletonrobotics.junction.Logger;
 import org.littletonrobotics.junction.networktables.LoggedDashboardNumber;
 
+import static edu.wpi.first.units.Units.Seconds;
+
 public class Module {
     private static final double WHEEL_RADIUS = .04754228114;
 
@@ -50,27 +52,28 @@ public class Module {
     switch (Constants.currentMode) {
       case REAL:
         switch (index) {
-//          case 0:
-//            driveFeedforward = new SimpleMotorFeedforward(0.14767, 0.85218, 0.12428);
-//            driveFeedback = new PIDController(0.15254, 0.0, 0.0);
-//            break;
-//          case 1:
-//            driveFeedforward = new SimpleMotorFeedforward(0.13197, 0.82237, 0.1558);
-//            driveFeedback = new PIDController(0.1295, 0.0, 0.0);
-//            break;
-//          case 2:
-//            driveFeedforward = new SimpleMotorFeedforward(0.21763, 0.83827, 0.13853);
-//            driveFeedback = new PIDController(0.13535, 0.0, 0.0);
-//            break;
-//          case 3:
-//            driveFeedforward = new SimpleMotorFeedforward(0.21342, 0.8122, 0.1631);
-//            driveFeedback = new PIDController(0.10222, 0.0, 0.0);
-//            break;
+          case 0:
+            driveFeedforward = new SimpleMotorFeedforward(0.14767, 0.85218, 0.12428);
+            driveFeedback = new PIDController(0.15254, 0.0, 0.0);
+            break;
+          case 1:
+            driveFeedforward = new SimpleMotorFeedforward(0.13197, 0.82237, 0.1558);
+            driveFeedback = new PIDController(0.1295, 0.0, 0.0);
+            break;
+          case 2:
+            driveFeedforward = new SimpleMotorFeedforward(0.21763, 0.83827, 0.13853);
+            driveFeedback = new PIDController(0.13535, 0.0, 0.0);
+            break;
+          case 3:
+            driveFeedforward = new SimpleMotorFeedforward(0.21342, 0.8122, 0.1631);
+            driveFeedback = new PIDController(0.10222, 0.0, 0.0);
+            break;
           default:
-            driveFeedforward = new SimpleMotorFeedforward(0.05, 0.8, .13);
-            driveFeedback = new PIDController(0.05, 0.0, 0.0);
+            driveFeedforward = new SimpleMotorFeedforward(.175, 0.8, .13);
+            driveFeedback = new PIDController(0.15254, 0.0, 0.0);
             break;
         }
+//        driveFeedback = new PIDController(0.16, 0.0, 0.0);//fixme: try commenting/uncommenting this line: it overrides the previous ones
         turnFeedback = new PIDController(5.0, 0.0, .02);
         break;
       case REPLAY:
@@ -97,8 +100,21 @@ public class Module {
     setBrakeMode(true);
   }
 
+  Measure<Velocity<Angle>> lastDriveVelocity = Units.RadiansPerSecond.zero();
+  Measure<Time> lastTime = Units.Microsecond.of(Logger.getTimestamp()).minus(Seconds.of(0.02));
+
   public void periodic() {
     io.updateInputs(inputs);
+    var time = Units.Microsecond.of(Logger.getTimestamp());
+    var currentVelocity = Units.RadiansPerSecond.of(inputs.driveVelocityRadPerSec);
+    var acceleration = (lastDriveVelocity.minus(currentVelocity)).per(lastTime.minus(time));
+    var maxAcheivableAcceleration = Units.RadiansPerSecond.per(Seconds).of(driveFeedforward.maxAchievableAcceleration(inputs.driveAppliedVolts,lastDriveVelocity.in(Units.RadiansPerSecond)));
+    var freeSpinningAmount = Math.min(acceleration.baseUnitMagnitude()/(maxAcheivableAcceleration.baseUnitMagnitude()), 1);
+    Logger.recordOutput("Drive/Module" + index + "/Max Achievable Acceleration", maxAcheivableAcceleration);
+    Logger.recordOutput("Drive/Module" + index + "/Acceleration", acceleration);
+    Logger.recordOutput("Drive/Module" + index + "/Free Spinning Amount", freeSpinningAmount);
+    lastDriveVelocity = currentVelocity;
+    lastTime = time;
 //    turnFeedback.setP(pPidRot.get());
 //    turnFeedback.setD(dPidRot.get());
     //noinspection UnnecessaryCallToStringValueOf

@@ -182,3 +182,4 @@ logs/
 
 # Test Logging files
 testLog.wpilog
+/testLog_sim.wpilog
