@@ -69,10 +69,11 @@ public class Module {
             driveFeedback = new PIDController(0.10222, 0.0, 0.0);
             break;
           default:
-            driveFeedforward = new SimpleMotorFeedforward(0.05, 0.8, .13);
-            driveFeedback = new PIDController(0.05, 0.0, 0.0);
+            driveFeedforward = new SimpleMotorFeedforward(.175, 0.8, .13);
+            driveFeedback = new PIDController(0.15254, 0.0, 0.0);
             break;
         }
+//        driveFeedback = new PIDController(0.16, 0.0, 0.0);//fixme: try commenting/uncommenting this line: it overrides the previous ones
         turnFeedback = new PIDController(5.0, 0.0, .02);
         break;
       case REPLAY:
@@ -143,8 +144,8 @@ public class Module {
         // Run drive controller
         double velocityRadPerSec = adjustSpeedSetpoint / WHEEL_RADIUS;
         io.setDriveVoltage( // fixme
-            (driveFeedforward.calculate(velocityRadPerSec)
-                + driveFeedback.calculate(inputs.driveVelocityRadPerSec, velocityRadPerSec)) * freeSpinningAmount);
+            driveFeedforward.calculate(velocityRadPerSec)
+                + driveFeedback.calculate(inputs.driveVelocityRadPerSec, velocityRadPerSec));
       }
     }
   }

@@ -24,6 +24,7 @@ public class FeederCommands {
         return sequence(
                 run(() -> feeder.runVolts(9), feeder)
                         .onlyIf(feeder::getBeamBroken)
+                        .raceWith(SpecializedCommands.timeoutDuringAutoSim(2))
                         .until(() -> !feeder.getBeamBroken()),
                 run(() -> feeder.runVolts(9), feeder)
                         .withTimeout(0.5),
@@ -44,9 +45,11 @@ public class FeederCommands {
                 sequence(
                         sequence(
                                 run(() -> feeder.runVolts(6), feeder)
-                                        .onlyWhile(() -> !feeder.getIntakeBeamBroken()),
+                                        .onlyWhile(() -> !feeder.getIntakeBeamBroken())
+                                        .raceWith(SpecializedCommands.timeoutDuringAutoSim(2)),
                                 run(() -> feeder.runVolts(6), feeder)
                                         .onlyWhile(feeder::getIntakeBeamBroken)
+                                        .raceWith(SpecializedCommands.timeoutDuringAutoSim(3))
                         )
                                 .onlyWhile(() -> !feeder.getBeamBroken()),
                         either(
@@ -60,14 +63,16 @@ public class FeederCommands {
 
     private static Command slowToBeam(Feeder feeder) {
         return run(() -> feeder.runVolts(2), feeder)
-                .onlyWhile(() -> !feeder.getBeamBroken());
+                .onlyWhile(() -> !feeder.getBeamBroken())
+                .raceWith(SpecializedCommands.timeoutDuringAutoSim(2));
     }
 
     private static Command zeroToBeamBreak(Feeder feeder) {
         return sequence(
                 run(() -> feeder.runVolts(-6), feeder).onlyWhile(feeder::getBeamBroken),
                 slowToBeam(feeder)
-        );
+        )
+                .raceWith(SpecializedCommands.timeoutDuringAutoSim(1));
     }
 
     public static Command humanPlayerIntake(Feeder feeder) {

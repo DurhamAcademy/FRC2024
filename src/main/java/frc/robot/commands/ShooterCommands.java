@@ -115,6 +115,7 @@ public class ShooterCommands {
                 shooter.shooterRunVelocity(distanceToRPM.get(distance));
             }
         }, shooter)
+                .raceWith(SpecializedCommands.timeoutDuringAutoSim(2))
                 .withName("Auto Aim");
     }
 
@@ -124,6 +125,7 @@ public class ShooterCommands {
             shooter.setTargetShooterAngle(Rotation2d.fromRadians(.8));
             shooter.shooterRunVelocity(3500);
         }, shooter)
+                .raceWith(SpecializedCommands.timeoutDuringAutoSim(2))
                 .withName("Just Shoot");
     }
 
