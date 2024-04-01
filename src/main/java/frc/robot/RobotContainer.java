@@ -587,7 +587,6 @@ private final CommandXboxController driverController = new CommandXboxController
         reactions
                 .isAutonomous
                 .and(reactions.isEnabled)
-
                 .whileTrue(LEDCommands.flameCommand(leds).ignoringDisable(true));
         reactions
                 .isTeleop
