@@ -143,9 +143,17 @@ public class Module {
 
         // Run drive controller
         double velocityRadPerSec = adjustSpeedSetpoint / WHEEL_RADIUS;
-        io.setDriveVoltage( // fixme
-            driveFeedforward.calculate(velocityRadPerSec)
-                + driveFeedback.calculate(inputs.driveVelocityRadPerSec, velocityRadPerSec));
+        double feedForwardValue = driveFeedforward.calculate(velocityRadPerSec);
+        double feedBackValue = driveFeedback.calculate(inputs.driveVelocityRadPerSec, velocityRadPerSec);
+        double sum = feedBackValue + feedForwardValue;
+        io.setDriveVoltage(sum);
+        Logger.recordOutput("Drive/Module "+index+"/Drive/FF Value", feedForwardValue);
+        Logger.recordOutput("Drive/Module "+index+"/Drive/FB Value", feedBackValue);
+        Logger.recordOutput("Drive/Module "+index+"/Drive/Voltage Sum", sum);
+        Logger.recordOutput("Drive/Module "+index+"/Drive/feedback Setpoint", driveFeedback.getSetpoint());
+        Logger.recordOutput("Drive/Module "+index+"/Drive/feedback Position Error", driveFeedback.getPositionError());
+        Logger.recordOutput("Drive/Module "+index+"/Drive/feedback Velocity Error", driveFeedback.getVelocityError());
+
       }
     }
   }
