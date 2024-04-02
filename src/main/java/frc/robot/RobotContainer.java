@@ -460,7 +460,7 @@ private final CommandXboxController driverController = new CommandXboxController
                                 driverController::getRightX));
                 var drivetrainDriveSysID =
                         new SysIdRoutine(
-                                new Config(Voltage.per(Units.Second).of(.5), Voltage.of(8.0), Seconds.of(12.0)),
+                                new Config(Voltage.per(Units.Second).of(2), Voltage.of(8.0), Seconds.of(12.0)),
                                 new Mechanism(
                                         drive::runCharacterizationVolts,
                                         drive::populateDriveCharacterizationData,

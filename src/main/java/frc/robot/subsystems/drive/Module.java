@@ -26,7 +26,7 @@ import org.littletonrobotics.junction.networktables.LoggedDashboardNumber;
 import static edu.wpi.first.units.Units.Seconds;
 
 public class Module {
-    private static final double WHEEL_RADIUS = .04754228114;
+    private static final double WHEEL_RADIUS = 0.051;
 
   private LoggedDashboardNumber pPidRot = new LoggedDashboardNumber("Drive/Module/Rot P");
   private LoggedDashboardNumber dPidRot = new LoggedDashboardNumber("Drive/Module/Rot D");
@@ -53,19 +53,19 @@ public class Module {
       case REAL:
         switch (index) {
           case 0:
-            driveFeedforward = new SimpleMotorFeedforward(0.14767, 0.85218, 0.12428);
+            driveFeedforward = new SimpleMotorFeedforward(0.02255, 0.84263, 0.12428);
             driveFeedback = new PIDController(0.15254, 0.0, 0.0);
             break;
           case 1:
-            driveFeedforward = new SimpleMotorFeedforward(0.13197, 0.82237, 0.1558);
+            driveFeedforward = new SimpleMotorFeedforward(0.024784, 0.82237, 0.1558);
             driveFeedback = new PIDController(0.1295, 0.0, 0.0);
             break;
           case 2:
-            driveFeedforward = new SimpleMotorFeedforward(0.21763, 0.83827, 0.13853);
+            driveFeedforward = new SimpleMotorFeedforward(0.077976, 0.83827, 0.13853);
             driveFeedback = new PIDController(0.13535, 0.0, 0.0);
             break;
           case 3:
-            driveFeedforward = new SimpleMotorFeedforward(0.21342, 0.8122, 0.1631);
+            driveFeedforward = new SimpleMotorFeedforward(0.077976, 0.8122, 0.1631);
             driveFeedback = new PIDController(0.10222, 0.0, 0.0);
             break;
           default:

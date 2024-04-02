@@ -75,8 +75,8 @@ public class Drive extends SubsystemBase {
     private SwerveDriveKinematics kinematics = new SwerveDriveKinematics(getModuleTranslations());
     private SwerveDrivePoseEstimator poseEstimator;
     private Pose2d pose = new Pose2d();
-    PIDConstants positionPID = new PIDConstants(0, 0);//64 //works at 8
-    public PIDConstants rotationPID = new PIDConstants(0, 0);//32+16
+    PIDConstants positionPID = new PIDConstants(1, 0);//64 //works at 8
+    public PIDConstants rotationPID = new PIDConstants(2, 0);//32+16
     private Measure<Velocity<Angle>> angularVelocity = RadiansPerSecond.zero();
     private Rotation2d lastGyroRotation = new Rotation2d();
 
@@ -243,7 +243,7 @@ public class Drive extends SubsystemBase {
         var twist = kinematics.toTwist2d(moduleDeltas);
         this.transform = pose.exp(twist).minus(pose);
         twist.dtheta *= -1;
-        if (gyroInputs.connected) {
+        if (isGyroConnected()) {
             boolean isAnyCameraConnected = false;
             for (VisionIO.VisionIOInputs visionInput : visionInputs) {
                 if (visionInput.connected) {
@@ -341,7 +341,10 @@ public class Drive extends SubsystemBase {
                             break;
 
                     }
-                    poseEstimator.addVisionMeasurement(pose2d, estimatedRobotPose.timestampSeconds, visionMatrix);
+                    if (isGyroConnected())
+                        poseEstimator.addVisionMeasurement(pose2d, estimatedRobotPose.timestampSeconds, visionMatrix);
+                    else
+                        noGyroPoseEstimation.addVisionMeasurement(pose2d, estimatedRobotPose.timestampSeconds, visionMatrix);
                     poseEstTransform();
                 }
             }
@@ -566,7 +569,7 @@ public class Drive extends SubsystemBase {
     public int cameraCount() {
         var cameraCount = 0;
         for (VisionIO.VisionIOInputs visionInput : visionInputs) {
-            if (visionInput.connected) cameraCount++;
+            if (visionInput.connected ) cameraCount++;
         }
         return cameraCount;
     }
@@ -591,7 +594,7 @@ public class Drive extends SubsystemBase {
      */
     public void setPose(Pose2d pose) {
         this.pose = pose;
-        if (gyroInputs.connected)
+        if (isGyroConnected())
             this.poseEstimator.resetPosition(gyroInputs.yawPosition, swerveModulePositions, pose);
         else this.noGyroPoseEstimation.resetPosition(noGyroRotation, swerveModulePositions, pose);
     }

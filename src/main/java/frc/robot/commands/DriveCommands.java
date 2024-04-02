@@ -50,7 +50,7 @@ public class DriveCommands {
     private static final double DRIVE_ROTATION_P_VALUE = 35.0;
     private static final TrapezoidProfile.Constraints rotationConstraints =
             new TrapezoidProfile.Constraints(
-                    RadiansPerSecond.of(9.505), RadiansPerSecond.per(Second).of(1));
+                    RadiansPerSecond.of(9.505*3), RadiansPerSecond.per(Second).of(1*3));
 
     private DriveCommands() {
     }
@@ -229,7 +229,7 @@ public class DriveCommands {
                                             linearVelocity.getX() * drive.getMaxLinearSpeedMetersPerSec(),
                                             linearVelocity.getY() * drive.getMaxLinearSpeedMetersPerSec(),
 
-                                            -(rotationController.getSetpoint().velocity + value),
+                                            (rotationController.getSetpoint().velocity/3.9 + value),
                                             drive.getRotation().rotateBy(getAllianceRotation())));
                             previousPose[0] = drive.getPose();
                         }, drive)
