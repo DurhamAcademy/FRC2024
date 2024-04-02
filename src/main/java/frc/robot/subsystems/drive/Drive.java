@@ -330,14 +330,14 @@ public class Drive extends SubsystemBase {
                                     mult += 0.5;
                             }
                             Logger.recordOutput("Vision/" + visionIO[i].getCameraName() + "/Single Tag Matrix Multiplier", mult);
-                            visionMatrix = new Matrix<>(Nat.N3(), Nat.N1(), new double[]{80 * mult, 80 * mult, 120 * mult});
+                            visionMatrix = new Matrix<>(Nat.N3(), Nat.N1(), new double[]{8 * mult, 8 * mult, 12 * mult});
                             break;
 
                         default:
                             MultiTargetPNPResult multiTagResult = visionInput.cameraResult.getMultiTagResult();
                             double meterErrorEstimation = (multiTagResult.estimatedPose.bestReprojErr / visionInput.cameraResult.getBestTarget().getArea()) * 0.045;
-                            meterErrorEstimation = 1;
-                            visionMatrix = new Matrix<>(Nat.N3(), Nat.N1(), new double[]{20 * meterErrorEstimation, 20 * meterErrorEstimation, 50 * meterErrorEstimation});
+//                            meterErrorEstimation = 1;
+                            visionMatrix = new Matrix<>(Nat.N3(), Nat.N1(), new double[]{1.75 * meterErrorEstimation, 5 * meterErrorEstimation, 3 * meterErrorEstimation});
                             break;
 
                     }
