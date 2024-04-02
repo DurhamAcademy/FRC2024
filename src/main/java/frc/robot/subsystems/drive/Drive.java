@@ -22,17 +22,14 @@ import edu.wpi.first.apriltag.AprilTagFieldLayout;
 import edu.wpi.first.apriltag.AprilTagFields;
 import edu.wpi.first.math.Matrix;
 import edu.wpi.first.math.Nat;
-import edu.wpi.first.math.estimator.KalmanFilter;
 import edu.wpi.first.math.estimator.SwerveDrivePoseEstimator;
 import edu.wpi.first.math.geometry.*;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.math.kinematics.SwerveDriveKinematics;
 import edu.wpi.first.math.kinematics.SwerveModulePosition;
 import edu.wpi.first.math.kinematics.SwerveModuleState;
-import edu.wpi.first.math.numbers.*;
-import edu.wpi.first.math.system.LinearSystem;
-import edu.wpi.first.math.system.plant.LinearSystemId;
-import edu.wpi.first.math.system.LinearSystemLoop;
+import edu.wpi.first.math.numbers.N1;
+import edu.wpi.first.math.numbers.N3;
 import edu.wpi.first.units.Angle;
 import edu.wpi.first.units.Measure;
 import edu.wpi.first.units.Velocity;
@@ -42,15 +39,12 @@ import edu.wpi.first.wpilibj.DriverStation.Alliance;
 import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj.sysid.SysIdRoutineLog;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
-import frc.robot.Constants;
 import frc.robot.Robot;
 import org.littletonrobotics.junction.AutoLogOutput;
 import org.littletonrobotics.junction.Logger;
 import org.photonvision.EstimatedRobotPose;
 import org.photonvision.PhotonPoseEstimator;
-import org.photonvision.PhotonUtils;
 import org.photonvision.targeting.MultiTargetPNPResult;
-import org.photonvision.targeting.PhotonPipelineResult;
 import org.photonvision.targeting.PhotonTrackedTarget;
 import org.photonvision.targeting.TargetCorner;
 
@@ -60,7 +54,6 @@ import java.util.Optional;
 import static edu.wpi.first.math.util.Units.inchesToMeters;
 import static edu.wpi.first.units.Units.*;
 import static frc.robot.Constants.robotToCam;
-import static java.lang.Math.sqrt;
 
 public class Drive extends SubsystemBase {
     private static final double MAX_LINEAR_SPEED = 4.5;
@@ -82,8 +75,8 @@ public class Drive extends SubsystemBase {
     private SwerveDriveKinematics kinematics = new SwerveDriveKinematics(getModuleTranslations());
     private SwerveDrivePoseEstimator poseEstimator;
     private Pose2d pose = new Pose2d();
-    PIDConstants positionPID = new PIDConstants(20, .1);//64 //works at 8
-    public PIDConstants rotationPID = new PIDConstants(45, 0.8);//32+16
+    PIDConstants positionPID = new PIDConstants(0, 0);//64 //works at 8
+    public PIDConstants rotationPID = new PIDConstants(0, 0);//32+16
     private Measure<Velocity<Angle>> angularVelocity = RadiansPerSecond.zero();
     private Rotation2d lastGyroRotation = new Rotation2d();
 
@@ -337,13 +330,14 @@ public class Drive extends SubsystemBase {
                                     mult += 0.5;
                             }
                             Logger.recordOutput("Vision/" + visionIO[i].getCameraName() + "/Single Tag Matrix Multiplier", mult);
-                            visionMatrix = new Matrix<>(Nat.N3(), Nat.N1(), new double[]{8 * mult, 8 * mult, 12 * mult});
+                            visionMatrix = new Matrix<>(Nat.N3(), Nat.N1(), new double[]{80 * mult, 80 * mult, 120 * mult});
                             break;
 
                         default:
                             MultiTargetPNPResult multiTagResult = visionInput.cameraResult.getMultiTagResult();
                             double meterErrorEstimation = (multiTagResult.estimatedPose.bestReprojErr / visionInput.cameraResult.getBestTarget().getArea()) * 0.045;
-                            visionMatrix = new Matrix<>(Nat.N3(), Nat.N1(), new double[]{1.75 * meterErrorEstimation, 1.75 * meterErrorEstimation, 3 * meterErrorEstimation});
+                            meterErrorEstimation = 1;
+                            visionMatrix = new Matrix<>(Nat.N3(), Nat.N1(), new double[]{20 * meterErrorEstimation, 20 * meterErrorEstimation, 50 * meterErrorEstimation});
                             break;
 
                     }

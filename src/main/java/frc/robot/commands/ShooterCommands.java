@@ -211,7 +211,7 @@ public class ShooterCommands {
 
     public static Command humanPlayerIntake(Shooter shooter){
         return run(() -> {
-            shooter.setTargetShooterAngle(Rotation2d.fromRadians(1.214));
+            shooter.setTargetShooterAngle(Rotation2d.fromRadians(1.15));
             shooter.shooterRunVelocity(-1500);
         });
     }
@@ -221,6 +221,25 @@ public class ShooterCommands {
                 shooter.setTargetShooterAngle(Rotation2d.fromRadians(1.114));
                 shooter.shooterRunVelocity(1000);
 //                shooter.setTargetShooterAngle(Rotation2d.fromRadians(-0.5));
+        });
+    }
+
+    public static Command ampSpin(Shooter shooter){
+        return run(() -> {
+            shooter.setTargetShooterAngle(Rotation2d.fromRadians(1.114));
+            shooter.shooterRunVelocity(300);
+        });
+    }
+
+    public static Command ampGo(Shooter shooter, int rpm){
+        return run(() -> {
+            shooter.shooterRunVelocity(rpm);
+        });
+    }
+
+    public static Command ampAng(Shooter shooter){
+        return run(() -> {
+            shooter.setTargetShooterAngle(Rotation2d.fromRadians(1.5));
         });
     }
 

@@ -19,8 +19,7 @@ public class IntakeCommands {
                     intake.setIntakePosition(Rotation2d.fromDegrees(-10));
                     intake.setRollerVoltage(9.0);
                 },
-                intake)
-                .raceWith(SpecializedCommands.timeoutDuringAutoSim(3));
+                intake);
     }
 
     public static Command safeIntakeCommand(Intake intake, Feeder feeder) {
