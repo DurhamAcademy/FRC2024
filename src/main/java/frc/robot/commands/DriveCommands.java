@@ -45,9 +45,7 @@ import static java.lang.Math.PI;
 public class DriveCommands {
 
     private static final double DEADBAND = 0.1;
-    private static final double DEADBANDX = 1.0;
     private static final double CANCEL_COMMAND_DEADBAND = 0.2;
-    private static final double DRIVE_ROTATION_P_VALUE = 35.0;
     private static final TrapezoidProfile.Constraints rotationConstraints =
             new TrapezoidProfile.Constraints(
                     RadiansPerSecond.of(9.505*3), RadiansPerSecond.per(Second).of(1*3));
@@ -229,7 +227,7 @@ public class DriveCommands {
                                             linearVelocity.getX() * drive.getMaxLinearSpeedMetersPerSec(),
                                             linearVelocity.getY() * drive.getMaxLinearSpeedMetersPerSec(),
 
-                                            (rotationController.getSetpoint().velocity/3.9 + value),
+                                            (rotationController.getSetpoint().velocity + value),
                                             drive.getRotation().rotateBy(getAllianceRotation())));
                             previousPose[0] = drive.getPose();
                         }, drive)

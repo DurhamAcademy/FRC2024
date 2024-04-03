@@ -53,27 +53,27 @@ public class Module {
       case REAL:
         switch (index) {
           case 0:
-            driveFeedforward = new SimpleMotorFeedforward(0.02255, 0.84263, 0.12428);
-            driveFeedback = new PIDController(0.15254, 0.0, 0.0);
+            driveFeedforward = new SimpleMotorFeedforward(0.039527, 0.13437, 0.12428/6.2831);
+//            driveFeedback = new PIDController(0.15254, 0.0, 0.0);
             break;
           case 1:
-            driveFeedforward = new SimpleMotorFeedforward(0.024784, 0.82237, 0.1558);
-            driveFeedback = new PIDController(0.1295, 0.0, 0.0);
+            driveFeedforward = new SimpleMotorFeedforward(0.024784, 0.13088, 0.1558/6.2831);
+//            driveFeedback = new PIDController(0.1295, 0.0, 0.0);
             break;
           case 2:
-            driveFeedforward = new SimpleMotorFeedforward(0.077976, 0.83827, 0.13853);
-            driveFeedback = new PIDController(0.13535, 0.0, 0.0);
+            driveFeedforward = new SimpleMotorFeedforward(0.077976, 0.13341, 0.13853/6.2831);
+//            driveFeedback = new PIDController(0.13535, 0.0, 0.0);
             break;
           case 3:
-            driveFeedforward = new SimpleMotorFeedforward(0.077976, 0.8122, 0.1631);
-            driveFeedback = new PIDController(0.10222, 0.0, 0.0);
+            driveFeedforward = new SimpleMotorFeedforward(0.077976, 0.12927, 0.1631/6.2831);
+//            driveFeedback = new PIDController(0.10222, 0.0, 0.0);
             break;
           default:
-            driveFeedforward = new SimpleMotorFeedforward(.175, 0.8, .13);
-            driveFeedback = new PIDController(0.15254, 0.0, 0.0);
+            driveFeedforward = new SimpleMotorFeedforward(.175, 0.127, .13);
+//            driveFeedback = new PIDController(0.15254, 0.0, 0.0);
             break;
         }
-//        driveFeedback = new PIDController(0.16, 0.0, 0.0);//fixme: try commenting/uncommenting this line: it overrides the previous ones
+        driveFeedback = new PIDController(0.0097924, 0.0, 0.0);//fixme: try commenting/uncommenting this line: it overrides the previous ones
         turnFeedback = new PIDController(5.0, 0.0, .02);
         break;
       case REPLAY:

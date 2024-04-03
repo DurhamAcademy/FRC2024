@@ -625,7 +625,7 @@ public class Drive extends SubsystemBase {
         };
     }
 
-    @AutoLogOutput
+    @AutoLogOutput(key = "[BAD] Angular Velocity")
     public Measure<Velocity<Angle>> getAnglularVelocity() {
         return this.angularVelocity.negate();
     }
