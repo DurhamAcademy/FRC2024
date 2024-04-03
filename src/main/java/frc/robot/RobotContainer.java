@@ -201,7 +201,7 @@ private final CommandXboxController driverController = new CommandXboxController
         );
         NamedCommands.registerCommand(
                 "Ready Shooter",
-                autoAim(shooter, drive, feeder)
+                autoAim(shooter, drive, feeder, () -> true)
         );
         NamedCommands.registerCommand(
                 "Zero Feeder",
@@ -213,7 +213,7 @@ private final CommandXboxController driverController = new CommandXboxController
         );
         NamedCommands.registerCommand(
                 "Auto Point",
-                ShooterCommands.autoAim(shooter, drive, feeder)
+                ShooterCommands.autoAim(shooter, drive, feeder, () -> true)
         );
         NamedCommands.registerCommand(
                 "Shoot When Ready",
@@ -377,6 +377,7 @@ private final CommandXboxController driverController = new CommandXboxController
                 operatorController
                         .povUp()
                         .and(operatorController.a())
+                        .and(operatorController.y().negate())
                         .whileTrue(
                                 LEDCommands.ledsUp(leds)
                         );
@@ -390,7 +391,14 @@ private final CommandXboxController driverController = new CommandXboxController
                 // ---- SHOOTER COMMANDS ----
                 operatorController
                         .y()
-                        .whileTrue(autoAim(shooter, drive, feeder));
+                        .and(operatorController.povUp().negate())
+                        .whileTrue(autoAim(shooter, drive, feeder, () -> false));
+
+                operatorController
+                        .y()
+                        .and(operatorController.povUp())
+                        .whileTrue(autoAim(shooter, drive, feeder, () -> true));
+
                 operatorController
                         .x()
                         .whileTrue(

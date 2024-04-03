@@ -14,6 +14,8 @@ import org.littletonrobotics.junction.Logger;
 import org.littletonrobotics.junction.networktables.LoggedDashboardBoolean;
 import org.littletonrobotics.junction.networktables.LoggedDashboardNumber;
 
+import java.util.function.BooleanSupplier;
+
 import static edu.wpi.first.units.Units.RadiansPerSecond;
 import static edu.wpi.first.wpilibj.DriverStation.Alliance.Blue;
 import static edu.wpi.first.wpilibj2.command.Commands.*;
@@ -81,7 +83,7 @@ public class ShooterCommands {
     public static LoggedDashboardBoolean retractAfterShot = new LoggedDashboardBoolean("Aim/Retract After Shooting", true);
     public static LoggedDashboardNumber flywheelSpeed = new LoggedDashboardNumber("Aim/FlywheelSpeed", 3000);
 
-    public static Command autoAim(Shooter shooter, Drive drive, Feeder feeder) {
+    public static Command autoAim(Shooter shooter, Drive drive, Feeder feeder, BooleanSupplier hoodUp) {
         construct();
         flywheelSpeed.periodic();
         isOverridden.periodic();
@@ -90,9 +92,11 @@ public class ShooterCommands {
         //the parameter is the robot, idk how to declare it, also this returns the angle
         return run(() -> {
             if (isOverridden.get()) {
-                shooter.setTargetShooterAngle(Rotation2d.fromRadians(overrideAngle.get()));
-                shooter.overrideHoodAtSetpoint(true);
                 shooter.shooterRunVelocity(3000);
+                if(hoodUp.getAsBoolean()) {
+                    shooter.setTargetShooterAngle(Rotation2d.fromRadians(overrideAngle.get()));
+                    shooter.overrideHoodAtSetpoint(true);
+                }
             } else {
                 // Calcaulate new linear velocity
                 // Get the angle to point at the goal
@@ -110,9 +114,11 @@ public class ShooterCommands {
                 Logger.recordOutput("distanceFromGoal", distance);
                 Logger.recordOutput("Aim/getZ", targetRelativeToShooter.getZ());
                 Logger.recordOutput("Aim/atan", atan);
-                shooter.setTargetShooterAngle(Rotation2d.fromRadians(atan + distanceToAngle.get(distance)));
-                shooter.overrideHoodAtSetpoint(true);
                 shooter.shooterRunVelocity(distanceToRPM.get(distance));
+                if(hoodUp.getAsBoolean()) {
+                    shooter.setTargetShooterAngle(Rotation2d.fromRadians(atan + distanceToAngle.get(distance)));
+                    shooter.overrideHoodAtSetpoint(true);
+                }
             }
         }, shooter)
                 .raceWith(SpecializedCommands.timeoutDuringAutoSim(2))
