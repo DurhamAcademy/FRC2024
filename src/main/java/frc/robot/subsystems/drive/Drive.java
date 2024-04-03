@@ -208,11 +208,9 @@ public class Drive extends SubsystemBase {
         }
 
         // Stop moving when disabled
-        if (DriverStation.isDisabled()) {
-            for (var module : modules) {
+        if (DriverStation.isDisabled())
+            for (var module : modules)
                 module.stop();
-            }
-        }
         // Log empty setpoint states when disabled
         if (DriverStation.isDisabled()) {
             //noinspection RedundantArrayCreation

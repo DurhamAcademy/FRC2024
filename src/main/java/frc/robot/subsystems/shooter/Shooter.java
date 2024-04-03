@@ -163,6 +163,9 @@ public class Shooter extends SubsystemBase {
         sState.setAngle(hoodInputs.hoodPositionRad);
         Logger.recordOutput("Shooter/Mechanism", mech1);
 
+        // Let the hood move more easily while disabled so that we don't skip gears as much
+        hoodIO.setBrakeMode(isDisabled() && (Math.abs(shooterInputs.flywheelVelocityRadPerSec) < 1000));
+
         if (hoodInputs.islimitSwitchPressed != lastLimitSwitch) {
             lastLimitSwitch = hoodInputs.islimitSwitchPressed;
             // only do it during these times to prevent arbitrary zero events
