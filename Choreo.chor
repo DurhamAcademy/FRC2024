@@ -1797,7 +1797,7 @@
                     }
                 }
             ],
-            "isTrajectoryStale": false
+            "isTrajectoryStale": true
         },
         "P1 Center Intake Nearest Far Note": {
             "waypoints": [
@@ -2792,7 +2792,7 @@
                     }
                 }
             ],
-            "isTrajectoryStale": false
+            "isTrajectoryStale": true
         },
         "P2 Center Intake Nearest Far Note": {
             "waypoints": [
@@ -2969,7 +2969,7 @@
                     }
                 }
             ],
-            "isTrajectoryStale": false
+            "isTrajectoryStale": true
         },
         "P3 Center Intake Nearest Far Note": {
             "waypoints": [
@@ -3758,7 +3758,7 @@
                     }
                 }
             ],
-            "isTrajectoryStale": false
+            "isTrajectoryStale": true
         },
         "P4 Center Intake Nearest Far Note (1)": {
             "waypoints": [
@@ -4911,7 +4911,7 @@
                 {
                     "name": "Intake",
                     "target": 5,
-                    "targetTimestamp": null,
+                    "targetTimestamp": 2.0200745883507563,
                     "offset": -0.7,
                     "command": {
                         "type": "named",
@@ -4921,7 +4921,7 @@
                     }
                 }
             ],
-            "isTrajectoryStale": false
+            "isTrajectoryStale": true
         },
         "Amp Mobility": {
             "waypoints": [
@@ -5758,7 +5758,7 @@
                 }
             ],
             "eventMarkers": [],
-            "isTrajectoryStale": false
+            "isTrajectoryStale": true
         },
         "Source Mobility": {
             "waypoints": [
@@ -6403,7 +6403,7 @@
                 }
             ],
             "eventMarkers": [],
-            "isTrajectoryStale": false
+            "isTrajectoryStale": true
         },
         "Source Side": {
             "waypoints": [
@@ -8940,7 +8940,7 @@
                 {
                     "name": "Intake",
                     "target": 7,
-                    "targetTimestamp": null,
+                    "targetTimestamp": 2.3982771257181246,
                     "offset": -1,
                     "command": {
                         "type": "named",
@@ -8952,7 +8952,7 @@
                 {
                     "name": "Aim",
                     "target": 11,
-                    "targetTimestamp": null,
+                    "targetTimestamp": 5.37703018216942,
                     "offset": -1,
                     "command": {
                         "type": "named",
@@ -8964,7 +8964,7 @@
                 {
                     "name": "Shoot",
                     "target": 11,
-                    "targetTimestamp": null,
+                    "targetTimestamp": 5.37703018216942,
                     "offset": 0,
                     "command": {
                         "type": "named",
@@ -8976,7 +8976,7 @@
                 {
                     "name": "Intake",
                     "target": 13,
-                    "targetTimestamp": null,
+                    "targetTimestamp": 6.13200208347499,
                     "offset": -0.5,
                     "command": {
                         "type": "named",
@@ -8988,7 +8988,7 @@
                 {
                     "name": "Aim",
                     "target": 14,
-                    "targetTimestamp": null,
+                    "targetTimestamp": 6.984976417129425,
                     "offset": -0.5,
                     "command": {
                         "type": "named",
@@ -9000,7 +9000,7 @@
                 {
                     "name": "Shoot",
                     "target": 14,
-                    "targetTimestamp": null,
+                    "targetTimestamp": 6.984976417129425,
                     "offset": 0,
                     "command": {
                         "type": "named",
@@ -9012,7 +9012,7 @@
                 {
                     "name": "Intake",
                     "target": 17,
-                    "targetTimestamp": null,
+                    "targetTimestamp": 10.91308507733646,
                     "offset": -0.5,
                     "command": {
                         "type": "named",
@@ -9046,7 +9046,7 @@
                     }
                 }
             ],
-            "isTrajectoryStale": false
+            "isTrajectoryStale": true
         },
         "Greedy": {
             "waypoints": [
@@ -10459,7 +10459,7 @@
             "usesDefaultFieldObstacles": true,
             "circleObstacles": [],
             "eventMarkers": [],
-            "isTrajectoryStale": false
+            "isTrajectoryStale": true
         },
         "Friend Amp Side": {
             "waypoints": [
@@ -12766,7 +12766,7 @@
                 }
             ],
             "eventMarkers": [],
-            "isTrajectoryStale": false
+            "isTrajectoryStale": true
         },
         "Friend Source Side": {
             "waypoints": [
@@ -14019,7 +14019,7 @@
             "usesDefaultFieldObstacles": true,
             "circleObstacles": [],
             "eventMarkers": [],
-            "isTrajectoryStale": false
+            "isTrajectoryStale": true
         },
         "Greedy No Stage": {
             "waypoints": [
@@ -15066,7 +15066,7 @@
             "usesDefaultFieldObstacles": true,
             "circleObstacles": [],
             "eventMarkers": [],
-            "isTrajectoryStale": false
+            "isTrajectoryStale": true
         },
         "Temp Greedy": {
             "waypoints": [
@@ -15797,7 +15797,7 @@
             "usesDefaultFieldObstacles": true,
             "circleObstacles": [],
             "eventMarkers": [],
-            "isTrajectoryStale": false
+            "isTrajectoryStale": true
         },
         "Wake Playoffs Path": {
             "waypoints": [
@@ -17228,7 +17228,7 @@
             "usesDefaultFieldObstacles": true,
             "circleObstacles": [],
             "eventMarkers": [],
-            "isTrajectoryStale": false
+            "isTrajectoryStale": true
         },
         "Sim PID Tuner": {
             "waypoints": [
@@ -18534,7 +18534,7 @@
             "usesDefaultFieldObstacles": true,
             "circleObstacles": [],
             "eventMarkers": [],
-            "isTrajectoryStale": false
+            "isTrajectoryStale": true
         }
     },
     "splitTrajectoriesAtStopPoints": false,
