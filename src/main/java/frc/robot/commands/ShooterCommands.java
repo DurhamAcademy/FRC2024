@@ -173,11 +173,10 @@ public class ShooterCommands {
                 .withName("Simple Hood Zero");
     }
 
-    //https://www.desmos.com/calculator/rcnsmtoqwi hypothetical math
     public static Command passNote(Shooter shooter) {
         return run(() -> {
-            shooter.shooterRunVelocity(1500);
-            shooter.setTargetShooterAngle(Rotation2d.fromRadians(1.06));
+            shooter.shooterRunVelocity(1000);
+            shooter.setTargetShooterAngle(Rotation2d.fromRadians(.25));
         }, shooter)
                 .withName("passNote");
     }
