@@ -24,4 +24,6 @@ public interface HoodIO {
 
   /** Stop in open loop. */
   public default void wristStop() {}
+
+  public default void setBrakeMode(boolean enableBrakeMode) {}
 }

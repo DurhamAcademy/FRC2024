@@ -75,8 +75,8 @@ public class Drive extends SubsystemBase {
     private SwerveDriveKinematics kinematics = new SwerveDriveKinematics(getModuleTranslations());
     private SwerveDrivePoseEstimator poseEstimator;
     private Pose2d pose = new Pose2d();
-    PIDConstants positionPID = new PIDConstants(1, 0);//64 //works at 8
-    public PIDConstants rotationPID = new PIDConstants(2, 0);//32+16
+    PIDConstants positionPID = new PIDConstants(5, 0);//64 //works at 8
+    public PIDConstants rotationPID = new PIDConstants(6, 0);//32+16
     private Measure<Velocity<Angle>> angularVelocity = RadiansPerSecond.zero();
     private Rotation2d lastGyroRotation = new Rotation2d();
 
@@ -208,11 +208,9 @@ public class Drive extends SubsystemBase {
         }
 
         // Stop moving when disabled
-        if (DriverStation.isDisabled()) {
-            for (var module : modules) {
+        if (DriverStation.isDisabled())
+            for (var module : modules)
                 module.stop();
-            }
-        }
         // Log empty setpoint states when disabled
         if (DriverStation.isDisabled()) {
             //noinspection RedundantArrayCreation
@@ -625,7 +623,7 @@ public class Drive extends SubsystemBase {
         };
     }
 
-    @AutoLogOutput
+    @AutoLogOutput(key = "[BAD] Angular Velocity")
     public Measure<Velocity<Angle>> getAnglularVelocity() {
         return this.angularVelocity.negate();
     }

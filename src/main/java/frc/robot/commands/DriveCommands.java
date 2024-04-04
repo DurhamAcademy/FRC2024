@@ -45,12 +45,10 @@ import static java.lang.Math.PI;
 public class DriveCommands {
 
     private static final double DEADBAND = 0.1;
-    private static final double DEADBANDX = 1.0;
     private static final double CANCEL_COMMAND_DEADBAND = 0.2;
-    private static final double DRIVE_ROTATION_P_VALUE = 35.0;
     private static final TrapezoidProfile.Constraints rotationConstraints =
             new TrapezoidProfile.Constraints(
-                    RadiansPerSecond.of(9.505*3), RadiansPerSecond.per(Second).of(1*3));
+                    RadiansPerSecond.of(9.315), RadiansPerSecond.per(Second).of(31.943));
 
     private DriveCommands() {
     }
@@ -157,15 +155,13 @@ public class DriveCommands {
         ProfiledPIDController rotationController =
                 new ProfiledPIDController(drive.rotationPID.kP, 0, drive.rotationPID.kD, rotationConstraints);
 
-        LoggedDashboardBoolean invertVelocity = new LoggedDashboardBoolean("Disable Velocity", false);
-
         rotationController.enableContinuousInput(-PI, PI);
         var filter = LinearFilter.singlePoleIIR(0.08, 0.02);
 
         var command =
                 new RunCommand(
                         () -> {
-                            // Calcaulate new linear velocity
+                            // Calculate new linear velocity
                             Translation2d linearVelocity = getLinearVelocity(xSupplier, ySupplier);
                             // Get the angle to point at the goal
                             var goalAngle =
@@ -176,8 +172,8 @@ public class DriveCommands {
                             Transform2d robotVelocity = drive.getTwistPerDt();
                             Pose2d movingWhileShootingTarget;
                             Pose2d targetPose = ShooterCommands.getSpeakerPos().toPose2d();
-//                            targetPose = targetPose.plus(new Transform2d(0.0, goalAngle.getSin() * 0.5, new Rotation2d()));
-                            if (previousPose[0] != null && false) {
+                            targetPose = targetPose.plus(new Transform2d(0.0, goalAngle.getSin() * 0.5, new Rotation2d()));
+                            if (previousPose[0] != null) {
                                 double distance =
                                         targetPose
                                                 .getTranslation()
@@ -193,7 +189,7 @@ public class DriveCommands {
 
 
                             Double goalAngleVelocity = null;
-                            if (previousPose[0] != null && false) {
+                            if (previousPose[0] != null) {
                                 var previousAngle =
                                         movingWhileShootingTarget
                                                 .getTranslation()
@@ -209,12 +205,10 @@ public class DriveCommands {
 //                      new TrapezoidProfile.State(
 //                          Radians.of(drive.getRotation().getRadians()),
 //                          drive.getAnglularVelocity()));
-                            rotationController.setGoal(
-                                    new TrapezoidProfile.State(
-                                            goalAngle.getRadians(), goalAngleVelocity));
+//                            rotationController.setGoal();
                             var value = rotationController.calculate(
                                     angleModulus(drive.getPose().getRotation().getRadians()),
-                                    angleModulus(goalAngle.getRadians())
+                                    new TrapezoidProfile.State(goalAngle.getRadians(), goalAngleVelocity)
                             );
 
                             Logger.recordOutput("Aim/Calculated Value", (value));
@@ -229,12 +223,14 @@ public class DriveCommands {
                                             linearVelocity.getX() * drive.getMaxLinearSpeedMetersPerSec(),
                                             linearVelocity.getY() * drive.getMaxLinearSpeedMetersPerSec(),
 
-                                            (rotationController.getSetpoint().velocity/3.9 + value),
+                                            (rotationController.getSetpoint().velocity + value),
                                             drive.getRotation().rotateBy(getAllianceRotation())));
                             previousPose[0] = drive.getPose();
                         }, drive)
                         .beforeStarting(
-                                () -> rotationController.reset(angleModulus(drive.getRotation().getRadians())), drive)
+                                () -> rotationController.reset(
+                                        angleModulus(drive.getRotation().getRadians()),drive.getAnglularVelocity().in(RadiansPerSecond)
+                                ), drive)
                         .until(
                                 () -> {
                                     // if the controller is giving a turn input, end the command

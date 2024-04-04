@@ -30,7 +30,7 @@ import edu.wpi.first.wpilibj.simulation.LinearSystemSim;
 public class ModuleIOSim implements ModuleIO {
   private static final double LOOP_PERIOD_SECS = 0.02;
 
-  private DCMotorSim driveSim = new DCMotorSim(LinearSystemId.createDCMotorSystem(0.83827/6.75,0.13853/6.75), DCMotor.getNEO(1), 6.75);
+  private DCMotorSim driveSim = new DCMotorSim(LinearSystemId.createDCMotorSystem(0.13437/6.75,0.13437/6.75), DCMotor.getNEO(1), 6.75);
   private DCMotorSim turnSim = new DCMotorSim(DCMotor.getNEO(1), 150.0 / 7.0, 0.004);
 
   private final Rotation2d turnAbsoluteInitPosition = new Rotation2d(Math.random() * 2.0 * Math.PI);
