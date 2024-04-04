@@ -225,7 +225,7 @@ private final CommandXboxController driverController = new CommandXboxController
                         )
                                 .onlyWhile(() -> !feeder.getBeamBroken())
                                 .withTimeout(3.0)
-                )
+                ).raceWith(SpecializedCommands.timeoutDuringAutoSim(3.0))
         );
         NamedCommands.registerCommand(
                 "Shoot",
@@ -345,7 +345,6 @@ private final CommandXboxController driverController = new CommandXboxController
                                         feeder::getBeamBroken
                                 )
                         );
-                driverController.rightBumper().whileTrue(IntakeCommands.idleCommand(intake));
 
                 operatorController
                         .povLeft()
@@ -432,13 +431,15 @@ private final CommandXboxController driverController = new CommandXboxController
 //                                .onlyWhile(feeder::getBeamBroken)
 //                                .andThen(ShooterCommands.ampAngle(shooter)));
                 driverController
-                        .povUp()
+                        .rightBumper()
                         .whileTrue(
                                 sequence(
                                     FeederCommands.feedToShooter(feeder)
-                                            .alongWith(ShooterCommands.ampSpin(shooter)).until(() -> !feeder.getBeamBroken()),
+                                            .alongWith(ShooterCommands.ampSpin(shooter)).withTimeout(0.2),
                                         ShooterCommands.ampAng(shooter)
-                                                .alongWith(ShooterCommands.ampGo(shooter, 400))
+                                                .alongWith(ShooterCommands.ampGo(shooter, 600))
+                                                .withTimeout(0.25)
+                                                .andThen(ShooterCommands.setAmpAngle(shooter, -0.4))
                                 )
 
 

@@ -98,6 +98,9 @@ public class Intake extends SubsystemBase {
     boolean disableFeedControl = false;
     @Override
     public void periodic() {
+        if(inputs.armPositionRad < 1.715 && inputs.armPositionRad > -0.97){
+            io.setRollerPercent(0.0);
+        }
         if (mustReset) {
             resetArmFB();
             mustReset = false;
