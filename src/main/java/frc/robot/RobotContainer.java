@@ -345,7 +345,6 @@ private final CommandXboxController driverController = new CommandXboxController
                                         feeder::getBeamBroken
                                 )
                         );
-                driverController.rightBumper().whileTrue(IntakeCommands.idleCommand(intake));
 
                 operatorController
                         .povLeft()
@@ -426,7 +425,7 @@ private final CommandXboxController driverController = new CommandXboxController
 //                                .onlyWhile(feeder::getBeamBroken)
 //                                .andThen(ShooterCommands.ampAngle(shooter)));
                 driverController
-                        .povUp()
+                        .rightBumper()
                         .whileTrue(
                                 sequence(
                                     FeederCommands.feedToShooter(feeder)
