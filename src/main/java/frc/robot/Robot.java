@@ -90,18 +90,19 @@ public class Robot extends LoggedRobot {
     // Instantiate our RobotContainer. This will perform all our button bindings,
     // and put our autonomous chooser on the dashboard.
     robotContainer = new RobotContainer();
+
+    Logger.runEveryN(25, ()-> {
+      Transform3d[] robotToCam = Constants.robotToCam;
+      for (int i = 0; i < robotToCam.length; i++) {
+        Transform3d transform3d = robotToCam[i];
+        Logger.recordOutput("cameraTransform"+i, transform3d);
+      }
+    });
   }
 
   /** This function is called periodically during all modes. */
   @Override
   public void robotPeriodic() {
-    Logger.runEveryN(25, ()-> {
-        Transform3d[] robotToCam = Constants.robotToCam;
-        for (int i = 0; i < robotToCam.length; i++) {
-            Transform3d transform3d = robotToCam[i];
-            Logger.recordOutput("cameraTransform"+i, transform3d);
-        }
-    });
     // Runs the Scheduler. This is responsible for polling buttons, adding
     // newly-scheduled commands, running already-scheduled commands, removing
     // finished or interrupted commands, and running subsystem periodic() methods.
@@ -167,5 +168,4 @@ public class Robot extends LoggedRobot {
   /** This function is called periodically whilst in simulation. */
   @Override
   public void simulationPeriodic() {}
-
 }

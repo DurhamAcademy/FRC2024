@@ -22,10 +22,8 @@ import edu.wpi.first.math.geometry.Transform2d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.math.trajectory.TrapezoidProfile;
-import edu.wpi.first.units.Angle;
-import edu.wpi.first.units.Measure;
-import edu.wpi.first.units.Velocity;
 import edu.wpi.first.wpilibj.DriverStation;
+import edu.wpi.first.wpilibj.RobotState;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.RunCommand;
@@ -37,22 +35,20 @@ import org.littletonrobotics.junction.networktables.LoggedDashboardBoolean;
 import java.util.function.BooleanSupplier;
 import java.util.function.DoubleSupplier;
 
-import static edu.wpi.first.math.MathUtil.applyDeadband;
-import static edu.wpi.first.math.MathUtil.inputModulus;
+import static edu.wpi.first.math.MathUtil.*;
 import static edu.wpi.first.math.geometry.Rotation2d.fromRotations;
 import static edu.wpi.first.units.Units.*;
 import static edu.wpi.first.wpilibj.DriverStation.Alliance.Blue;
 import static edu.wpi.first.wpilibj.DriverStation.Alliance.Red;
+import static java.lang.Math.PI;
 
 public class DriveCommands {
 
     private static final double DEADBAND = 0.1;
-    private static final double DEADBANDX = 1.0;
     private static final double CANCEL_COMMAND_DEADBAND = 0.2;
-    private static final double DRIVE_ROTATION_P_VALUE = 35.0;
-    private static TrapezoidProfile.Constraints rotationConstraints =
+    private static final TrapezoidProfile.Constraints rotationConstraints =
             new TrapezoidProfile.Constraints(
-                    RadiansPerSecond.of(5), RadiansPerSecond.per(Second).of(5.0));
+                    RadiansPerSecond.of(9.315), RadiansPerSecond.per(Second).of(31.943));
 
     private DriveCommands() {
     }
@@ -157,17 +153,15 @@ public class DriveCommands {
 
         final Pose2d[] previousPose = {null};
         ProfiledPIDController rotationController =
-                new ProfiledPIDController(.5, 0, 0, new TrapezoidProfile.Constraints(RotationsPerSecond.of(1), RotationsPerSecond.per(Second).of(2)));
+                new ProfiledPIDController(drive.rotationPID.kP, 0, drive.rotationPID.kD, rotationConstraints);
 
-        LoggedDashboardBoolean invertVelocity = new LoggedDashboardBoolean("Disable Velocity", false);
-
-        rotationController.enableContinuousInput(Rotations.zero().baseUnitMagnitude(), Rotations.one().baseUnitMagnitude());
+        rotationController.enableContinuousInput(-PI, PI);
         var filter = LinearFilter.singlePoleIIR(0.08, 0.02);
 
         var command =
                 new RunCommand(
                         () -> {
-                            // Calcaulate new linear velocity
+                            // Calculate new linear velocity
                             Translation2d linearVelocity = getLinearVelocity(xSupplier, ySupplier);
                             // Get the angle to point at the goal
                             var goalAngle =
@@ -194,7 +188,7 @@ public class DriveCommands {
                             Logger.recordOutput("speakerAimTargetPose", movingWhileShootingTarget);
 
 
-                            Measure<Velocity<Angle>> goalAngleVelocity = null;
+                            Double goalAngleVelocity = null;
                             if (previousPose[0] != null) {
                                 var previousAngle =
                                         movingWhileShootingTarget
@@ -203,24 +197,18 @@ public class DriveCommands {
                                                 .getAngle();
                                 var currentAngle = goalAngle;
                                 goalAngleVelocity =
-                                        Radians.of(currentAngle.minus(previousAngle).getRadians())
-                                                .per(Seconds.of(Robot.defaultPeriodSecs));
-                            } else goalAngleVelocity = RadiansPerSecond.zero();
+                                        currentAngle.minus(previousAngle).getRadians()/Robot.defaultPeriodSecs;
+                            } else goalAngleVelocity = 0.0;
                             Logger.recordOutput("Aim/goalAngleVelocity", goalAngleVelocity);
                             // calculate how much speed is needed to get there
 //                  rotationController.reset(
 //                      new TrapezoidProfile.State(
 //                          Radians.of(drive.getRotation().getRadians()),
 //                          drive.getAnglularVelocity()));
-                            rotationController.setGoal(
-                                    new TrapezoidProfile.State(
-                                            Radians.of(goalAngle.getRadians()), goalAngleVelocity));
+//                            rotationController.setGoal();
                             var value = rotationController.calculate(
-                                    inputModulus(Rotations.toBaseUnits(drive.getPose().getRotation().getRotations()), Rotations.zero().baseUnitMagnitude(), Rotation.one().baseUnitMagnitude()),
-//                            new TrapezoidProfile.State(
-                                    inputModulus(Rotations.toBaseUnits(goalAngle.getRotations()), Rotations.zero().baseUnitMagnitude(), Rotation.one().baseUnitMagnitude())
-//                                    goalAngleVelocity.in(RotationsPerSecond)*.0025
-//                            )
+                                    angleModulus(drive.getPose().getRotation().getRadians()),
+                                    new TrapezoidProfile.State(goalAngle.getRadians(), goalAngleVelocity)
                             );
 
                             Logger.recordOutput("Aim/Calculated Value", (value));
@@ -230,26 +218,27 @@ public class DriveCommands {
                             Logger.recordOutput("Aim/Setpoint Velocity Error", rotationController.getVelocityError());
                             Logger.recordOutput("Aim/Setpoint Velocity", rotationController.getSetpoint().velocity);
                             Logger.recordOutput("Aim/Setpoint Position", rotationController.getSetpoint().position);
-                            double filterCalc = filter.calculate(rotationController.getSetpoint().velocity);
-                            Logger.recordOutput("Aim/Filtered Setpoint Velocity", filterCalc);
                             drive.runVelocity(
                                     ChassisSpeeds.fromFieldRelativeSpeeds(
                                             linearVelocity.getX() * drive.getMaxLinearSpeedMetersPerSec(),
                                             linearVelocity.getY() * drive.getMaxLinearSpeedMetersPerSec(),
 
-                                            RadiansPerSecond.fromBaseUnits(rotationController.getSetpoint().velocity) + (value),
+                                            (rotationController.getSetpoint().velocity + value),
                                             drive.getRotation().rotateBy(getAllianceRotation())));
                             previousPose[0] = drive.getPose();
                         }, drive)
                         .beforeStarting(
-                                () -> rotationController.reset(inputModulus(drive.getRotation().getRotations(), 0, 1)), drive)
+                                () -> rotationController.reset(
+                                        angleModulus(drive.getRotation().getRadians()),drive.getAnglularVelocity().in(RadiansPerSecond)
+                                ), drive)
                         .until(
                                 () -> {
                                     // if the controller is giving a turn input, end the command
                                     // because the driver is trying to take back control
                                     var isGTE = omegaSupplier.getAsDouble() >= CANCEL_COMMAND_DEADBAND;
                                     var isLTE = omegaSupplier.getAsDouble() <= -CANCEL_COMMAND_DEADBAND;
-                                    return isLTE || isGTE;
+                                    return !RobotState.isAutonomous() && (isLTE || isGTE);
+                                    // until the driver moves the stick, and it is not during autonomous
                                 });
         return new CommandAndReadySupplier(command, rotationController::atGoal);
     }

@@ -60,6 +60,8 @@ import org.littletonrobotics.junction.networktables.LoggedDashboardBoolean;
 import org.littletonrobotics.junction.networktables.LoggedDashboardChooser;
 import org.littletonrobotics.junction.networktables.LoggedDashboardNumber;
 
+import java.beans.FeatureDescriptor;
+
 import static edu.wpi.first.units.BaseUnits.Voltage;
 import static edu.wpi.first.units.Units.Radians;
 import static edu.wpi.first.units.Units.Seconds;
@@ -69,8 +71,7 @@ import static frc.robot.commands.FeederCommands.feedToShooter;
 import static frc.robot.commands.IntakeCommands.intakeCommand;
 import static frc.robot.commands.IntakeCommands.smartIntakeCommand;
 import static frc.robot.commands.RumbleCommands.*;
-import static frc.robot.commands.ShooterCommands.autoAim;
-import static frc.robot.commands.ShooterCommands.newAmpShoot;
+import static frc.robot.commands.ShooterCommands.*;
 
 /**
  * This class is where the bulk of the robot should be declared. Since Command-based is a
@@ -325,7 +326,6 @@ private final CommandXboxController driverController = new CommandXboxController
                                 () -> (-driverController.getLeftX() * (invertY.get()?-1:1)),
                                 () -> (-driverController.getRightX()) * (invertOmega.get()?-1:1));
 
-                drive.setDefaultCommand(command.getCommand());
                 driverController.leftBumper().whileTrue(command.getCommand());
 
                 // ---- INTAKE COMMANDS ----
@@ -372,7 +372,7 @@ private final CommandXboxController driverController = new CommandXboxController
                                                 ShooterCommands.humanPlayerIntake(shooter),
                                                 FeederCommands.humanPlayerIntake(feeder)
                                         ).until(() -> !feeder.getBeamBroken())
-                                )
+                                ).andThen(FeederCommands.feedToBeamBreak(feeder))
                         )
                         .onFalse(
                                 parallel(
@@ -425,12 +425,28 @@ private final CommandXboxController driverController = new CommandXboxController
                                 ShooterCommands.simpleHoodZero(shooter)
                                         .withTimeout(4.0)
                         );
-                driverController // fixme move to operator controls
+//                driverController // fixme move to operator controls
+//                        .povUp()
+//                        .whileTrue(newAmpShoot(shooter)
+//                                .alongWith(feedToShooter(feeder))
+//                                .onlyWhile(feeder::getBeamBroken)
+//                                .andThen(ShooterCommands.ampAngle(shooter)));
+                driverController
                         .povUp()
-                        .whileTrue(newAmpShoot(shooter)
-                                .alongWith(feedToShooter(feeder))
-                                .onlyWhile(feeder::getBeamBroken)
-                                .andThen(ShooterCommands.ampAngle(shooter)));
+                        .whileTrue(
+                                sequence(
+                                    FeederCommands.feedToShooter(feeder)
+                                            .alongWith(ShooterCommands.ampSpin(shooter)).until(() -> !feeder.getBeamBroken()),
+                                        ShooterCommands.ampAng(shooter)
+                                                .alongWith(ShooterCommands.ampGo(shooter, 400))
+                                )
+
+
+//                                ShooterCommands.ampSpin(shooter)
+//                                        .alongWith(ShooterCommands.ampAng(shooter)
+//                                        .alongWith(feedToShooter(feeder))
+//                                .onlyWhile(feeder::getBeamBroken))
+                        );
 
                 // NEW OPERATOR CONTROLS
                 // leftbumper zero
@@ -450,7 +466,7 @@ private final CommandXboxController driverController = new CommandXboxController
                                 driverController::getRightX));
                 var drivetrainDriveSysID =
                         new SysIdRoutine(
-                                new Config(Voltage.per(Units.Second).of(.5), Voltage.of(8.0), Seconds.of(12.0)),
+                                new Config(Voltage.per(Units.Second).of(2), Voltage.of(8.0), Seconds.of(12.0)),
                                 new Mechanism(
                                         drive::runCharacterizationVolts,
                                         drive::populateDriveCharacterizationData,
@@ -574,6 +590,7 @@ private final CommandXboxController driverController = new CommandXboxController
 
     public void configureReactions() {
         driverRumble.setDefaultCommand(noRumble(driverRumble).ignoringDisable(true));
+        operatorRumble.setDefaultCommand(noRumble(operatorRumble).ignoringDisable(true));
         reactions.intakeBeamBroken
                 .and(reactions.shooterBeamBroken.negate())
                 .whileTrue(
@@ -593,7 +610,6 @@ private final CommandXboxController driverController = new CommandXboxController
         reactions
                 .isAutonomous
                 .and(reactions.isEnabled)
-
                 .whileTrue(LEDCommands.flameCommand(leds).ignoringDisable(true));
         reactions
                 .isTeleop

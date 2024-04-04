@@ -17,7 +17,7 @@ public class SpecializedCommands {
     public static Command timeoutDuringAutoSim(double timeout) {
         return Commands.either(
                 Commands.waitSeconds(timeout),
-                Commands.none(),
+                Commands.waitUntil(() -> false),
                 () -> RobotState.isAutonomous() && Constants.currentMode.equals(Constants.Mode.SIM)
         );
     }
