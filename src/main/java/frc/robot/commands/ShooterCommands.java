@@ -226,8 +226,14 @@ public class ShooterCommands {
 
     public static Command ampSpin(Shooter shooter){
         return run(() -> {
-            shooter.setTargetShooterAngle(Rotation2d.fromRadians(1.114));
-            shooter.shooterRunVelocity(300);
+            shooter.setTargetShooterAngle(Rotation2d.fromRadians(0.925));
+            shooter.shooterRunVelocity(600);
+        });
+    }
+
+    public static Command setAmpAngle(Shooter shooter, double angle){
+        return run(() -> {
+            shooter.setTargetShooterAngle(Rotation2d.fromRadians(angle));
         });
     }
 
