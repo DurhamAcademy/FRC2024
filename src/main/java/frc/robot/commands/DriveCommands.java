@@ -48,7 +48,7 @@ public class DriveCommands {
     private static final double CANCEL_COMMAND_DEADBAND = 0.2;
     private static final TrapezoidProfile.Constraints rotationConstraints =
             new TrapezoidProfile.Constraints(
-                    RadiansPerSecond.of(9.505*3), RadiansPerSecond.per(Second).of(1*3));
+                    RadiansPerSecond.of(9.315), RadiansPerSecond.per(Second).of(31.943));
 
     private DriveCommands() {
     }
@@ -175,7 +175,7 @@ public class DriveCommands {
                             Pose2d movingWhileShootingTarget;
                             Pose2d targetPose = ShooterCommands.getSpeakerPos().toPose2d();
 //                            targetPose = targetPose.plus(new Transform2d(0.0, goalAngle.getSin() * 0.5, new Rotation2d()));
-                            if (previousPose[0] != null && false) {
+                            if (previousPose[0] != null) {
                                 double distance =
                                         targetPose
                                                 .getTranslation()
@@ -191,7 +191,7 @@ public class DriveCommands {
 
 
                             Double goalAngleVelocity = null;
-                            if (previousPose[0] != null && false) {
+                            if (previousPose[0] != null) {
                                 var previousAngle =
                                         movingWhileShootingTarget
                                                 .getTranslation()
