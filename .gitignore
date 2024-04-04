@@ -179,3 +179,7 @@ networktables.json
 logs/
 .sysid/
 /.outlineviewer/outlineviewer-window.json
+
+# Test Logging files
+testLog.wpilog
+/testLog_sim.wpilog

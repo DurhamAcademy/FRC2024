@@ -33,7 +33,9 @@ public class IntakeIOSparkMax implements IntakeIO {
   private final CANSparkMax arm = new CANSparkMax(9, MotorType.kBrushless);
   private final CANSparkMax roller = new CANSparkMax(31, MotorType.kBrushless);
   private final AbsoluteEncoder encoder =
-      arm.getAbsoluteEncoder(SparkAbsoluteEncoder.Type.kDutyCycle);
+          arm.getAbsoluteEncoder(SparkAbsoluteEncoder.Type.kDutyCycle);
+  private final AbsoluteEncoder rollerEncoder =
+          arm.getAbsoluteEncoder(SparkAbsoluteEncoder.Type.kDutyCycle);
 
   public IntakeIOSparkMax() {
     arm.restoreFactoryDefaults();
@@ -44,10 +46,12 @@ public class IntakeIOSparkMax implements IntakeIO {
     roller.setCANTimeout(250);
 
     arm.setInverted(true);
-    //    roller.follow(arm, false);
+    arm.enableVoltageCompensation(12.0);
+    arm.setSmartCurrentLimit(30);
 
-    //    arm.enableVoltageCompensation(12.0);
-    //    roller.setSmartCurrentLimit(30);
+    roller.setInverted(false);
+    roller.enableVoltageCompensation(12.0);
+    roller.setSmartCurrentLimit(30);
 
     encoder.setInverted(false);
 
@@ -62,6 +66,11 @@ public class IntakeIOSparkMax implements IntakeIO {
     inputs.armAppliedVolts = arm.getAppliedOutput() * arm.getBusVoltage();
     inputs.armCurrentAmps = new double[] {arm.getOutputCurrent()};
     inputs.armTemperature = new double[] {arm.getMotorTemperature()};
+
+    inputs.rollerPositionRad = MathUtil.angleModulus(Units.rotationsToRadians(rollerEncoder.getPosition()));
+    inputs.rollerVelocityRadPerSec = Units.rotationsPerMinuteToRadiansPerSecond(rollerEncoder.getVelocity());
+    inputs.rollerAppliedVolts = roller.getAppliedOutput() * roller.getBusVoltage();
+    inputs.rollerCurrentAmps = new double[]{roller.getOutputCurrent()};
     inputs.rollerTemperature = new double[] {roller.getMotorTemperature()};
   }
 
@@ -74,6 +83,10 @@ public class IntakeIOSparkMax implements IntakeIO {
   @Override
   public void setRollerPercent(double percent) {
     roller.setVoltage(percent * roller.getBusVoltage());
+  }
+
+  public void setRollerVoltage(double volts) {
+    roller.setVoltage(volts);
   }
   //
   //    @Override

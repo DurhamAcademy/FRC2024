@@ -5,12 +5,14 @@ import edu.wpi.first.math.controller.SimpleMotorFeedforward;
 import edu.wpi.first.math.filter.Debouncer;
 import edu.wpi.first.math.trajectory.TrapezoidProfile;
 import edu.wpi.first.math.util.Units;
+import edu.wpi.first.units.*;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants;
 import org.littletonrobotics.junction.AutoLogOutput;
 import org.littletonrobotics.junction.Logger;
 
 import static edu.wpi.first.math.filter.Debouncer.DebounceType.kBoth;
+import static edu.wpi.first.units.Units.*;
 
 public class Feeder extends SubsystemBase {
   private final FeederIO io;
@@ -20,9 +22,16 @@ public class Feeder extends SubsystemBase {
   double offset = 0.0;
 
   Debouncer debouncer = new Debouncer(.05, kBoth);
+  Debouncer debouncer2 = new Debouncer(.05, kBoth);
 
+  @AutoLogOutput
   public boolean getBeamBroken() {
     return !debouncer.calculate(inputs.beamUnobstructed);
+  }
+
+  @AutoLogOutput
+  public boolean getIntakeBeamBroken(){
+    return !debouncer2.calculate(inputs.intakebeamUnobstructed);
   }
 
   public Feeder(FeederIO io) {
@@ -73,6 +82,41 @@ public class Feeder extends SubsystemBase {
     io.setVoltage(volts);
   }
 
+  /**
+   * Run open loop at the specified voltage.
+   */
+  public void runVolts(Measure<Voltage> volts) {
+    runVolts(volts.in(Volts));
+  }
+
+  /**
+   * Run open loop at the specified voltage.
+   */
+  public Measure<Voltage> getCharacterizationVoltage() {
+    return Volts.of(inputs.appliedVolts);
+  }
+
+  /**
+   * Run open loop at the specified voltage.
+   */
+  public Measure<Current> getCharacterizationCurrent() {
+    double sum = 0.0;
+    for (int i = inputs.currentAmps.length - 1; i >= 0; i--) {
+      sum += inputs.currentAmps[i];
+    }
+    if (inputs.currentAmps.length != 0) {
+      return Amps.of(sum / inputs.currentAmps.length);
+    } else return Amps.zero();
+  }
+
+  public Measure<Angle> getCharacterizationPosition() {
+    return Radians.of(inputs.positionRad);
+  }
+
+  public Measure<Velocity<Angle>> getCharacterizationVelocity() {
+    return RadiansPerSecond.of(inputs.velocityRadPerSec);
+  }
+
   /** Run closed loop to the specified position. */
   public void runPosition(double position) {
     pidController.setGoal(position + offset);
@@ -97,10 +141,5 @@ public class Feeder extends SubsystemBase {
   @AutoLogOutput
   public double getVelocityRPM() {
     return Units.radiansPerSecondToRotationsPerMinute(inputs.velocityRadPerSec);
-  }
-
-  /** Returns the current velocity in radians per second. */
-  public double getCharacterizationVelocity() {
-    return inputs.velocityRadPerSec;
   }
 }

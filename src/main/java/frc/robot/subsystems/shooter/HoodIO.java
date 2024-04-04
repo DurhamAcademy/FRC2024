@@ -9,11 +9,14 @@ public interface HoodIO {
 
   @AutoLog
   public static class HoodIOInputs {
+    public double motorPositionRad = 0.0;
     public double hoodPositionRad = 0.0;
     public double hoodVelocityRadPerSec = 0.0;
     public double hoodAppliedVolts = 0.0;
     public double[] hoodCurrentAmps = new double[] {};
     public double[] hoodTemperature = new double[] {};
+    public boolean isStalled = false;
+    public boolean islimitSwitchPressed;
   }
 
   /** Run open loop at the specified voltage. */
@@ -21,4 +24,6 @@ public interface HoodIO {
 
   /** Stop in open loop. */
   public default void wristStop() {}
+
+  public default void setBrakeMode(boolean enableBrakeMode) {}
 }

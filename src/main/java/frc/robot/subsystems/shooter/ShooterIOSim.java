@@ -22,7 +22,7 @@ import edu.wpi.first.wpilibj.simulation.FlywheelSim;
 import edu.wpi.first.wpilibj.simulation.SingleJointedArmSim;
 
 public class ShooterIOSim implements ShooterIO {
-  private final FlywheelSim sim = new FlywheelSim(DCMotor.getNEO(2), 1.5, 0.004);
+  private final FlywheelSim sim = new FlywheelSim(DCMotor.getKrakenX60(2), 1.5, 0.004);
   private final SingleJointedArmSim armSim =
       new SingleJointedArmSim(
           DCMotor.getNEO(1),
