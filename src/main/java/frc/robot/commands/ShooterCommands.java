@@ -166,18 +166,16 @@ public class ShooterCommands {
                     shooter.zeroMode = false;
                     shooter.setHoodPIDEnabled(true);
                 })
-                .handleInterrupt(() -> {
-                    shooter.zeroMode = false;
-                    shooter.setHoodPIDEnabled(true);
-                })
                 .withName("Simple Hood Zero");
     }
 
-    public static Command passNote(Shooter shooter) {
+    public static Command passNote(Shooter shooter, Drive drive) {
         return run(() -> {
             shooter.shooterRunVelocity(1000);
             shooter.setTargetShooterAngle(Rotation2d.fromRadians(.25));
         }, shooter)
+                .beforeStarting(() -> drive.setOverrideDriveAutoAim(true))
+                .finallyDo(interrupted -> drive.setOverrideDriveAutoAim(false))
                 .withName("passNote");
     }
 

@@ -72,6 +72,16 @@ public class Drive extends SubsystemBase {
 
     //  private final
 
+    private boolean overrideDriveAutoAim = false;
+
+    public boolean isOverrideDriveAutoAim() {
+        return overrideDriveAutoAim;
+    }
+
+    public void setOverrideDriveAutoAim(boolean overrideDriveAutoAim) {
+        this.overrideDriveAutoAim = overrideDriveAutoAim;
+    }
+
     private SwerveDriveKinematics kinematics = new SwerveDriveKinematics(getModuleTranslations());
     private SwerveDrivePoseEstimator poseEstimator;
     private Pose2d pose = new Pose2d();

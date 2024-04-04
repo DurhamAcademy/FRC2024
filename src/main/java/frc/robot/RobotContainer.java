@@ -406,13 +406,16 @@ private final CommandXboxController driverController = new CommandXboxController
                         .rightTrigger()
                         .whileTrue(
                                 sequence(
-                                        waitUntil(() -> (shooter.allAtSetpoint() && (shooter.getShooterVelocityRPM() > 1000) && command.getReadySupplier().getAsBoolean())),
+                                        waitUntil(() -> ((shooter.allAtSetpoint()) && (shooter.getShooterVelocityRPM() > 1000) && (command.getReadySupplier().getAsBoolean() || drive.isOverrideDriveAutoAim()))),
                                         feedToShooter(feeder)
                                                 .until(() -> !feeder.getBeamBroken()),
                                         feedToShooter(feeder)
                                                 .withTimeout(.25)
                                 )
                         );
+                operatorController
+                        .rightBumper()
+                        .whileTrue(passNote(shooter, drive));
                 operatorController
                         .start()
                         .onTrue(
