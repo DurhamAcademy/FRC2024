@@ -155,15 +155,13 @@ public class DriveCommands {
         ProfiledPIDController rotationController =
                 new ProfiledPIDController(drive.rotationPID.kP, 0, drive.rotationPID.kD, rotationConstraints);
 
-        LoggedDashboardBoolean invertVelocity = new LoggedDashboardBoolean("Disable Velocity", false);
-
         rotationController.enableContinuousInput(-PI, PI);
         var filter = LinearFilter.singlePoleIIR(0.08, 0.02);
 
         var command =
                 new RunCommand(
                         () -> {
-                            // Calcaulate new linear velocity
+                            // Calculate new linear velocity
                             Translation2d linearVelocity = getLinearVelocity(xSupplier, ySupplier);
                             // Get the angle to point at the goal
                             var goalAngle =
@@ -174,7 +172,7 @@ public class DriveCommands {
                             Transform2d robotVelocity = drive.getTwistPerDt();
                             Pose2d movingWhileShootingTarget;
                             Pose2d targetPose = ShooterCommands.getSpeakerPos().toPose2d();
-//                            targetPose = targetPose.plus(new Transform2d(0.0, goalAngle.getSin() * 0.5, new Rotation2d()));
+                            targetPose = targetPose.plus(new Transform2d(0.0, goalAngle.getSin() * 0.5, new Rotation2d()));
                             if (previousPose[0] != null) {
                                 double distance =
                                         targetPose
@@ -207,12 +205,10 @@ public class DriveCommands {
 //                      new TrapezoidProfile.State(
 //                          Radians.of(drive.getRotation().getRadians()),
 //                          drive.getAnglularVelocity()));
-                            rotationController.setGoal(
-                                    new TrapezoidProfile.State(
-                                            goalAngle.getRadians(), goalAngleVelocity));
+//                            rotationController.setGoal();
                             var value = rotationController.calculate(
                                     angleModulus(drive.getPose().getRotation().getRadians()),
-                                    angleModulus(goalAngle.getRadians())
+                                    new TrapezoidProfile.State(goalAngle.getRadians(), goalAngleVelocity)
                             );
 
                             Logger.recordOutput("Aim/Calculated Value", (value));
@@ -232,7 +228,9 @@ public class DriveCommands {
                             previousPose[0] = drive.getPose();
                         }, drive)
                         .beforeStarting(
-                                () -> rotationController.reset(angleModulus(drive.getRotation().getRadians())), drive)
+                                () -> rotationController.reset(
+                                        angleModulus(drive.getRotation().getRadians()),drive.getAnglularVelocity().in(RadiansPerSecond)
+                                ), drive)
                         .until(
                                 () -> {
                                     // if the controller is giving a turn input, end the command
