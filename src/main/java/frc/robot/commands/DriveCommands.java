@@ -172,7 +172,7 @@ public class DriveCommands {
                             Transform2d robotVelocity = drive.getTwistPerDt();
                             Pose2d movingWhileShootingTarget;
                             Pose2d targetPose = ShooterCommands.getSpeakerPos().toPose2d();
-//                            targetPose = targetPose.plus(new Transform2d(0.0, goalAngle.getSin() * 0.5, new Rotation2d()));
+                            targetPose = targetPose.plus(new Transform2d(0.0, goalAngle.getSin() * 0.5, new Rotation2d()));
                             if (previousPose[0] != null) {
                                 double distance =
                                         targetPose
