@@ -1,12 +1,15 @@
 package frc.robot.commands;
 
 
+import edu.wpi.first.math.controller.ProfiledPIDController;
 import edu.wpi.first.math.filter.Debouncer;
 import edu.wpi.first.math.geometry.*;
 import edu.wpi.first.math.interpolation.InterpolatingDoubleTreeMap;
 import edu.wpi.first.math.interpolation.InterpolatingTreeMap;
+import edu.wpi.first.math.trajectory.TrapezoidProfile;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj2.command.Command;
+import edu.wpi.first.wpilibj2.command.ProfiledPIDCommand;
 import frc.robot.subsystems.drive.Drive;
 import frc.robot.subsystems.feeder.Feeder;
 import frc.robot.subsystems.shooter.Shooter;
@@ -32,6 +35,13 @@ public class ShooterCommands {
 
     public static LoggedDashboardBoolean isOverridden = new LoggedDashboardBoolean("Override Hood Angle", false);
     public static LoggedDashboardNumber overrideAngle = new LoggedDashboardNumber("Overridden Hood Angle", 0.0);
+
+    public static void periodic() {
+        flywheelSpeed.periodic();
+        isOverridden.periodic();
+        overrideAngle.periodic();
+        retractAfterShot.periodic();
+    }
 
     public static double inverseInterpolate(Double startValue, Double endValue, Double q) {
         double totalRange = endValue - startValue;
@@ -71,10 +81,10 @@ public class ShooterCommands {
         distanceToAngle.put(1000.0, 0.0);
 
         distanceToRPM.clear();
-        distanceToRPM.put(0.0, 3500.0);
-        distanceToRPM.put(0.894, 3500.0);
-        distanceToRPM.put(3.506, 5000.0);
+        distanceToRPM.put(0.0, 1250.0);
+        distanceToRPM.put(0.894, 1500.0);
         distanceToRPM.put(2.52, 3750.0); //GOOD VALUES
+        distanceToRPM.put(3.506, 5000.0);
         distanceToRPM.put(4.25, 4000.0);
         distanceToRPM.put(1000.0,
                 4000.0);
@@ -85,18 +95,17 @@ public class ShooterCommands {
 
     public static Command autoAim(Shooter shooter, Drive drive, Feeder feeder, BooleanSupplier hoodUp) {
         construct();
-        flywheelSpeed.periodic();
-        isOverridden.periodic();
-        overrideAngle.periodic();
-        retractAfterShot.periodic();
+//        var a = new ProfiledPIDController(0.0,0.0,0.0,new TrapezoidProfile.Constraints(0,0));
+//        var b = new TrapezoidProfile(new TrapezoidProfile.Constraints(0,0));
+//        b.calculate(0,a.getSetpoint(), a.getGoal());
+//        b.totalTime();
+        final boolean[] lastFeeder = {feeder.getBeamBroken()};
         //the parameter is the robot, idk how to declare it, also this returns the angle
         return run(() -> {
             if (isOverridden.get()) {
-                shooter.shooterRunVelocity(3000);
-                if(hoodUp.getAsBoolean()) {
-                    shooter.setTargetShooterAngle(Rotation2d.fromRadians(overrideAngle.get()));
-                    shooter.overrideHoodAtSetpoint(true);
-                }
+                shooter.shooterRunVelocity(flywheelSpeed.get());
+                shooter.setTargetShooterAngle(Rotation2d.fromRadians(overrideAngle.get()));
+                shooter.overrideHoodAtSetpoint(true);
             } else {
                 // Calcaulate new linear velocity
                 // Get the angle to point at the goal
@@ -118,9 +127,17 @@ public class ShooterCommands {
                 if(hoodUp.getAsBoolean()) {
                     shooter.setTargetShooterAngle(Rotation2d.fromRadians(atan + distanceToAngle.get(distance)));
                     shooter.overrideHoodAtSetpoint(true);
+                } else {
+                    shooter.setTargetShooterAngle(Rotation2d.fromRadians(IDLE_ANGLE));
+                    shooter.overrideHoodAtSetpoint(false);
                 }
             }
         }, shooter)
+//                .until(()-> {
+//                    var b = (feeder.getBeamBroken() != lastFeeder[0]);
+//                    lastFeeder[0] = feeder.getBeamBroken();
+//                    return feeder.getState() == Feeder.State.feedingShooter && b;
+//                })
                 .raceWith(SpecializedCommands.timeoutDuringAutoSim(2))
                 .withName("Auto Aim");
     }
@@ -131,14 +148,15 @@ public class ShooterCommands {
             shooter.setTargetShooterAngle(Rotation2d.fromRadians(.8));
             shooter.shooterRunVelocity(3500);
         }, shooter)
-                .raceWith(SpecializedCommands.timeoutDuringAutoSim(2))
                 .withName("Just Shoot");
     }
+
+    public static final double IDLE_ANGLE = 1.6;
 
     public static Command shooterIdle(Shooter shooter) {
         return run(() -> {
             shooter.shooterRunVelocity(0.0);
-            shooter.setTargetShooterAngle(Rotation2d.fromRadians(1.6));
+            shooter.setTargetShooterAngle(Rotation2d.fromRadians(IDLE_ANGLE));
         }, shooter)
                 .withName("Shooter Idle");
     }

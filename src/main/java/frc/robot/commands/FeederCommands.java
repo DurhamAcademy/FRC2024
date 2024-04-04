@@ -17,7 +17,7 @@ public class FeederCommands {
                                 zeroToBeamBreak(feeder)
                         ),
                         feeder::getBeamBroken
-                )
+                ).beforeStarting(()-> feeder.setState(Feeder.State.none))
         );
     }
     public static Command feedToShooter(Feeder feeder) {
@@ -29,7 +29,9 @@ public class FeederCommands {
                 run(() -> feeder.runVolts(9), feeder)
                         .withTimeout(0.5),
                 runOnce(() -> feeder.runVolts(0.0))
-        );
+        )
+                .beforeStarting(()->feeder.setState(Feeder.State.feedingShooter))
+                .finallyDo(interrupted -> feeder.setState(Feeder.State.none));
     }
 
     public static Command flushFeeder(Feeder feeder) {
@@ -58,7 +60,10 @@ public class FeederCommands {
                                 feeder::getBeamBroken
                         )
                 ),
-                feeder::getBeamBroken);
+                feeder::getBeamBroken)
+                .beforeStarting(()-> feeder.setState(Feeder.State.zeroingNote))
+                .finallyDo(interrupted -> feeder.setState(Feeder.State.none));
+
     }
 
     private static Command slowToBeam(Feeder feeder) {

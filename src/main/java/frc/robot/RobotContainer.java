@@ -349,6 +349,8 @@ private final CommandXboxController driverController = new CommandXboxController
 
                 operatorController
                         .povLeft()
+                        .and(operatorController.a().negate())
+                        .and(operatorController.y().negate())
                         .whileTrue(
                                 IntakeCommands.flushIntake(intake)
                                         .alongWith(FeederCommands.flushFeeder(feeder))
@@ -356,6 +358,7 @@ private final CommandXboxController driverController = new CommandXboxController
                 operatorController
                         .povDown()
                         .and(operatorController.a().negate())
+                        .and(operatorController.y().negate())
                         .whileTrue(
                                 sequence(
                                         parallel(
@@ -384,6 +387,7 @@ private final CommandXboxController driverController = new CommandXboxController
                 operatorController
                         .povDown()
                         .and(operatorController.a())
+                        .and(operatorController.y().negate())
                         .whileTrue(
                                 LEDCommands.ledsDown(leds)
                         );
@@ -391,13 +395,7 @@ private final CommandXboxController driverController = new CommandXboxController
                 // ---- SHOOTER COMMANDS ----
                 operatorController
                         .y()
-                        .and(operatorController.povUp().negate())
-                        .whileTrue(autoAim(shooter, drive, feeder, () -> false));
-
-                operatorController
-                        .y()
-                        .and(operatorController.povUp())
-                        .whileTrue(autoAim(shooter, drive, feeder, () -> true));
+                        .whileTrue(autoAim(shooter, drive, feeder, operatorController.povUp()));
 
                 operatorController
                         .x()
