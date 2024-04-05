@@ -7,6 +7,7 @@ import edu.wpi.first.math.interpolation.InterpolatingDoubleTreeMap;
 import edu.wpi.first.math.interpolation.InterpolatingTreeMap;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj2.command.Command;
+import edu.wpi.first.wpilibj2.command.Commands;
 import frc.robot.subsystems.drive.Drive;
 import frc.robot.subsystems.feeder.Feeder;
 import frc.robot.subsystems.shooter.Shooter;
@@ -185,7 +186,7 @@ public class ShooterCommands {
 
     public static Command passNote(Shooter shooter, Drive drive) {
         return run(() -> {
-            shooter.shooterRunVelocity(1000);
+            shooter.shooterRunVelocity(2000);
             shooter.setTargetShooterAngle(Rotation2d.fromRadians(.25));
         }, shooter)
                 .beforeStarting(() -> drive.setOverrideDriveAutoAim(true))
@@ -247,7 +248,7 @@ public class ShooterCommands {
     public static Command ampSpin(Shooter shooter){
         return run(() -> {
             shooter.setTargetShooterAngle(Rotation2d.fromRadians(0.925));
-            shooter.shooterRunVelocity(600);
+            shooter.shooterRunVelocity(775);
         });
     }
 

@@ -443,9 +443,12 @@ private final CommandXboxController driverController = new CommandXboxController
                                     FeederCommands.feedToShooter(feeder)
                                             .alongWith(ShooterCommands.ampSpin(shooter)).withTimeout(0.2),
                                         ShooterCommands.ampAng(shooter)
-                                                .alongWith(ShooterCommands.ampGo(shooter, 600))
+                                                .alongWith(ShooterCommands.ampGo(shooter, 750))
                                                 .withTimeout(0.25)
-                                                .andThen(ShooterCommands.setAmpAngle(shooter, -0.4))
+                                                .andThen(
+                                                        ShooterCommands.setAmpAngle(shooter, -0.4).alongWith(
+                                                        ShooterCommands.ampGo(shooter, 750).withTimeout(.5)
+                                                ))
                                 )
 
 
