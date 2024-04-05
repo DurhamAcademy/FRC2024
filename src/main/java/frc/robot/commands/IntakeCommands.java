@@ -8,7 +8,6 @@ import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.RunCommand;
 import frc.robot.subsystems.feeder.Feeder;
 import frc.robot.subsystems.intake.Intake;
-
 import static edu.wpi.first.wpilibj.DriverStation.Alliance.Blue;
 import static edu.wpi.first.wpilibj2.command.Commands.sequence;
 
@@ -34,9 +33,9 @@ public class IntakeCommands {
     public static Command smartIntakeCommand(Intake intake, Feeder feeder) {
         return sequence(
                 safeIntakeCommand(intake, feeder)
-                        .until(feeder::getIntakeBeamBroken),
+                        .until(feeder::getBeamBroken),
                 intakeCommand(intake)
-                        .withTimeout(.2)
+                        .withTimeout(1.0)
                         .onlyWhile(feeder::getIntakeBeamBroken),
                 IntakeCommands.flushIntakeWithoutTheArmExtendedOutward(intake,feeder)
                         .onlyWhile(feeder::getIntakeBeamBroken)

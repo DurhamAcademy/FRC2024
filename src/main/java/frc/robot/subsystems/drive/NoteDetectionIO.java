@@ -1,8 +1,6 @@
 package frc.robot.subsystems.drive;
 
-import frc.robot.util.LimelightHelpers;
 import org.littletonrobotics.junction.AutoLog;
-import org.littletonrobotics.junction.inputs.LoggableInputs;
 
 public interface NoteDetectionIO {
 
@@ -23,6 +21,7 @@ public interface NoteDetectionIO {
         double tx = 0.0;
         double ty = 0.0;
         double ta = 0.0;
+        boolean tv = false;
     }
 
 }

@@ -5,7 +5,7 @@ import frc.robot.util.LimelightHelpers;
 public class LimelightNoteDetection implements NoteDetectionIO {
     @Override
     public String getCameraName() {
-        return "Limelight";
+        return "limelight";
     }
     public void turnOffLEDs() {
         LimelightHelpers.setLEDMode_ForceOff(getCameraName());
@@ -18,5 +18,6 @@ public class LimelightNoteDetection implements NoteDetectionIO {
         inputs.tx = LimelightHelpers.getTX(getCameraName());
         inputs.ty = LimelightHelpers.getTY(getCameraName());
         inputs.ta = LimelightHelpers.getTA(getCameraName());
+        inputs.tv = LimelightHelpers.getTV(getCameraName());
     }
 }

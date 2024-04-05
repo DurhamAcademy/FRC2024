@@ -26,6 +26,12 @@
                 "data": {
                   "pathName": "Friend Source Side.1"
                 }
+              },
+              {
+                "type": "named",
+                "data": {
+                  "name": "Zero Feeder"
+                }
               }
             ]
           }
@@ -37,13 +43,26 @@
               {
                 "type": "named",
                 "data": {
-                  "name": "Ready Shooter"
+                  "name": "Aim Drivetrain"
                 }
               },
               {
-                "type": "named",
+                "type": "race",
                 "data": {
-                  "name": "Shoot When Ready"
+                  "commands": [
+                    {
+                      "type": "named",
+                      "data": {
+                        "name": "Shoot When Ready"
+                      }
+                    },
+                    {
+                      "type": "named",
+                      "data": {
+                        "name": "Ready Shooter"
+                      }
+                    }
+                  ]
                 }
               }
             ]
@@ -107,13 +126,26 @@
               {
                 "type": "named",
                 "data": {
-                  "name": "Ready Shooter"
+                  "name": "Aim Drivetrain"
                 }
               },
               {
-                "type": "named",
+                "type": "race",
                 "data": {
-                  "name": "Shoot When Ready"
+                  "commands": [
+                    {
+                      "type": "named",
+                      "data": {
+                        "name": "Ready Shooter"
+                      }
+                    },
+                    {
+                      "type": "named",
+                      "data": {
+                        "name": "Shoot When Ready"
+                      }
+                    }
+                  ]
                 }
               }
             ]
