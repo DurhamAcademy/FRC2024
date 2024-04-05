@@ -21,6 +21,24 @@ public class Feeder extends SubsystemBase {
   private final ProfiledPIDController pidController;
   double offset = 0.0;
 
+  private State state = State.none;
+
+  public enum State {
+    feedingShooter,
+    intaking,
+    zeroingNote,
+    humanPlayerIntake,
+    none
+  }
+
+  public State getState() {
+    return state;
+  }
+
+  public void setState(State state) {
+    this.state = state;
+  }
+
   Debouncer debouncer = new Debouncer(.05, kBoth);
   Debouncer debouncer2 = new Debouncer(.05, kBoth);
 
