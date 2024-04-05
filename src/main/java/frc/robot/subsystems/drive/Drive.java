@@ -499,7 +499,11 @@ public class Drive extends SubsystemBase {
             Logger.recordOutput("Vision/" + visionInput.name + "/Corners", outCorners);
 
             // PNP Result
-            Logger.recordOutput("Vision/" + visionInput.name + "/MultiTag PNP Result", visionInput.cameraResult.getMultiTagResult());
+            var a = visionInput.cameraResult.getMultiTagResult().estimatedPose;
+            Logger.recordOutput("Vision/" + visionInput.name + "/MultiTag PNP Result/best", a.best);
+            Logger.recordOutput("Vision/" + visionInput.name + "/MultiTag PNP Result/bestReprojErr", a.bestReprojErr);
+            Logger.recordOutput("Vision/" + visionInput.name + "/MultiTag PNP Result/isPresent", a.isPresent);
+            Logger.recordOutput("Vision/" + visionInput.name + "/MultiTag PNP Result/ambiguity", a.ambiguity);
 
             // Tag Count
             Logger.recordOutput("Vision/" + visionInput.name + "/Tag Count", visionInput.cameraResult.getTargets().size());
