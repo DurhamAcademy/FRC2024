@@ -41,30 +41,13 @@ public class Intake extends SubsystemBase {
 
     public Intake(IntakeIO io) {
         this.io = io;
-        switch (Constants.currentMode) {
-            case REAL:
-                armFF = new ArmFeedforward(0.0, 0.21, 0.195, 0.0);
-                armFB = new ProfiledPIDController(7.0, 0.0, 0.0, new Constraints(RadiansPerSecond.of(18), RadiansPerSecond.per(Second).of(240)));
-                break;
-            case REPLAY:
-                armFF = new ArmFeedforward(0.1, .15, 1.95);
-                armFB = new ProfiledPIDController(1.0, 0.0, 0.0, new Constraints(RotationsPerSecond.of(3), RotationsPerSecond.per(Second).of(9)));
-                break;
-            case SIM:
-                armFF = new ArmFeedforward(0.0, 0.21, 0.195, 0.0);
-                armFB = new ProfiledPIDController(5.0, 0.0, 0.0, new Constraints(RotationsPerSecond.of(3), RotationsPerSecond.per(Second).of(9)));
-                break;
-            default:
-                armFF = new ArmFeedforward(0.0, 0.0, 0.0);
-                armFB = new ProfiledPIDController(0.0, 0.0, 0.0, new Constraints(0.0, 0.0));
-                break;
-        }
+        armFF = new ArmFeedforward(0.0, 0.0, 0.0, 0.0);
+        armFB = new ProfiledPIDController(7.0, 0.0, 0.0, new Constraints(RadiansPerSecond.of(18), RadiansPerSecond.per(Second).of(240)));
         var root = mechanism2d.getRoot("Root", .305, .220);
         armFB.enableContinuousInput(-Math.PI, Math.PI);
         armFB.setTolerance(0.025);
         ligament1 = new MechanismLigament2d("Intake", .135, off1.getDegrees(), .1, new Color8Bit(1, 1, 1));
         ligament1A = new MechanismLigament2d("Intake", 0.232427, off1A.minus(quarterTurn).getDegrees(), .5, new Color8Bit(1, 1, 1));
-        //    ligament1
         ligament2 = new MechanismLigament2d("Intake2", .227, off2.getDegrees(), .1, new Color8Bit(1, 1, 1));
         ligament2A = new MechanismLigament2d("Intake2", 0.232983, off2A.minus(quarterTurn).getDegrees(), .5, new Color8Bit(1, 1, 1));
         root.append(ligament1).append(ligament1A);
@@ -98,6 +81,8 @@ public class Intake extends SubsystemBase {
     boolean disableFeedControl = false;
     @Override
     public void periodic() {
+        io.updateInputs(inputs);
+        Logger.processInputs("Intake", inputs);
         if(this.getCurrentCommand() != null) {
             Logger.recordOutput("Commands/Intake", this.getCurrentCommand().getName());
         } else {
@@ -110,8 +95,6 @@ public class Intake extends SubsystemBase {
             resetArmFB();
             mustReset = false;
         }
-        io.updateInputs(inputs);
-        Logger.processInputs("Intake", inputs);
         if (disableFeedControl) {
 
         } else if (RobotController.isSysActive())
