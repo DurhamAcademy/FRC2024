@@ -28,9 +28,7 @@ import edu.wpi.first.wpilibj.Joystick;
 import edu.wpi.first.wpilibj.RobotState;
 import edu.wpi.first.wpilibj.XboxController;
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
-import edu.wpi.first.wpilibj2.command.Command;
-import edu.wpi.first.wpilibj2.command.RunCommand;
-import edu.wpi.first.wpilibj2.command.WaitCommand;
+import edu.wpi.first.wpilibj2.command.*;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.button.JoystickButton;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
@@ -56,6 +54,7 @@ import frc.robot.subsystems.intake.IntakeIOSparkMax;
 import frc.robot.subsystems.lights.LEDs;
 import frc.robot.subsystems.shooter.*;
 import frc.robot.util.Mode;
+import org.littletonrobotics.junction.Logger;
 import org.littletonrobotics.junction.networktables.LoggedDashboardBoolean;
 import org.littletonrobotics.junction.networktables.LoggedDashboardChooser;
 import org.littletonrobotics.junction.networktables.LoggedDashboardNumber;
@@ -127,7 +126,8 @@ private final CommandXboxController driverController = new CommandXboxController
                                 new VisionIOReal[]{
                                         new VisionIOReal("ShootSideCamera"),
                                         new VisionIOReal("RightCamera") //fixme: rename camera
-                                });
+                                },
+                                new LimelightNoteDetection());
                 shooter = new Shooter(new ShooterIOTalonFX(), new HoodIOSparkMax()); // new HoodIOSparkMax() {}
                 feeder = new Feeder(new FeederIOTalonFX());
                 intake = new Intake(new IntakeIOSparkMax());
@@ -144,7 +144,8 @@ private final CommandXboxController driverController = new CommandXboxController
                                 new ModuleIOSim(),
                                 new ModuleIOSim(),
                                 new ModuleIOSim(),
-                                new ModuleIOSim());
+                                new ModuleIOSim(),
+                                new LimelightNoteDetection() {});
                 shooter = new Shooter(new ShooterIOSim(), new HoodIO() {});
                 feeder = new Feeder(new FeederIOSim());
                 intake = new Intake(new IntakeIOSim());
@@ -166,7 +167,8 @@ private final CommandXboxController driverController = new CommandXboxController
                                         return "ShootSideCamera";
                                     }}, new VisionIO() {
                                     public String getCameraName() {return "RightCamera";}
-                                }});
+                                }},
+                                new LimelightNoteDetection(){});
                 shooter = new Shooter(new ShooterIO() {
                 }, new HoodIO() {
                 });
@@ -201,56 +203,59 @@ private final CommandXboxController driverController = new CommandXboxController
         );
         NamedCommands.registerCommand(
                 "Ready Shooter",
-                autoAim(shooter, drive, feeder)
+                autoAim(shooter, drive, feeder).asProxy()
         );
         NamedCommands.registerCommand(
                 "Zero Feeder",
-                FeederCommands.feedToBeamBreak(feeder)
+                FeederCommands.feedToBeamBreak(feeder).asProxy()
+                        // STOP THE FEEDER ONCE DONE, WAIT FOR SHOOTER TAKE OVER
+                        .andThen(Commands.runOnce(() -> {
+                            feeder.runVolts(0.0);
+                        }))
         );
         NamedCommands.registerCommand(
                 "Zero Hood",
-                ShooterCommands.simpleHoodZero(shooter)
+                ShooterCommands.simpleHoodZero(shooter).asProxy()
         );
         NamedCommands.registerCommand(
                 "Auto Point",
-                ShooterCommands.autoAim(shooter, drive, feeder)
+                ShooterCommands.autoAim(shooter, drive, feeder).asProxy()
         );
         NamedCommands.registerCommand(
                 "Shoot When Ready",
+
                 sequence(
-                        waitUntil(feeder::getBeamBroken),
                         sequence(
                                 waitUntil(() -> (shooter.allAtSetpoint() && (shooter.getShooterVelocityRPM() > 1000))),
-                                feedToShooter(feeder)
+                                feedToShooter(feeder).asProxy()
                         )
-                                .onlyWhile(() -> !feeder.getBeamBroken())
-                                .withTimeout(3.0)
-                ).raceWith(SpecializedCommands.timeoutDuringAutoSim(3.0))
-        );
+                                .onlyWhile(() -> {
+                                    Logger.recordOutput("Sanity Check", feeder.getBeamBroken());
+                                    return feeder.getBeamBroken();
+                                })
+                ).finallyDo(interupted -> {
+                    System.out.println("AH SAANTITY lCHECK OVER");
+                }));
+        ;
         NamedCommands.registerCommand(
                 "Shoot",
                 sequence(
-                        feedToBeamBreak(feeder),
+                        feedToBeamBreak(feeder).asProxy(),
                         waitUntil(() -> (shooter.allAtSetpoint() && (shooter.getShooterVelocityRPM() > 1000))),
-                        feedToShooter(feeder)
+                        feedToShooter(feeder).asProxy()
                 )
-                        .deadlineWith(ShooterCommands.JustShoot(shooter))
+                        .deadlineWith(ShooterCommands.JustShoot(shooter).asProxy())
                         .withTimeout(8.0));
         NamedCommands.registerCommand(
                 "Intake Note",
-                smartIntakeCommand(intake, feeder)
-                        .andThen(either(
-                                none(),
-                                race(
-                                        feedToBeamBreak(feeder).withTimeout(5),
-                                        IntakeCommands.flushIntakeWithoutTheArmExtendedOutward(intake, feeder)
-                                ),
-                                feeder::getBeamBroken
-                        )).withTimeout(3.0)
+                smartIntakeCommand(intake, feeder).raceWith(
+                                feedToBeamBreak(feeder)
+                )
+                .andThen(feedToBeamBreak(feeder).withTimeout(8.0)).until(() -> feeder.getBeamBroken()).asProxy()
         );
         NamedCommands.registerCommand(
                 "Intake",
-                intakeCommand(intake)
+                intakeCommand(intake).asProxy()
                         .withTimeout(1.0)
         );
         autoChooser = new LoggedDashboardChooser<>("Auto Choices", AutoBuilder.buildAutoChooser());
@@ -286,8 +291,8 @@ private final CommandXboxController driverController = new CommandXboxController
                                 () -> (-driverController.getLeftY() * (invertX.get()?-1:1)),
                                 () -> (-driverController.getLeftX() * (invertY.get()?-1:1)),
                                 () -> (-driverController.getRightX()) * (invertOmega.get()?-1:1)));
-                intake.setDefaultCommand(IntakeCommands.idleCommand(intake));
-                feeder.setDefaultCommand(new RunCommand(() -> feeder.runVolts(0.0), feeder));
+                intake.setDefaultCommand(IntakeCommands.idleCommand(intake).withName("Intake Idle"));
+                feeder.setDefaultCommand(new RunCommand(() -> feeder.runVolts(0.0), feeder).withName("Stop Feeder"));
                 shooter.setDefaultCommand(
                         either(
                                 ShooterCommands.shooterIdle(shooter),
@@ -297,7 +302,7 @@ private final CommandXboxController driverController = new CommandXboxController
                                         ShooterCommands.shooterIdle(shooter)
                                 ).withName("Default Command"),
                                 shooter::hasZeroed
-                        )
+                        ).withName("Shooter Default")
 
                 );
                 // CLIMB DEFAULT COMMAND
@@ -345,6 +350,12 @@ private final CommandXboxController driverController = new CommandXboxController
                                         feeder::getBeamBroken
                                 )
                         );
+                driverController
+                        .rightBumper()
+                                .whileTrue(DriveCommands.intakeAlign(drive,
+                                        () -> (-driverController.getLeftY() * (invertX.get()?-1:1)),
+                                        () -> (-driverController.getLeftX() * (invertY.get()?-1:1)),
+                                        () -> (-driverController.getRightX()) * (invertOmega.get()?-1:1)));
 
                 operatorController
                         .povLeft()
@@ -360,9 +371,8 @@ private final CommandXboxController driverController = new CommandXboxController
                                         parallel(
                                                 ShooterCommands.humanPlayerIntake(shooter),
                                                 FeederCommands.humanPlayerIntake(feeder)
-                                        ).until(feeder::getBeamBroken),
+                                        ).onlyWhile(() -> !feeder.getBeamBroken()),
                                         parallel(
-                                                ShooterCommands.humanPlayerIntake(shooter),
                                                 FeederCommands.humanPlayerIntake(feeder)
                                         ).until(() -> !feeder.getBeamBroken())
                                 ).andThen(FeederCommands.feedToBeamBreak(feeder))
@@ -425,7 +435,7 @@ private final CommandXboxController driverController = new CommandXboxController
 //                                .onlyWhile(feeder::getBeamBroken)
 //                                .andThen(ShooterCommands.ampAngle(shooter)));
                 driverController
-                        .rightBumper()
+                        .povUp()
                         .whileTrue(
                                 sequence(
                                     FeederCommands.feedToShooter(feeder)

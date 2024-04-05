@@ -28,8 +28,10 @@ public class ShooterCommands {
     static InterpolatingDoubleTreeMap distanceToRPM = new InterpolatingDoubleTreeMap();
     static Transform3d shooterOffset = new Transform3d(new Translation3d(0.0, 0.239, .669), new Rotation3d());
 
-    public static LoggedDashboardBoolean isOverridden = new LoggedDashboardBoolean("Override Hood Angle", false);
-    public static LoggedDashboardNumber overrideAngle = new LoggedDashboardNumber("Overridden Hood Angle", 0.0);
+    public static LoggedDashboardBoolean isOverridden = new LoggedDashboardBoolean("Aim/Override Hood Angle", false);
+    public static LoggedDashboardNumber overrideAngle = new LoggedDashboardNumber("Aim/Overridden Hood Angle", 0.0);
+    public static LoggedDashboardNumber offsetAngle = new LoggedDashboardNumber("Aim/Offsetted Hood Angle", 0.0);
+
 
     public static double inverseInterpolate(Double startValue, Double endValue, Double q) {
         double totalRange = endValue - startValue;
@@ -43,10 +45,12 @@ public class ShooterCommands {
         return queryToStart / totalRange;
     }
 
+    static LoggedDashboardNumber height = new LoggedDashboardNumber("Shooter Tweak Height", 2.13);
+
     public static Pose3d getSpeakerPos() {
         return (DriverStation.getAlliance().orElse(Blue).equals(Blue)) ?
-                new Pose3d(0.24, 5.50, 2.13, new Rotation3d()) :
-                new Pose3d(16.27, 5.50, 2.13, new Rotation3d());
+                new Pose3d(0.24, 5.550, height.get(), new Rotation3d()) :
+                new Pose3d(16.27, 5.550, height.get(), new Rotation3d());
     }
 
     public static Pose3d getSourcePos() {
@@ -62,6 +66,9 @@ public class ShooterCommands {
     public static void construct() {
         distanceToAngle.clear();
         distanceToAngle.put(0.0, 0.0);
+//        distanceToAngle.put(1.633, 0.2);
+//        distanceToAngle.put(2.0, 0.2);
+//        distanceToAngle.put(2.29, 0.0);
 //        distanceToAngle.put(1.1, -0.2941);
 //        distanceToAngle.put(1.7, -0.3472);
 //        distanceToAngle.put(2.52, -0.1700); //GOOD VALUES
@@ -69,13 +76,13 @@ public class ShooterCommands {
         distanceToAngle.put(1000.0, 0.0);
 
         distanceToRPM.clear();
-        distanceToRPM.put(0.0, 3500.0);
-        distanceToRPM.put(0.894, 3500.0);
-        distanceToRPM.put(3.506, 5000.0);
+        distanceToRPM.put(0.0, 2000.0);
+        distanceToRPM.put(0.894, 3000.0);
         distanceToRPM.put(2.52, 3750.0); //GOOD VALUES
-        distanceToRPM.put(4.25, 4000.0);
+        distanceToRPM.put(3.506, 4000.0);
+        distanceToRPM.put(4.25, 4200.0);
         distanceToRPM.put(1000.0,
-                4000.0);
+                5000.0);
     }
 
     public static LoggedDashboardBoolean retractAfterShot = new LoggedDashboardBoolean("Aim/Retract After Shooting", true);
@@ -86,6 +93,7 @@ public class ShooterCommands {
         flywheelSpeed.periodic();
         isOverridden.periodic();
         overrideAngle.periodic();
+        offsetAngle.periodic();
         retractAfterShot.periodic();
         //the parameter is the robot, idk how to declare it, also this returns the angle
         return run(() -> {
@@ -110,7 +118,7 @@ public class ShooterCommands {
                 Logger.recordOutput("distanceFromGoal", distance);
                 Logger.recordOutput("Aim/getZ", targetRelativeToShooter.getZ());
                 Logger.recordOutput("Aim/atan", atan);
-                shooter.setTargetShooterAngle(Rotation2d.fromRadians(atan + distanceToAngle.get(distance)));
+                shooter.setTargetShooterAngle(Rotation2d.fromRadians(atan + distanceToAngle.get(distance)).plus(Rotation2d.fromRadians(offsetAngle.get())));
                 shooter.overrideHoodAtSetpoint(true);
                 shooter.shooterRunVelocity(distanceToRPM.get(distance));
             }
@@ -135,6 +143,12 @@ public class ShooterCommands {
             shooter.setTargetShooterAngle(Rotation2d.fromRadians(1.6));
         }, shooter)
                 .withName("Shooter Idle");
+    }
+
+    public static Command stopShooter(Shooter shooter){
+        return runOnce(() -> {
+            shooter.shooterRunVelocity(0.0);
+        }, shooter).withName("Stop Shooter");
     }
 
     public static Command simpleHoodZero(Shooter shooter) {

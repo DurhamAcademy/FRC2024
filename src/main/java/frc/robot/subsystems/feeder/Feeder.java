@@ -70,6 +70,11 @@ public class Feeder extends SubsystemBase {
 
   @Override
   public void periodic() {
+    if(this.getCurrentCommand() != null) {
+      Logger.recordOutput("Commands/Feeder", this.getCurrentCommand().getName());
+    } else {
+      Logger.recordOutput("Commands/Feeder", "");
+    }
     io.updateInputs(inputs);
 //    io.setVoltage(
 //        pidController.calculate(inputs.positionRad)

@@ -77,7 +77,7 @@ public class FeederCommands {
 
     public static Command humanPlayerIntake(Feeder feeder) {
         return startEnd(
-                () -> feeder.runVolts(-2.0),
+                () -> feeder.runVolts(-8.0),
                 ()-> feeder.runVolts(0)
         );
     }

@@ -16,14 +16,8 @@ package frc.robot;
 import edu.wpi.first.math.geometry.Rotation3d;
 import edu.wpi.first.math.geometry.Transform3d;
 import edu.wpi.first.math.geometry.Translation3d;
-import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.RobotBase;
-import org.littletonrobotics.junction.LogFileUtil;
-import org.littletonrobotics.junction.Logger;
-import org.littletonrobotics.junction.wpilog.WPILOGWriter;
 
-import static edu.wpi.first.math.util.Units.degreesToRadians;
-import static edu.wpi.first.math.util.Units.inchesToMeters;
 import static edu.wpi.first.units.Units.*;
 
 /**
@@ -66,7 +60,7 @@ public final class Constants {
                         Meters.of(0.280162)//-0.34316 z
                 ),
                 new Rotation3d(
-                        Radians.zero().in(Radians),
+                        Rotations.of(.5).in(Radians),
                         Degrees.of(-30).in(Radians),
                         Degrees.of(3).in(Radians)
                 )
@@ -80,7 +74,7 @@ public final class Constants {
                                 Meters.of(0.280162).plus(Inches.of(4.938808))
                         ),
                         new Rotation3d(
-                                Radians.zero().in(Radians),
+                                Rotations.of(.5).in(Radians),
                                 Degrees.of(-30).plus(Radians.of(0.1839466536)).in(Radians),
                                 Degrees.of(3).plus(Radians.of(-1.500654)).in(Radians)
                         )

@@ -64,6 +64,10 @@ public class Drive extends SubsystemBase {
     private static final double MAX_ANGULAR_SPEED = MAX_LINEAR_SPEED / DRIVE_BASE_RADIUS;
 
     private final GyroIO gyroIO;
+
+    private final NoteDetectionIO noteIO;
+
+    private final NoteDetectionIOInputsAutoLogged noteInputs = new NoteDetectionIOInputsAutoLogged();
     private final GyroIOInputsAutoLogged gyroInputs = new GyroIOInputsAutoLogged();
     private final Module[] modules = new Module[4]; // FL, FR, BL, BR
     private SwerveModulePosition[] swerveModulePositions;
@@ -76,7 +80,7 @@ public class Drive extends SubsystemBase {
     private SwerveDrivePoseEstimator poseEstimator;
     private Pose2d pose = new Pose2d();
     PIDConstants positionPID = new PIDConstants(5, 0);//64 //works at 8
-    public PIDConstants rotationPID = new PIDConstants(6, 0);//32+16
+    public PIDConstants rotationPID = new PIDConstants(3, 0);//32+16
     private Measure<Velocity<Angle>> angularVelocity = RadiansPerSecond.zero();
     private Rotation2d lastGyroRotation = new Rotation2d();
 
@@ -90,7 +94,7 @@ public class Drive extends SubsystemBase {
     double[] timestampSeconds;
 
     private SwerveModulePosition[] lastModulePositions = // For delta tracking
-            new SwerveModulePosition[] {
+            new SwerveModulePosition[]{
                     new SwerveModulePosition(),
                     new SwerveModulePosition(),
                     new SwerveModulePosition(),
@@ -103,8 +107,9 @@ public class Drive extends SubsystemBase {
             ModuleIO flModuleIO,
             ModuleIO frModuleIO,
             ModuleIO blModuleIO,
-            ModuleIO brModuleIO) {
-        this(gyroIO, flModuleIO, frModuleIO, blModuleIO, brModuleIO, new VisionIO[]{visionIO});
+            ModuleIO brModuleIO,
+            NoteDetectionIO noteIO) {
+        this(gyroIO, flModuleIO, frModuleIO, blModuleIO, brModuleIO, new VisionIO[]{visionIO}, noteIO);
     }
 
     public Drive(
@@ -113,11 +118,15 @@ public class Drive extends SubsystemBase {
             ModuleIO frModuleIO,
             ModuleIO blModuleIO,
             ModuleIO brModuleIO,
-            VisionIO[] visionIO) {
+            VisionIO[] visionIO,
+            NoteDetectionIO noteIO) {
         this.visionIO = visionIO;
+        this.noteIO = noteIO;
+
         visionInputs = new VisionIO.VisionIOInputs[visionIO.length];
         for (int i = 0, visionIOLength = visionIO.length; i < visionIOLength; i++) {
-            visionInputs[i] = new VisionIO.VisionIOInputs(visionIO[i].getCameraName()) {};
+            visionInputs[i] = new VisionIO.VisionIOInputs(visionIO[i].getCameraName()) {
+            };
         }
         timestampSeconds = new double[visionIO.length];
         for (int i = 0, visionIOLength = visionIO.length; i < visionIOLength; i++) {
@@ -189,9 +198,17 @@ public class Drive extends SubsystemBase {
     public void periodic() {
         previousPose = pose;
 
+        if(this.getCurrentCommand() != null) {
+            Logger.recordOutput("Commands/Drive", this.getCurrentCommand().getName());
+        } else {
+            Logger.recordOutput("Commands/Drive", "");
+        }
 
         gyroIO.updateInputs(gyroInputs);
         Logger.processInputs("Drive/Gyro", gyroInputs);
+
+        noteIO.updateInputs(noteInputs);
+        Logger.processInputs("Drive/Note", noteInputs);
 
         VisionIO vision = null;
         for (int i = 0, visionIOLength = visionIO.length; i < visionIOLength; i++) {
@@ -499,7 +516,7 @@ public class Drive extends SubsystemBase {
             Logger.recordOutput("Vision/" + visionInput.name + "/Corners", outCorners);
 
             // PNP Result
-            Logger.recordOutput("Vision/" + visionInput.name + "/MultiTag PNP Result", visionInput.cameraResult.getMultiTagResult());
+//            Logger.recordOutput("Vision/" + visionInput.name + "/MultiTag PNP Result", visionInput.cameraResult.getMultiTagResult());
 
             // Tag Count
             Logger.recordOutput("Vision/" + visionInput.name + "/Tag Count", visionInput.cameraResult.getTargets().size());
@@ -630,5 +647,17 @@ public class Drive extends SubsystemBase {
 
     public Module[] shuffleboardMethod() {
         return modules;
+    }
+
+    /**
+     *
+     * @return Heading to note, null if no note sighted
+     */
+    public Double getDetectedNote(){
+        if(!noteInputs.tv) {
+            return null;
+        } else {
+            return noteInputs.tx;
+        }
     }
 }

@@ -26,7 +26,7 @@ import org.littletonrobotics.junction.networktables.LoggedDashboardNumber;
 import static edu.wpi.first.units.Units.Seconds;
 
 public class Module {
-    private static final double WHEEL_RADIUS = 0.051;
+    private static final double WHEEL_RADIUS = 0.057;
 
   private LoggedDashboardNumber pPidRot = new LoggedDashboardNumber("Drive/Module/Rot P");
   private LoggedDashboardNumber dPidRot = new LoggedDashboardNumber("Drive/Module/Rot D");

@@ -31,7 +31,7 @@
           }
         },
         {
-          "type": "parallel",
+          "type": "race",
           "data": {
             "commands": [
               {
@@ -64,6 +64,12 @@
                 "data": {
                   "pathName": "Greedy.1"
                 }
+              },
+              {
+                "type": "named",
+                "data": {
+                  "name": "Ready Shooter"
+                }
               }
             ]
           }
@@ -75,19 +81,13 @@
               {
                 "type": "named",
                 "data": {
-                  "name": "Aim Drivetrain"
+                  "name": "Shoot When Ready"
                 }
               },
               {
                 "type": "named",
                 "data": {
                   "name": "Ready Shooter"
-                }
-              },
-              {
-                "type": "named",
-                "data": {
-                  "name": "Shoot When Ready"
                 }
               }
             ]
@@ -108,12 +108,18 @@
                 "data": {
                   "pathName": "Greedy.2"
                 }
+              },
+              {
+                "type": "named",
+                "data": {
+                  "name": "Ready Shooter"
+                }
               }
             ]
           }
         },
         {
-          "type": "race",
+          "type": "parallel",
           "data": {
             "commands": [
               {
@@ -123,15 +129,22 @@
                 }
               },
               {
-                "type": "named",
+                "type": "race",
                 "data": {
-                  "name": "Ready Shooter"
-                }
-              },
-              {
-                "type": "named",
-                "data": {
-                  "name": "Shoot When Ready"
+                  "commands": [
+                    {
+                      "type": "named",
+                      "data": {
+                        "name": "Ready Shooter"
+                      }
+                    },
+                    {
+                      "type": "named",
+                      "data": {
+                        "name": "Shoot When Ready"
+                      }
+                    }
+                  ]
                 }
               }
             ]
@@ -163,7 +176,7 @@
           }
         },
         {
-          "type": "race",
+          "type": "parallel",
           "data": {
             "commands": [
               {
@@ -173,15 +186,22 @@
                 }
               },
               {
-                "type": "named",
+                "type": "race",
                 "data": {
-                  "name": "Ready Shooter"
-                }
-              },
-              {
-                "type": "named",
-                "data": {
-                  "name": "Shoot When Ready"
+                  "commands": [
+                    {
+                      "type": "named",
+                      "data": {
+                        "name": "Shoot When Ready"
+                      }
+                    },
+                    {
+                      "type": "named",
+                      "data": {
+                        "name": "Ready Shooter"
+                      }
+                    }
+                  ]
                 }
               }
             ]

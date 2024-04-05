@@ -120,6 +120,11 @@ public class Shooter extends SubsystemBase {
 
     @Override
     public void periodic() {
+        if(this.getCurrentCommand() != null) {
+            Logger.recordOutput("Commands/Shooter", this.getCurrentCommand().getName());
+        } else {
+            Logger.recordOutput("Commands/Shooter", "");
+        }
         shooterIO.updateInputs(shooterInputs);
         Logger.processInputs("Shooter/Flywheel", shooterInputs);
 
