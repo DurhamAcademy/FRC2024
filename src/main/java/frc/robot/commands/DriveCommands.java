@@ -30,14 +30,15 @@ import edu.wpi.first.wpilibj2.command.RunCommand;
 import frc.robot.Robot;
 import frc.robot.subsystems.drive.Drive;
 import org.littletonrobotics.junction.Logger;
-import org.littletonrobotics.junction.networktables.LoggedDashboardBoolean;
 
 import java.util.function.BooleanSupplier;
 import java.util.function.DoubleSupplier;
 
-import static edu.wpi.first.math.MathUtil.*;
+import static edu.wpi.first.math.MathUtil.angleModulus;
+import static edu.wpi.first.math.MathUtil.applyDeadband;
 import static edu.wpi.first.math.geometry.Rotation2d.fromRotations;
-import static edu.wpi.first.units.Units.*;
+import static edu.wpi.first.units.Units.RadiansPerSecond;
+import static edu.wpi.first.units.Units.Second;
 import static edu.wpi.first.wpilibj.DriverStation.Alliance.Blue;
 import static edu.wpi.first.wpilibj.DriverStation.Alliance.Red;
 import static java.lang.Math.PI;
@@ -144,6 +145,42 @@ public class DriveCommands {
         }
     }
 
+    public static Command intakeAlign(
+            Drive drive,
+            DoubleSupplier xSupplier,
+            DoubleSupplier ySupplier,
+            DoubleSupplier omegaSupplier)
+    {
+
+        var command =
+                new RunCommand(
+                        () -> {
+//                            // Calculate new linear velocity
+                            Translation2d linearVelocity = getLinearVelocity(xSupplier, ySupplier);
+
+                            Double detectedNote = drive.getDetectedNote();
+
+                            if(detectedNote != null) {
+                                // we have a target
+                                detectedNote *= -0.1;
+                            } else {
+                                // fall back to stick control
+                                double omega = MathUtil.applyDeadband(omegaSupplier.getAsDouble(), DEADBAND);
+                                omega = Math.copySign(omega * omega, omega);
+                                detectedNote = omega * drive.getMaxAngularSpeedRadPerSec();
+                            }
+
+                            drive.runVelocity(
+                                    ChassisSpeeds.fromFieldRelativeSpeeds(
+                                            linearVelocity.getX() * drive.getMaxLinearSpeedMetersPerSec(),
+                                            linearVelocity.getY() * drive.getMaxLinearSpeedMetersPerSec(),
+                                            detectedNote,
+                                            drive.getRotation().rotateBy(getAllianceRotation())));
+                        }, drive);
+
+        return command;
+    }
+
 
     public static CommandAndReadySupplier aimAtSpeakerCommand(
             Drive drive,
@@ -155,15 +192,13 @@ public class DriveCommands {
         ProfiledPIDController rotationController =
                 new ProfiledPIDController(drive.rotationPID.kP, 0, drive.rotationPID.kD, rotationConstraints);
 
-        LoggedDashboardBoolean invertVelocity = new LoggedDashboardBoolean("Disable Velocity", false);
-
         rotationController.enableContinuousInput(-PI, PI);
         var filter = LinearFilter.singlePoleIIR(0.08, 0.02);
 
         var command =
                 new RunCommand(
                         () -> {
-                            // Calcaulate new linear velocity
+                            // Calculate new linear velocity
                             Translation2d linearVelocity = getLinearVelocity(xSupplier, ySupplier);
                             // Get the angle to point at the goal
                             var goalAngle =
@@ -174,8 +209,8 @@ public class DriveCommands {
                             Transform2d robotVelocity = drive.getTwistPerDt();
                             Pose2d movingWhileShootingTarget;
                             Pose2d targetPose = ShooterCommands.getSpeakerPos().toPose2d();
-//                            targetPose = targetPose.plus(new Transform2d(0.0, goalAngle.getSin() * 0.5, new Rotation2d()));
-                            if (previousPose[0] != null) {
+                            targetPose = targetPose.plus(new Transform2d(0.0, goalAngle.getSin() * 0.0, new Rotation2d()));
+                            if (previousPose[0] != null && false) {
                                 double distance =
                                         targetPose
                                                 .getTranslation()
@@ -191,7 +226,7 @@ public class DriveCommands {
 
 
                             Double goalAngleVelocity = null;
-                            if (previousPose[0] != null) {
+                            if (previousPose[0] != null && false) {
                                 var previousAngle =
                                         movingWhileShootingTarget
                                                 .getTranslation()
@@ -207,12 +242,10 @@ public class DriveCommands {
 //                      new TrapezoidProfile.State(
 //                          Radians.of(drive.getRotation().getRadians()),
 //                          drive.getAnglularVelocity()));
-                            rotationController.setGoal(
-                                    new TrapezoidProfile.State(
-                                            goalAngle.getRadians(), goalAngleVelocity));
+//                            rotationController.setGoal();
                             var value = rotationController.calculate(
                                     angleModulus(drive.getPose().getRotation().getRadians()),
-                                    angleModulus(goalAngle.getRadians())
+                                    new TrapezoidProfile.State(goalAngle.getRadians(), goalAngleVelocity)
                             );
 
                             Logger.recordOutput("Aim/Calculated Value", (value));
@@ -232,7 +265,9 @@ public class DriveCommands {
                             previousPose[0] = drive.getPose();
                         }, drive)
                         .beforeStarting(
-                                () -> rotationController.reset(angleModulus(drive.getRotation().getRadians())), drive)
+                                () -> rotationController.reset(
+                                        angleModulus(drive.getRotation().getRadians()),drive.getAnglularVelocity().in(RadiansPerSecond)
+                                ), drive)
                         .until(
                                 () -> {
                                     // if the controller is giving a turn input, end the command

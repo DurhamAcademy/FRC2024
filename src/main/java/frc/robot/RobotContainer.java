@@ -127,7 +127,8 @@ private final CommandXboxController driverController = new CommandXboxController
                                 new VisionIOReal[]{
                                         new VisionIOReal("ShootSideCamera"),
                                         new VisionIOReal("RightCamera") //fixme: rename camera
-                                });
+                                },
+                                new LimelightNoteDetection());
                 shooter = new Shooter(new ShooterIOTalonFX(), new HoodIOSparkMax()); // new HoodIOSparkMax() {}
                 feeder = new Feeder(new FeederIOTalonFX());
                 intake = new Intake(new IntakeIOSparkMax());
@@ -144,7 +145,8 @@ private final CommandXboxController driverController = new CommandXboxController
                                 new ModuleIOSim(),
                                 new ModuleIOSim(),
                                 new ModuleIOSim(),
-                                new ModuleIOSim());
+                                new ModuleIOSim(),
+                                new LimelightNoteDetection() {});
                 shooter = new Shooter(new ShooterIOSim(), new HoodIO() {});
                 feeder = new Feeder(new FeederIOSim());
                 intake = new Intake(new IntakeIOSim());
@@ -166,7 +168,8 @@ private final CommandXboxController driverController = new CommandXboxController
                                         return "ShootSideCamera";
                                     }}, new VisionIO() {
                                     public String getCameraName() {return "RightCamera";}
-                                }});
+                                }},
+                                new LimelightNoteDetection(){});
                 shooter = new Shooter(new ShooterIO() {
                 }, new HoodIO() {
                 });
@@ -201,7 +204,7 @@ private final CommandXboxController driverController = new CommandXboxController
         );
         NamedCommands.registerCommand(
                 "Ready Shooter",
-                autoAim(shooter, drive, feeder)
+                autoAim(shooter, drive, feeder).asProxy()
         );
         NamedCommands.registerCommand(
                 "Zero Feeder",
@@ -213,7 +216,7 @@ private final CommandXboxController driverController = new CommandXboxController
         );
         NamedCommands.registerCommand(
                 "Auto Point",
-                ShooterCommands.autoAim(shooter, drive, feeder)
+                ShooterCommands.autoAim(shooter, drive, feeder).asProxy()
         );
         NamedCommands.registerCommand(
                 "Shoot When Ready",
@@ -225,7 +228,7 @@ private final CommandXboxController driverController = new CommandXboxController
                         )
                                 .onlyWhile(() -> !feeder.getBeamBroken())
                                 .withTimeout(3.0)
-                )
+                ).raceWith(SpecializedCommands.timeoutDuringAutoSim(3.0))
         );
         NamedCommands.registerCommand(
                 "Shoot",
@@ -345,7 +348,6 @@ private final CommandXboxController driverController = new CommandXboxController
                                         feeder::getBeamBroken
                                 )
                         );
-                driverController.rightBumper().whileTrue(IntakeCommands.idleCommand(intake));
 
                 operatorController
                         .povLeft()
@@ -433,9 +435,11 @@ private final CommandXboxController driverController = new CommandXboxController
                         .whileTrue(
                                 sequence(
                                     FeederCommands.feedToShooter(feeder)
-                                            .alongWith(ShooterCommands.ampSpin(shooter)).until(() -> !feeder.getBeamBroken()),
+                                            .alongWith(ShooterCommands.ampSpin(shooter)).withTimeout(0.2),
                                         ShooterCommands.ampAng(shooter)
-                                                .alongWith(ShooterCommands.ampGo(shooter, 400))
+                                                .alongWith(ShooterCommands.ampGo(shooter, 600))
+                                                .withTimeout(0.25)
+                                                .andThen(ShooterCommands.setAmpAngle(shooter, -0.4))
                                 )
 
 
