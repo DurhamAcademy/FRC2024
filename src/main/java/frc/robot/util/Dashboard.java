@@ -42,6 +42,7 @@ public class Dashboard {
             builder.addDoubleProperty("Back Right Angle", () -> drive.shuffleboardMethod()[3].getAngle().getRadians(), null);
             builder.addDoubleProperty("Robot Angle", () -> drive.getRotation().getRadians(), null);
         });
+        SmartDashboard.putData("Override Auto Aim", drive.setManualOverideDriveAutoAim(!(drive.isManualOverideDriveAutoAim())));
 //        main.add("Hood Angle Manager", hood.hoodPositionRad)
 //                .withWidget(BuiltInWidgets.kEncoder);
     }

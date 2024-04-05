@@ -34,6 +34,7 @@ import edu.wpi.first.units.Angle;
 import edu.wpi.first.units.Measure;
 import edu.wpi.first.units.Velocity;
 import edu.wpi.first.units.Voltage;
+import edu.wpi.first.util.sendable.Sendable;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.DriverStation.Alliance;
 import edu.wpi.first.wpilibj.Timer;
@@ -78,12 +79,23 @@ public class Drive extends SubsystemBase {
 
     private boolean overrideDriveAutoAim = false;
 
+    private boolean manualOverideDriveAutoAim = false;
+
     public boolean isOverrideDriveAutoAim() {
-        return overrideDriveAutoAim;
+        return overrideDriveAutoAim || manualOverideDriveAutoAim;
     }
 
     public void setOverrideDriveAutoAim(boolean overrideDriveAutoAim) {
-        this.overrideDriveAutoAim = overrideDriveAutoAim;
+        this.overrideDriveAutoAim = overrideDriveAutoAim || manualOverideDriveAutoAim;
+    }
+
+    public boolean isManualOverideDriveAutoAim() {
+        return manualOverideDriveAutoAim;
+    }
+
+    public Sendable setManualOverideDriveAutoAim(boolean manualOverideDriveAutoAim) {
+        this.manualOverideDriveAutoAim = manualOverideDriveAutoAim;
+        return null;
     }
 
     private SwerveDriveKinematics kinematics = new SwerveDriveKinematics(getModuleTranslations());
