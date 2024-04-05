@@ -82,7 +82,7 @@ public class ShooterCommands {
         distanceToRPM.put(3.506, 4000.0);
         distanceToRPM.put(4.25, 4200.0);
         distanceToRPM.put(1000.0,
-                5000.0);
+                4000.0);
     }
 
     public static LoggedDashboardBoolean retractAfterShot = new LoggedDashboardBoolean("Aim/Retract After Shooting", true);
