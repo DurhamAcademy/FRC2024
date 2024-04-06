@@ -350,6 +350,7 @@ public class Drive extends SubsystemBase {
                                 if (visionInputs[j].cameraResult.getTargets().size()>visionInputs[i].cameraResult.getTargets().size() && visionInputs[j].timestampSeconds != timestampSeconds[j])
                                     mult += 0.5;
                             }
+                            mult += 2;
                             Logger.recordOutput("Vision/" + visionIO[i].getCameraName() + "/Single Tag Matrix Multiplier/Step 5", mult);
                             Logger.recordOutput("Vision/" + visionIO[i].getCameraName() + "/Single Tag Matrix Multiplier", mult);
                             visionMatrix = new Matrix<>(Nat.N3(), Nat.N1(), new double[]{8 * mult, 8 * mult, 12 * mult});

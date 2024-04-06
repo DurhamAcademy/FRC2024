@@ -411,7 +411,7 @@ public class RobotContainer {
                                         .withTimeout(4.0)
                         );
                 driverController
-                        .povUp()
+                        .rightBumper()
                         .whileTrue(
                                 sequence(
                                         FeederCommands.feedToShooter(feeder)

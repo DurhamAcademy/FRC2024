@@ -180,8 +180,8 @@ public class Shooter extends SubsystemBase {
     }
 
     public void resetToLimitAngle(){
-        hoodOffsetAngle = new Rotation2d(hoodInputs.motorPositionRad - 1.98875);
-        hoodFB.reset(hoodInputs.motorPositionRad - 1.98875);
+        hoodOffsetAngle = new Rotation2d(hoodInputs.motorPositionRad - (1.98875));
+        hoodFB.reset(hoodInputs.motorPositionRad - (1.98875+.16));
     }
 
     public void resetToStartingAngle() {
@@ -190,7 +190,7 @@ public class Shooter extends SubsystemBase {
     }
 
     public void resetWhileZeroing() {
-        hoodOffsetAngle = new Rotation2d(hoodInputs.motorPositionRad - 2.225);
+        hoodOffsetAngle = new Rotation2d(hoodInputs.motorPositionRad - (2.225));
         hoodFB.reset(hoodInputs.motorPositionRad - hoodOffsetAngle.getRadians());
     }
 

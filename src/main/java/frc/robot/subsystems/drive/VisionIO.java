@@ -83,8 +83,13 @@ public interface VisionIO {
       latencyMillis = table.get("LatencyMillis", latencyMillis);
       timestampSeconds = table.get("TimestampSeconds", timestampSeconds);
       name = table.get("Name", name);
-      table.get("CameraResultData").getRaw();
-      cameraResult = PhotonPipelineResult.serde.unpack(new Packet(table.get("CameraResultData").getRaw()));
+      LogTable.LogValue cameraResultData = table.get("CameraResultData");
+      if (cameraResultData != null) {
+        cameraResultData.getRaw();
+        cameraResult = PhotonPipelineResult.serde.unpack(new Packet(cameraResultData.getRaw()));
+      } else {
+        connected = false;
+      }
 
       cameraResult.setTimestampSeconds(timestampSeconds);
     }
