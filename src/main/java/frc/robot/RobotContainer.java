@@ -72,8 +72,7 @@ import static edu.wpi.first.units.Units.Seconds;
 import static edu.wpi.first.wpilibj2.command.Commands.*;
 import static frc.robot.commands.FeederCommands.feedToBeamBreak;
 import static frc.robot.commands.FeederCommands.feedToShooter;
-import static frc.robot.commands.IntakeCommands.intakeCommand;
-import static frc.robot.commands.IntakeCommands.smartIntakeCommand;
+import static frc.robot.commands.IntakeCommands.*;
 import static frc.robot.commands.RumbleCommands.*;
 import static frc.robot.commands.ShooterCommands.*;
 
@@ -94,10 +93,10 @@ public class RobotContainer {
     private final ControllerRumble driverRumble = new ControllerRumble(0);
     private final ControllerRumble operatorRumble = new ControllerRumble(1);
 
-//  private final ModeHelper modeHelper = new ModeHelper(this);
-// Controller
-private final CommandXboxController driverController = new CommandXboxController(0);
+    // Controller
+    private final CommandXboxController driverController = new CommandXboxController(0);
     private final CommandXboxController operatorController = new CommandXboxController(1);
+
     // Dashboard inputs
     private final LoggedDashboardChooser<Command> autoChooser;
     private final LoggedDashboardChooser<SmartCommandsMode> smartCommandsMode =
@@ -106,6 +105,7 @@ private final CommandXboxController driverController = new CommandXboxController
             new LoggedDashboardNumber("Flywheel Speed", 1500.0);
     private final ReactionObject reactions;
     LoggedDashboardNumber angleOffsetInput = new LoggedDashboardNumber("Angle Offset", 0.0);
+
     // Subsystems
     public Drive drive;
     LoggedDashboardBoolean invertX = new LoggedDashboardBoolean("Invert X Axis", false);
@@ -130,10 +130,10 @@ private final CommandXboxController driverController = new CommandXboxController
                                 new ModuleIOSparkMax(3){},
                                 new VisionIOReal[]{
                                         new VisionIOReal("ShootSideCamera"),
-                                        new VisionIOReal("RightCamera") //fixme: rename camera
+                                        new VisionIOReal("RightCamera")
                                 },
                                 new LimelightNoteDetection());
-                shooter = new Shooter(new ShooterIOTalonFX(), new HoodIOSparkMax()); // new HoodIOSparkMax() {}
+                shooter = new Shooter(new ShooterIOTalonFX(), new HoodIOSparkMax());
                 feeder = new Feeder(new FeederIOTalonFX());
                 intake = new Intake(new IntakeIOSparkMax());
                 climb = new Climb(new ClimbIOSparkMax());
@@ -192,17 +192,6 @@ private final CommandXboxController driverController = new CommandXboxController
                         driverController::getLeftY,
                         driverController::getLeftX,
                         driverController::getRightX);
-//        NamedCommands.registerCommand(
-//                "AutoShoot",
-//                parallel(
-//                        ShooterCommands.autoAim(shooter, drive),
-//                        sequence(
-//                                waitUntil(shooter::allAtSetpoint),
-//                                feedToShooter(feeder)
-//                        )
-//                )
-//        );
-
 
         NamedCommands.registerCommand(
                 "Aim Drivetrain",
@@ -252,7 +241,7 @@ private final CommandXboxController driverController = new CommandXboxController
                                 none(),
                                 race(
                                         feedToBeamBreak(feeder).withTimeout(5),
-                                        IntakeCommands.flushIntakeWithoutTheArmExtendedOutward(intake, feeder)
+                                        flushIntakeWithoutTheArmExtendedOutward(intake, feeder)
                                 ),
                                 feeder::getBeamBroken
                         )).withTimeout(3.0)
@@ -296,12 +285,12 @@ private final CommandXboxController driverController = new CommandXboxController
                                 () -> (-driverController.getLeftX() * (invertY.get()?-1:1)),
                                 () -> (-driverController.getRightX()) * (invertOmega.get()?-1:1)));
                 intake.setDefaultCommand(IntakeCommands.idleCommand(intake));
-                feeder.setDefaultCommand(new RunCommand(() -> feeder.runVolts(0.0), feeder));
+                feeder.setDefaultCommand(FeederCommands.idleFeeder(feeder));
                 shooter.setDefaultCommand(
                         either(
                                 ShooterCommands.shooterIdle(shooter),
                                 sequence(
-                                        ShooterCommands.shooterIdle(shooter).until(shooter::hoodAtSetpoint),
+                                        ShooterCommands.shooterIdle(shooter).until(shooter::hoodAtSetpoint).withTimeout(.5),
                                         ShooterCommands.simpleHoodZero(shooter),
                                         ShooterCommands.shooterIdle(shooter)
                                 ).withName("Default Command"),
@@ -332,11 +321,6 @@ private final CommandXboxController driverController = new CommandXboxController
                 driverController.leftBumper().whileTrue(command.getCommand());
 
                 // ---- INTAKE COMMANDS ----
-//                operatorController
-//                        .povLeft()
-//                        .whileTrue(
-//                                IntakeCommands.intakeBack(intake)
-//                        );
                 driverController
                         .leftTrigger()
                         .whileTrue(
@@ -349,7 +333,7 @@ private final CommandXboxController driverController = new CommandXboxController
                                         none(),
                                         race(
                                                 feedToBeamBreak(feeder).withTimeout(5),
-                                                IntakeCommands.flushIntakeWithoutTheArmExtendedOutward(intake, feeder)
+                                                flushIntakeWithoutTheArmExtendedOutward(intake, feeder)
                                         ),
                                         feeder::getBeamBroken
                                 )
@@ -377,10 +361,9 @@ private final CommandXboxController driverController = new CommandXboxController
                                 ).andThen(FeederCommands.feedToBeamBreak(feeder))
                         )
                         .onFalse(
-                                parallel(
-                                        ShooterCommands.humanPlayerIntake(shooter),
-                                        FeederCommands.humanPlayerIntake(feeder)
-                                ).until(() -> !feeder.getBeamBroken())
+                                FeederCommands.humanPlayerIntake(feeder)
+                                        .withTimeout(5.0)
+                                        .until(() -> !feeder.getBeamBroken())
                         );
                 operatorController
                         .povUp()
@@ -427,39 +410,18 @@ private final CommandXboxController driverController = new CommandXboxController
                                 ShooterCommands.simpleHoodZero(shooter)
                                         .withTimeout(4.0)
                         );
-//                driverController // fixme move to operator controls
-//                        .povUp()
-//                        .whileTrue(newAmpShoot(shooter)
-//                                .alongWith(feedToShooter(feeder))
-//                                .onlyWhile(feeder::getBeamBroken)
-//                                .andThen(ShooterCommands.ampAngle(shooter)));
                 driverController
                         .povUp()
                         .whileTrue(
                                 sequence(
-                                    FeederCommands.feedToShooter(feeder)
-                                            .alongWith(ShooterCommands.ampSpin(shooter)).withTimeout(0.2),
+                                        FeederCommands.feedToShooter(feeder)
+                                                .alongWith(ShooterCommands.ampSpin(shooter)).withTimeout(0.2),
                                         ShooterCommands.ampAng(shooter)
                                                 .alongWith(ShooterCommands.ampGo(shooter, 600))
                                                 .withTimeout(0.25)
                                                 .andThen(ShooterCommands.setAmpAngle(shooter, -0.4))
                                 )
-
-
-//                                ShooterCommands.ampSpin(shooter)
-//                                        .alongWith(ShooterCommands.ampAng(shooter)
-//                                        .alongWith(feedToShooter(feeder))
-//                                .onlyWhile(feeder::getBeamBroken))
                         );
-
-                // NEW OPERATOR CONTROLS
-                // leftbumper zero
-                // x justShoot
-                // y aim
-                // povup humanplayerintake
-                // down flush
-
-                //zero shooter
                 break;
             case DriveMotors:
                 drive.setDefaultCommand(
