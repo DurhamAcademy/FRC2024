@@ -59,6 +59,14 @@ public class ShooterCommands {
                 new Pose3d(1.122, 0.916, 2.13, new Rotation3d());
     }
 
+    public static Command diagShot(Shooter shooter) {
+        return run(() -> {
+            shooter.shooterRunVelocity(2000);
+            shooter.setTargetShooterAngle(Rotation2d.fromRadians(1.1));
+        }, shooter)
+                .withName("Set diag shot");
+    }
+
     private static double getDistance(Pose3d pose3d) {
         return pose3d.toPose2d().getTranslation().getNorm();
     }
