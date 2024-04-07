@@ -139,8 +139,8 @@ public class ShooterCommands {
     public static Command JustShoot(Shooter shooter) {
         //the parameter is the robot, idk how to declare it, also this returns the angle
         return run(() -> {
-            shooter.setTargetShooterAngle(Rotation2d.fromRadians(.8));
-            shooter.shooterRunVelocity(3500);
+            shooter.setTargetShooterAngle(Rotation2d.fromRadians(1));
+            shooter.shooterRunVelocity(3000);
         }, shooter)
                 .raceWith(SpecializedCommands.timeoutDuringAutoSim(2))
                 .withName("Just Shoot");
@@ -158,6 +158,13 @@ public class ShooterCommands {
         return runOnce(() -> {
             shooter.shooterRunVelocity(0.0);
         }, shooter).withName("Stop Shooter");
+    }
+
+    public static Command forceShoot (Shooter shooter){
+        return run(() -> {
+            shooter.setTargetShooterAngle(Rotation2d.fromRadians(1));
+            shooter.shooterRunVelocity(3000);
+        });
     }
 
     public static Command simpleHoodZero(Shooter shooter) {

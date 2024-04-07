@@ -991,5 +991,33 @@
       "timestamp": 5.37703018216942
     }
   ],
-  "eventMarkers": []
+  "eventMarkers": [
+    {
+      "timestamp": 1.3982771257181246,
+      "command": {
+        "type": "named",
+        "data": {
+          "name": "Intake Note"
+        }
+      }
+    },
+    {
+      "timestamp": 4.37703018216942,
+      "command": {
+        "type": "named",
+        "data": {
+          "name": "Ready Shooter"
+        }
+      }
+    },
+    {
+      "timestamp": 5.37703018216942,
+      "command": {
+        "type": "named",
+        "data": {
+          "name": "Fire When Ready"
+        }
+      }
+    }
+  ]
 }

@@ -203,11 +203,11 @@ public class RobotContainer {
         );
         NamedCommands.registerCommand(
                 "Zero Feeder",
-                FeederCommands.feedToBeamBreak(feeder)
+                FeederCommands.feedToBeamBreak(feeder).asProxy()
         );
         NamedCommands.registerCommand(
                 "Zero Hood",
-                ShooterCommands.simpleHoodZero(shooter)
+                ShooterCommands.simpleHoodZero(shooter).asProxy()
         );
         NamedCommands.registerCommand(
                 "Auto Point",
@@ -233,10 +233,10 @@ public class RobotContainer {
                         feedToShooter(feeder)
                 )
                         .deadlineWith(ShooterCommands.JustShoot(shooter))
-                        .withTimeout(8.0));
+                        .withTimeout(4.0).asProxy());
         NamedCommands.registerCommand(
                 "Intake Note",
-                smartIntakeCommand(intake, feeder)
+                smartIntakeCommand(intake, feeder).raceWith(FeederCommands.feedToBeamBreak(feeder))
                         .andThen(either(
                                 none(),
                                 race(
@@ -244,12 +244,20 @@ public class RobotContainer {
                                         flushIntakeWithoutTheArmExtendedOutward(intake, feeder)
                                 ),
                                 feeder::getBeamBroken
-                        )).withTimeout(3.0)
+                        )).withTimeout(3.0).asProxy()
         );
         NamedCommands.registerCommand(
                 "Intake",
                 intakeCommand(intake)
                         .withTimeout(1.0)
+        );
+        NamedCommands.registerCommand(
+                "Force Shoot",
+                sequence(
+                ShooterCommands.forceShoot(shooter),
+                        waitUntil(() -> (shooter.allAtSetpoint() && (shooter.getShooterVelocityRPM() > 1000))),
+                                run(()->{feeder.runVolts(8);}, feeder)
+                ).asProxy()
         );
         autoChooser = new LoggedDashboardChooser<>("Auto Choices", AutoBuilder.buildAutoChooser());
 //        dashboard = new Dashboard(autoChooser, drive, shooter, feeder, intake, vision, this.smartCommandsMode);
@@ -397,13 +405,14 @@ public class RobotContainer {
                         .rightTrigger()
                         .whileTrue(
                                 sequence(
-                                        waitUntil(() -> (shooter.allAtSetpoint() && (shooter.getShooterVelocityRPM() > 1000) && command.getReadySupplier().getAsBoolean())),
+                                        waitUntil(() -> (shooter.allAtSetpoint() && (shooter.getShooterVelocityRPM() > 1000) /*&& command.getReadySupplier().getAsBoolean()*/)),
                                         feedToShooter(feeder)
                                                 .until(() -> !feeder.getBeamBroken()),
                                         feedToShooter(feeder)
                                                 .withTimeout(.25)
                                 )
                         );
+                operatorController.rightBumper().whileTrue(run(()->{feeder.runVolts(8);}, feeder));
                 operatorController
                         .start()
                         .onTrue(

@@ -194,7 +194,7 @@ public class Shooter extends SubsystemBase {
         hoodFB.reset(hoodInputs.motorPositionRad - hoodOffsetAngle.getRadians());
     }
 
-    boolean hoodOverride = false;
+    boolean hoodOverride = true;
 
     public void overrideHoodAtSetpoint(boolean isAtSetpoint) {
         hoodOverride = isAtSetpoint;
