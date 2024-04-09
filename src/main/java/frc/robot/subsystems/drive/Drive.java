@@ -56,7 +56,7 @@ import static edu.wpi.first.units.Units.*;
 import static frc.robot.Constants.robotToCam;
 
 public class Drive extends SubsystemBase {
-    private static final double MAX_LINEAR_SPEED = 4.5;
+    private static final double MAX_LINEAR_SPEED = 5.75;
     private static final double TRACK_WIDTH_X = inchesToMeters(20.75);
     private static final double TRACK_WIDTH_Y = inchesToMeters(20.75);
     private static final double DRIVE_BASE_RADIUS =

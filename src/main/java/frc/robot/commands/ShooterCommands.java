@@ -146,6 +146,13 @@ public class ShooterCommands {
                 .withName("Just Shoot");
     }
 
+    public static Command passNote(Shooter shooter) {
+        return run(()-> {
+            shooter.setTargetShooterAngle(Rotation2d.fromRadians(0.25));
+            shooter.shooterRunVelocity(4000.0);
+        }, shooter).withName("Pass note");
+    }
+
     public static Command shooterIdle(Shooter shooter) {
         return run(() -> {
             shooter.shooterRunVelocity(0.0);

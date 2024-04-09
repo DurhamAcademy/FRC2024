@@ -401,6 +401,8 @@ public class RobotContainer {
                                 feedToBeamBreak(feeder)
                                         .withTimeout(5)
                         );
+                operatorController.rightTrigger()
+                        .whileTrue(passNote(shooter));
                 driverController
                         .rightTrigger()
                         .whileTrue(
@@ -590,6 +592,10 @@ public class RobotContainer {
                 .isTeleop
                 .and(reactions.isEnabled)
                 .whileTrue(LEDCommands.enabled(leds).ignoringDisable(true));
+        reactions
+                .isTeleop
+                .and(reactions.isEnabled)
+                .whileTrue(ClimbCommands.zeroClimb(climb).ignoringDisable(true).withTimeout(6.5));
     }
 
 
