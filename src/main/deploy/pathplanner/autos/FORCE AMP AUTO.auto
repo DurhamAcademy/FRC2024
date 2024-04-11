@@ -12,6 +12,50 @@
     "data": {
       "commands": [
         {
+          "type": "parallel",
+          "data": {
+            "commands": [
+              {
+                "type": "named",
+                "data": {
+                  "name": "Zero Hood"
+                }
+              },
+              {
+                "type": "named",
+                "data": {
+                  "name": "Zero Feeder"
+                }
+              }
+            ]
+          }
+        },
+        {
+          "type": "named",
+          "data": {
+            "name": "Shoot"
+          }
+        },
+        {
+          "type": "parallel",
+          "data": {
+            "commands": [
+              {
+                "type": "path",
+                "data": {
+                  "pathName": "Friend Amp Side.1"
+                }
+              },
+              {
+                "type": "named",
+                "data": {
+                  "name": "Intake Note"
+                }
+              }
+            ]
+          }
+        },
+        {
           "type": "named",
           "data": {
             "name": "Shoot"
@@ -20,7 +64,7 @@
         {
           "type": "path",
           "data": {
-            "pathName": "Friend Amp Side.1"
+            "pathName": "Friend Amp Side.2"
           }
         },
         {
@@ -28,15 +72,15 @@
           "data": {
             "commands": [
               {
-                "type": "named",
+                "type": "path",
                 "data": {
-                  "name": "Intake Note"
+                  "pathName": "Friend Amp Side.3"
                 }
               },
               {
-                "type": "path",
+                "type": "named",
                 "data": {
-                  "pathName": "Friend Amp Side.2"
+                  "name": "Intake Note"
                 }
               }
             ]
@@ -45,32 +89,7 @@
         {
           "type": "named",
           "data": {
-            "name": "Zero Hood"
-          }
-        },
-        {
-          "type": "path",
-          "data": {
-            "pathName": "Friend Amp Side.3"
-          }
-        },
-        {
-          "type": "parallel",
-          "data": {
-            "commands": [
-              {
-                "type": "named",
-                "data": {
-                  "name": "Intake Note"
-                }
-              },
-              {
-                "type": "path",
-                "data": {
-                  "pathName": "Friend Amp Side.3"
-                }
-              }
-            ]
+            "name": "Shoot"
           }
         }
       ]

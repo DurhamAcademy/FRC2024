@@ -2161,40 +2161,5 @@
       "timestamp": 19.93155357043123
     }
   ],
-  "eventMarkers": [
-    {
-      "timestamp": 0.5146806163482623,
-      "command": {
-        "type": "parallel",
-        "data": {
-          "commands": [
-            {
-              "type": "named",
-              "data": {
-                "name": "Intake Note"
-              }
-            }
-          ]
-        }
-      }
-    },
-    {
-      "timestamp": 3.495829069127752,
-      "command": {
-        "type": "named",
-        "data": {
-          "name": "Shoot When Ready"
-        }
-      }
-    },
-    {
-      "timestamp": 2.495829069127752,
-      "command": {
-        "type": "named",
-        "data": {
-          "name": "Ready Shooter"
-        }
-      }
-    }
-  ]
+  "eventMarkers": []
 }

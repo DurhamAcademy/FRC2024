@@ -56,7 +56,7 @@ import static edu.wpi.first.units.Units.*;
 import static frc.robot.Constants.robotToCam;
 
 public class Drive extends SubsystemBase {
-    private static final double MAX_LINEAR_SPEED = 4.5;
+    private static final double MAX_LINEAR_SPEED = 5.75;
     private static final double TRACK_WIDTH_X = inchesToMeters(20.75);
     private static final double TRACK_WIDTH_Y = inchesToMeters(20.75);
     private static final double DRIVE_BASE_RADIUS =
@@ -328,22 +328,30 @@ public class Drive extends SubsystemBase {
 
                         case 1:
                             PhotonTrackedTarget target = estimatedRobotPose.targetsUsed.get(0);
-                            var mult = target.getPoseAmbiguity() * 25;
+                            var mult = target.getPoseAmbiguity() * 500;
+                            Logger.recordOutput("Vision/" + visionIO[i].getCameraName() + "/Single Tag Matrix Multiplier/Step 0", mult);
+                            mult*=mult;
+                            Logger.recordOutput("Vision/" + visionIO[i].getCameraName() + "/Single Tag Matrix Multiplier/Step 1", mult);
                             if (
                                     (pose.getX() <= 16.5) &&
                                             (pose.getX() > 0) &&
                                             (pose.getY() <= 8.2) &&
                                             (pose.getY() > 0)
                             ) mult = mult / 4;
+                            Logger.recordOutput("Vision/" + visionIO[i].getCameraName() + "/Single Tag Matrix Multiplier/Step 2", mult);
                             if (target.getPoseAmbiguity()<0.4)
-                                mult*=Math.abs(estimatedRobotPose.estimatedPose.getZ())+0.01;
+                                mult*=Math.pow(Math.abs(estimatedRobotPose.estimatedPose.getZ()),2)+0.01;
+                            Logger.recordOutput("Vision/" + visionIO[i].getCameraName() + "/Single Tag Matrix Multiplier/Step 3", mult);
                             if (target.getArea()>0.05)
                                 mult/= (target.getArea()*target.getArea())*8*8;
+                            Logger.recordOutput("Vision/" + visionIO[i].getCameraName() + "/Single Tag Matrix Multiplier/Step 4", mult);
                             for (int j = 0; j < visionInputs.length; j++) {
                                 if (i==j) break;
                                 if (visionInputs[j].cameraResult.getTargets().size()>visionInputs[i].cameraResult.getTargets().size() && visionInputs[j].timestampSeconds != timestampSeconds[j])
                                     mult += 0.5;
                             }
+                            mult += 2;
+                            Logger.recordOutput("Vision/" + visionIO[i].getCameraName() + "/Single Tag Matrix Multiplier/Step 5", mult);
                             Logger.recordOutput("Vision/" + visionIO[i].getCameraName() + "/Single Tag Matrix Multiplier", mult);
                             visionMatrix = new Matrix<>(Nat.N3(), Nat.N1(), new double[]{8 * mult, 8 * mult, 12 * mult});
                             break;
@@ -352,6 +360,7 @@ public class Drive extends SubsystemBase {
                             MultiTargetPNPResult multiTagResult = visionInput.cameraResult.getMultiTagResult();
                             double meterErrorEstimation = (multiTagResult.estimatedPose.bestReprojErr / visionInput.cameraResult.getBestTarget().getArea()) * 0.045;
 //                            meterErrorEstimation = 1;
+                            Logger.recordOutput("Vision/" + visionIO[i].getCameraName() + "/Multi Tag meterErrorEstimation", meterErrorEstimation);
                             visionMatrix = new Matrix<>(Nat.N3(), Nat.N1(), new double[]{1.75 * meterErrorEstimation, 5 * meterErrorEstimation, 3 * meterErrorEstimation});
                             break;
 

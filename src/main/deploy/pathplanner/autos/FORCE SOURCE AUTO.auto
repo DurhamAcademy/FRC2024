@@ -22,12 +22,6 @@
                 }
               },
               {
-                "type": "path",
-                "data": {
-                  "pathName": "Friend Source Side.1"
-                }
-              },
-              {
                 "type": "named",
                 "data": {
                   "name": "Zero Feeder"
@@ -43,35 +37,22 @@
               {
                 "type": "named",
                 "data": {
-                  "name": "Aim Drivetrain"
-                }
-              },
-              {
-                "type": "race",
-                "data": {
-                  "commands": [
-                    {
-                      "type": "named",
-                      "data": {
-                        "name": "Shoot When Ready"
-                      }
-                    },
-                    {
-                      "type": "named",
-                      "data": {
-                        "name": "Ready Shooter"
-                      }
-                    }
-                  ]
+                  "name": "Shoot"
                 }
               }
             ]
           }
         },
         {
-          "type": "parallel",
+          "type": "sequential",
           "data": {
             "commands": [
+              {
+                "type": "path",
+                "data": {
+                  "pathName": "Friend Source Side.1"
+                }
+              },
               {
                 "type": "path",
                 "data": {
@@ -126,26 +107,7 @@
               {
                 "type": "named",
                 "data": {
-                  "name": "Aim Drivetrain"
-                }
-              },
-              {
-                "type": "race",
-                "data": {
-                  "commands": [
-                    {
-                      "type": "named",
-                      "data": {
-                        "name": "Ready Shooter"
-                      }
-                    },
-                    {
-                      "type": "named",
-                      "data": {
-                        "name": "Shoot When Ready"
-                      }
-                    }
-                  ]
+                  "name": "Force Shoot"
                 }
               }
             ]
@@ -183,26 +145,7 @@
               {
                 "type": "named",
                 "data": {
-                  "name": "Aim Drivetrain"
-                }
-              },
-              {
-                "type": "race",
-                "data": {
-                  "commands": [
-                    {
-                      "type": "named",
-                      "data": {
-                        "name": "Ready Shooter"
-                      }
-                    },
-                    {
-                      "type": "named",
-                      "data": {
-                        "name": "Shoot When Ready"
-                      }
-                    }
-                  ]
+                  "name": "Shoot"
                 }
               }
             ]

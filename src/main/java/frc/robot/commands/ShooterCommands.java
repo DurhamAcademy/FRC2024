@@ -14,7 +14,7 @@ import org.littletonrobotics.junction.Logger;
 import org.littletonrobotics.junction.networktables.LoggedDashboardBoolean;
 import org.littletonrobotics.junction.networktables.LoggedDashboardNumber;
 
-import static edu.wpi.first.units.Units.RadiansPerSecond;
+import static edu.wpi.first.units.Units.*;
 import static edu.wpi.first.wpilibj.DriverStation.Alliance.Blue;
 import static edu.wpi.first.wpilibj2.command.Commands.*;
 import static java.lang.Math.abs;
@@ -46,11 +46,12 @@ public class ShooterCommands {
     }
 
     static LoggedDashboardNumber height = new LoggedDashboardNumber("Shooter Tweak Height", 2.13);
+    static LoggedDashboardNumber fartherIn = new LoggedDashboardNumber("Shoot Farther In", Inches.of(0).in(Meters));
 
     public static Pose3d getSpeakerPos() {
         return (DriverStation.getAlliance().orElse(Blue).equals(Blue)) ?
-                new Pose3d(0.24, 5.550, height.get(), new Rotation3d()) :
-                new Pose3d(16.27, 5.550, height.get(), new Rotation3d());
+                new Pose3d(0.24-fartherIn.get(), 5.50, height.get(), new Rotation3d()) :
+                new Pose3d(16.27+fartherIn.get(), 5.50, height.get(), new Rotation3d());
     }
 
     public static Pose3d getSourcePos() {
@@ -59,14 +60,23 @@ public class ShooterCommands {
                 new Pose3d(1.122, 0.916, 2.13, new Rotation3d());
     }
 
+    public static Command diagShot(Shooter shooter) {
+        return run(() -> {
+            shooter.shooterRunVelocity(2000);
+            shooter.setTargetShooterAngle(Rotation2d.fromRadians(1.1));
+        }, shooter)
+                .withName("Set diag shot");
+    }
+
     private static double getDistance(Pose3d pose3d) {
         return pose3d.toPose2d().getTranslation().getNorm();
     }
-
+//0.35 offset
     public static void construct() {
         distanceToAngle.clear();
         distanceToAngle.put(0.0, 0.0);
-//        distanceToAngle.put(1.633, 0.2);
+//        distanceToAngle.put(1.0, -0.38);
+//        distanceToAngle.put(1.633, -0.2);
 //        distanceToAngle.put(2.0, 0.2);
 //        distanceToAngle.put(2.29, 0.0);
 //        distanceToAngle.put(1.1, -0.2941);
@@ -76,13 +86,12 @@ public class ShooterCommands {
         distanceToAngle.put(1000.0, 0.0);
 
         distanceToRPM.clear();
-        distanceToRPM.put(0.0, 2000.0);
-        distanceToRPM.put(0.894, 3000.0);
+        distanceToRPM.put(0.0, 3500.0);
+        distanceToRPM.put(0.894, 3500.0);
         distanceToRPM.put(2.52, 3750.0); //GOOD VALUES
-        distanceToRPM.put(3.506, 4000.0);
-        distanceToRPM.put(4.25, 4200.0);
-        distanceToRPM.put(1000.0,
-                4000.0);
+//        distanceToRPM.put(3.506, 4000.0);
+        distanceToRPM.put(4.25, 4000.0);
+        distanceToRPM.put(1000.0, 4000.0);
     }
 
     public static LoggedDashboardBoolean retractAfterShot = new LoggedDashboardBoolean("Aim/Retract After Shooting", true);
@@ -130,11 +139,18 @@ public class ShooterCommands {
     public static Command JustShoot(Shooter shooter) {
         //the parameter is the robot, idk how to declare it, also this returns the angle
         return run(() -> {
-            shooter.setTargetShooterAngle(Rotation2d.fromRadians(.8));
-            shooter.shooterRunVelocity(3500);
+            shooter.setTargetShooterAngle(Rotation2d.fromRadians(1));
+            shooter.shooterRunVelocity(3000);
         }, shooter)
                 .raceWith(SpecializedCommands.timeoutDuringAutoSim(2))
                 .withName("Just Shoot");
+    }
+
+    public static Command passNote(Shooter shooter) {
+        return run(()-> {
+            shooter.setTargetShooterAngle(Rotation2d.fromRadians(0.25));
+            shooter.shooterRunVelocity(4000.0);
+        }, shooter).withName("Pass note");
     }
 
     public static Command shooterIdle(Shooter shooter) {
@@ -149,6 +165,13 @@ public class ShooterCommands {
         return runOnce(() -> {
             shooter.shooterRunVelocity(0.0);
         }, shooter).withName("Stop Shooter");
+    }
+
+    public static Command forceShoot (Shooter shooter){
+        return run(() -> {
+            shooter.setTargetShooterAngle(Rotation2d.fromRadians(1));
+            shooter.shooterRunVelocity(3000);
+        });
     }
 
     public static Command simpleHoodZero(Shooter shooter) {
@@ -240,7 +263,7 @@ public class ShooterCommands {
 
     public static Command ampSpin(Shooter shooter){
         return run(() -> {
-            shooter.setTargetShooterAngle(Rotation2d.fromRadians(0.925));
+            shooter.setTargetShooterAngle(Rotation2d.fromRadians(1.114));
             shooter.shooterRunVelocity(600);
         });
     }

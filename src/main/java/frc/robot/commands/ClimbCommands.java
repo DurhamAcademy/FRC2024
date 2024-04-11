@@ -26,12 +26,14 @@ public class ClimbCommands {
             public Debouncer rightDebounce = new Debouncer(1.0, kFalling);
 
             public void reset() {
-                leftDebounce = new Debouncer(.35, kFalling);
+                leftDebounce = new Debouncer(1.0, kFalling);
                 cannotMoveAL = false;
                 cannotMoveAR = false;
                 cannotMoveBL = false;
                 cannotMoveBR = false;
-                rightDebounce = new Debouncer(0.35, kFalling);
+                rightDebounce = new Debouncer(1.0, kFalling);
+                rightDebounce.calculate(true);
+                leftDebounce.calculate(true);
             }
         };
         SequentialCommandGroup sequentialCommandGroup = new InstantCommand(debouncers::reset).andThen(
@@ -54,6 +56,13 @@ public class ClimbCommands {
             if (calculate) onTrue.run();
             return calculate;
         };
+    }
+
+    public static Command zeroClimb(Climb climb){
+        return run(() -> {
+            climb.runLeftVolts(4.0);
+            climb.runRightVolts(4.0);
+        });
     }
 
     public static Command runClimb(Climb climb, DoubleSupplier leftSupplier, DoubleSupplier rightSupplier) {
