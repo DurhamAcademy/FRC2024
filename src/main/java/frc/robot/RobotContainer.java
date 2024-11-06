@@ -291,7 +291,8 @@ public class RobotContainer {
                                 drive,
                                 () -> (-driverController.getLeftY() * (invertX.get()?-1:1)),
                                 () -> (-driverController.getLeftX() * (invertY.get()?-1:1)),
-                                () -> (-driverController.getRightX()) * (invertOmega.get()?-1:1)));
+                                () -> (-driverController.getRightX()) * (invertOmega.get()?-1:1))
+                        );
                 intake.setDefaultCommand(IntakeCommands.idleCommand(intake));
                 feeder.setDefaultCommand(FeederCommands.idleFeeder(feeder));
                 shooter.setDefaultCommand(
